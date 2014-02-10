@@ -1,0 +1,101 @@
+Revision:27
+ExeXml 27
+g++ -Wall -D BSD -c -lstdc++ testunit.cpp -o generate.o -I /home/webkruncher/source/webkruncher -I /home/webkruncher/source/datapipe -I /home/webkruncher/source/toctic -I /home/webkruncher/source/spinlock -I /home/webkruncher/source/heterogeneity -I /home/webkruncher/source/exexml
+g++  -Wall -D BSD  -frepo -lstdc++  -o generate generate.o -I /home/webkruncher/source/webkruncher -I /home/webkruncher/source/datapipe -I /home/webkruncher/source/toctic -I /home/webkruncher/source/spinlock -I /home/webkruncher/source/heterogeneity -I /home/webkruncher/source/exexml
+multiplying 10 times, starting at Sat May 21 15:18:13 EDT 2011
+-rw-r--r--  1 webkruncher  webkruncher  12912 May 21 15:18 biggy.xml
+     622    1522   12912 characters
+Sat May 21 15:18:13 EDT 2011 regergetating
+                  Method     Avg   Calls   Total
+                    main    37ms       1    37ms
+                  Loader    30ms       1    30ms
+                  Outter     4ms       1     4ms
+             Item::tic()    21us      20   430us
+                 NewNode    12us     130     1ms
+
+Started:  Sat May 21 15:18:13 EDT 2011
+Complete: Sat May 21 15:18:13 EDT 2011
+diff biggy.xml biggy.check.xml
+-rw-r--r--  1 webkruncher  webkruncher  12912 May 21 15:18 biggy.check.xml
+diff count:        0
+ExeXml 27
+multiplying 100 times, starting at Sat May 21 15:18:13 EDT 2011
+-rw-r--r--  1 webkruncher  webkruncher  128923 May 21 15:18 biggy.xml
+    6202   15202  128923 characters
+Sat May 21 15:18:14 EDT 2011 regergetating
+                  Method     Avg   Calls   Total
+                  Loader  1000ms       1  1000ms
+                  Outter    55ms       1    55ms
+                 NewNode    23us    1300    30ms
+             Item::tic()    16us     200     3ms
+
+Started:  Sat May 21 15:18:14 EDT 2011
+Complete: Sat May 21 15:18:14 EDT 2011
+diff biggy.xml biggy.check.xml
+-rw-r--r--  1 webkruncher  webkruncher  128923 May 21 15:18 biggy.check.xml
+diff count:        0
+ExeXml 27
+multiplying 500 times, starting at Sat May 21 15:18:14 EDT 2011
+-rw-r--r--  1 webkruncher  webkruncher  644872 May 21 15:18 biggy.xml
+   31002   76002  644872 characters
+Sat May 21 15:18:16 EDT 2011 regergetating
+                  Method     Avg   Calls   Total
+                  Loader     2s        1     2s 
+                  Outter   274ms       1   274ms
+             Item::tic()    21us    1000    21ms
+                 NewNode    17us    6500   104ms
+
+Started:  Sat May 21 15:18:16 EDT 2011
+Complete: Sat May 21 15:18:18 EDT 2011
+diff biggy.xml biggy.check.xml
+-rw-r--r--  1 webkruncher  webkruncher  644872 May 21 15:18 biggy.check.xml
+diff count:        0
+ExeXml 27
+multiplying 2000 times, starting at Sat May 21 15:18:18 EDT 2011
+-rw-r--r--  1 webkruncher  webkruncher  2580682 May 21 15:18 biggy.xml
+  124002  304002 2580682 characters
+Sat May 21 15:18:23 EDT 2011 regergetating
+                  Method     Avg   Calls   Total
+                    main     6s        1     6s 
+                  Loader     5s        1     5s 
+                  Outter     1s        1     1s 
+             Item::tic()    25us    4000   100ms
+                 NewNode    17us   26000   458ms
+
+Started:  Sat May 21 15:18:23 EDT 2011
+Complete: Sat May 21 15:18:31 EDT 2011
+diff biggy.xml biggy.check.xml
+-rw-r--r--  1 webkruncher  webkruncher  2580682 May 21 15:18 biggy.check.xml
+diff count:        0
+ExeXml 27
+multiplying 4000 times, starting at Sat May 21 15:18:31 EDT 2011
+-rw-r--r--  1 webkruncher  webkruncher  5162453 May 21 15:18 biggy.xml
+  248002  608002 5162453 characters
+Sat May 21 15:18:41 EDT 2011 regergetating
+                  Method     Avg   Calls   Total
+                  Loader    10s        1    10s 
+             Item::tic()    23us    8000     1s 
+                 NewNode    18us   52000   949ms
+
+Started:  Sat May 21 15:18:41 EDT 2011
+Complete: Sat May 21 15:18:57 EDT 2011
+diff biggy.xml biggy.check.xml
+-rw-r--r--  1 webkruncher  webkruncher  5162453 May 21 15:18 biggy.check.xml
+diff count:        0
+ExeXml 27
+multiplying 6000 times, starting at Sat May 21 15:18:57 EDT 2011
+-rw-r--r--  1 webkruncher  webkruncher  7744254 May 21 15:19 biggy.xml
+  372002  912002 7744254 characters
+Sat May 21 15:19:13 EDT 2011 regergetating
+                  Method     Avg   Calls   Total
+                    main    20s        1    20s 
+                  Loader    14s        1    14s 
+                  Outter     4s        1     4s 
+             Item::tic()    21us   12000   283ms
+                 NewNode    18us   78000     1s 
+
+Started:  Sat May 21 15:19:13 EDT 2011
+Complete: Sat May 21 15:19:36 EDT 2011
+diff biggy.xml biggy.check.xml
+-rw-r--r--  1 webkruncher  webkruncher  7744254 May 21 15:19 biggy.check.xml
+diff count:        0
