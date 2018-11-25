@@ -33,7 +33,7 @@
 	Every node is based on a generic node, and can be customized.
 	The only dependency is C++ / STL.
 	The utility does not transform or validate.  
-	yamlxml is designed to be fully contained in a single header file that should never exceed 200 lines of code.
+	exeyaml is designed to be fully contained in a single header file that should never exceed 200 lines of code.
 */
 
 #ifndef BUILDER_YAML_H
