@@ -13,8 +13,13 @@ typedef char chartype;
 typedef stringstream stringstreamtype;
 #include "exexml"
 #include <iomanip>
-#define _USE_KRUNCH_PROFILER 
-#include <toctic>
+
+
+#include <regex.h>
+#include "tools.h"
+#include "exeyaml.h"
+#include "hypefactory.h"
+
 
 namespace XmlPayload
 {
@@ -25,24 +30,12 @@ namespace XmlPayload
 		virtual XmlNodeBase* NewNode(Xml& _doc,XmlNodeBase* parent,stringtype name) 
 		{ 
 			XmlNodeBase* ret(NULL);
-			tictoc(true,"NewNode","","");
-			if (name=="tick") ret=new tick(_doc,parent,name); 
-			else ret=new Item(_doc,parent,name); 
-			tictoc(false,"NewNode","","");
+			ret=new Item(_doc,parent,name); 
 			return ret;
 		}
 		virtual ostream& operator<<(ostream& o) { XmlNode::operator<<(o); return o;}
 		virtual bool operator()(ostream& o) { return XmlNode::operator()(o); }
 		Item(Xml& _doc,const XmlNodeBase* _parent,stringtype _name) : XmlNode(_doc,_parent,_name) {}
-	private:
-
-		struct tick : XmlNode, timespec
-		{
-			virtual XmlNodeBase* NewNode(Xml& _doc,XmlNodeBase* parent,stringtype name) { return new tick(_doc,parent,name);}
-			virtual ostream& operator<<(ostream& o) { XmlNode::operator<<(o); return o;}
-			virtual bool operator()(ostream&);
-			tick(Xml& _doc,const XmlNodeBase* _parent,stringtype _name) : XmlNode(_doc,_parent,_name) {}
-		};
 	};
 	inline ostream& operator<<(ostream& o,Item& xmlnode){return xmlnode.operator<<(o);}
 
@@ -57,35 +50,12 @@ namespace XmlPayload
 	};
 	inline ostream& operator<<(ostream& o,Payload& xml){return xml.operator<<(o);}
 
-	bool Item::tick::operator()(ostream& o) 
-	{ 
-		tictoc(true,"Item::tic()","","");
-		Payload& doc(static_cast<Payload&>(Document));
-		clock_gettime(CLOCK_MONOTONIC,this);
-		stringstream ss; ss<<tv_sec<<"."<<tv_nsec;
-		if (doc.mode==Payload::Multiply)
-		{
-			textsegments[textsegments.size()]=TextElement(Document,this,"");	// cheat. need a couple dummies to help tabs and endls
-			textsegments[textsegments.size()]=TextElement(Document,this,"\n");	// tbd: update exexml << to deal with this better
-			attributes["when"]=TextElement(Document,this,ss.str());
-			XmlNodeBase* newnode(new Item(Document,this,"SomeStuff"));
-			if (!newnode) throw string("out of memory");
-			appendChild(newnode);
-			XmlNode& nn(static_cast<XmlNode&>(*newnode));
-			nn.textsegments[nn.textsegments.size()]=TextElement(Document,&nn,"What should I put here?");
-			nn.textsegments[nn.textsegments.size()]=TextElement(Document,&nn,"Maybe more samples?");
-			nn.textsegments[nn.textsegments.size()]=TextElement(Document,&nn,"How 'bout some more stuff?");
-		}
-		tictoc(false,"Item::tic()","","");
-		return XmlNode::operator()(o); 
-	}
 } // XmlPayload
 
 
 bool Diagnose(false);
 int main(int argc,char** argv)
 {
-	tictoc(true,"main","","");
 	string mode,bigs;
 	if (argc>1) mode=argv[1];
 	if (argc>2) bigs=argv[2];
@@ -109,9 +79,7 @@ int main(int argc,char** argv)
 				config.Load(c);
 				config.TabLevel(1);
 				XmlFamily::XmlNode& multiples(config);
-				tictoc(true,"multiplicity","","");
 				multiples(cerr);
-				tictoc(false,"multiplicity","","");
 				for (XmlFamily::XmlNodeSet::iterator it=multiples.children.begin();it!=multiples.children.end();it++) cout<<(*(*it))<<endl;
 				cout<<"\t"<<"</sub>"<<endl;	
 			}
@@ -119,22 +87,23 @@ int main(int argc,char** argv)
 		}
 
 
+		if (mode=="-hype") 
+		{
+			Yaml::stream streaminput( cin );
+			HypeFactory::ChainFactory yaml( 2, -1, NULL);
+			yaml << streaminput; 
+			cout << yaml;
+		}
+
 		if (mode=="-run") 
 		{
-			tictoc(true,"Loader","","");
 			XmlPayload::Payload config(XmlPayload::Payload::Run);
 			config.Load(cin);
-			tictoc(false,"Loader","","");
 			XmlFamily::XmlNode& multiples(config);
 			config.TabLevel(0);
 			multiples(cerr);
 			Diagnose=true;
-			{
-				ofstream oo("biggy.check.xml");
-				tictoc(true,"Outter","","");
-				oo<<multiples<<endl;
-				tictoc(false,"Outter","","");
-			}
+			cout<<multiples<<endl;
 		}
 
 	}
@@ -142,9 +111,7 @@ int main(int argc,char** argv)
 	catch(string& s) {except=s;}
 	catch(...) {except="Unknown exception";}
 	if (except.size()) cerr<<except<<endl;
-	tictoc(false,"main","","");
 	ostream& pout((mode=="-run")?cout:cerr);
-	KrunchProfiler::Profile(pout);
 	return 0;
 }
 

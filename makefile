@@ -1,5 +1,5 @@
 
-.include <${scripts}/include.mk>
+#.include <${scripts}/include.mk>
 
 
 generate:  generate.o  $(INCS)
