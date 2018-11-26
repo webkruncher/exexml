@@ -30,6 +30,7 @@ namespace XmlPayload
 		virtual XmlNodeBase* NewNode(Xml& _doc,XmlNodeBase* parent,stringtype name) 
 		{ 
 			XmlNodeBase* ret(NULL);
+			cerr << "\33[33m" << name << "\33[30m" << "|";
 			ret=new Item(_doc,parent,name); 
 			return ret;
 		}
@@ -112,6 +113,7 @@ int main(int argc,char** argv)
 	catch(...) {except="Unknown exception";}
 	if (except.size()) cerr<<except<<endl;
 	ostream& pout((mode=="-run")?cout:cerr);
+	cerr << endl;
 	return 0;
 }
 
