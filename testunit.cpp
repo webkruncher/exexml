@@ -54,6 +54,39 @@ namespace XmlPayload
 
 } // XmlPayload
 
+namespace JsonPayload
+{
+	using namespace JsonFamily;
+	struct Item : JsonNode
+	{
+		friend struct Payload;
+		virtual JsonNodeBase* NewNode(Json& _doc,JsonNodeBase* parent,stringtype name) 
+		{ 
+			JsonNodeBase* ret(NULL);
+			cerr << "\33[33m" << name << "\33[30m" << "|";
+			ret=new Item(_doc,parent,name); 
+			return ret;
+		}
+		virtual ostream& operator<<(ostream& o) { JsonNode::operator<<(o); return o;}
+		virtual bool operator()(ostream& o) { return JsonNode::operator()(o); }
+		Item(Json& _doc,const JsonNodeBase* _parent,stringtype _name) : JsonNode(_doc,_parent,_name) {}
+	};
+	inline ostream& operator<<(ostream& o,Item& jsonnode){return jsonnode.operator<<(o);}
+
+	struct Payload : Json
+	{
+		enum Modes {Multiply=1,Run=2};
+		const Modes mode;
+		Payload(const Modes _mode) : mode(_mode) {}
+		virtual JsonNode* NewNode(Json& _doc,stringtype name) { return new Item(_doc,NULL,name); }
+		ostream& operator<<(ostream& o) { Json::operator<<(o); return o;}
+		operator Item& () { if (!Root) throw string("No root node"); return static_cast<Item&>(*Root); }
+	};
+	inline ostream& operator<<(ostream& o,Payload& Json){return Json.operator<<(o);}
+
+} // JsonPayload
+
+
 
 bool Diagnose(false);
 int main(int argc,char** argv)
@@ -88,6 +121,29 @@ int main(int argc,char** argv)
 			cout<<"</multiplicity>"<<endl;
 		}
 
+		if (mode=="-jsontest")
+		{
+			int t(0);
+			stringstream text;  string b;
+			while (!cin.eof()) {getline(cin,b); text<<b<<endl;}
+			int howbig(100); if (bigs.size()>1) howbig=atoi(&bigs[1]);	
+			cout<<"<multiplicity>"<<endl;
+			for (int big=0;big<howbig;big++)
+			{
+				t++;
+				cout<<"\t"<<"<sub "<<endl<<"\t\ttimes=\""<<t<<"\""<<endl<<"\t>"<<endl;	
+				string c; c=text.str();
+				JsonPayload::Payload config(JsonPayload::Payload::Multiply);
+				config.Load(c);
+				config.TabLevel(1);
+				JsonFamily::JsonNode& multiples(config);
+				multiples(cerr);
+				for (JsonFamily::JsonNodeSet::iterator it=multiples.children.begin();it!=multiples.children.end();it++) cout<<(*(*it))<<endl;
+				cout<<"\t"<<"</sub>"<<endl;	
+			}
+			cout<<"</multiplicity>"<<endl;
+		}
+
 
 		if (mode=="-hype") 
 		{
@@ -97,13 +153,6 @@ int main(int argc,char** argv)
 			cout << yaml;
 		}
 
-		if (mode=="-jsontest") 
-		{
-			//Yaml::stream streaminput( cin );
-			//HypeFactory::ChainFactory yaml( 2, -1, NULL);
-			//yaml << streaminput; 
-			//cout << yaml;
-		}
 
 		if (mode=="-run") 
 		{

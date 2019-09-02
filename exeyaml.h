@@ -38,7 +38,6 @@
 
 #ifndef BUILDER_YAML_H
 #define BUILDER_YAML_H
-
 namespace Yaml
 {
 	struct yamlstring : string

@@ -1,5 +1,5 @@
 /*
-* Copyright (c) Jack M. Thompson WebKruncher.com, exexml.com
+* Copyright (c) Jack M. Thompson WebKruncher.com
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without
@@ -28,7 +28,7 @@
 // JackMThompson.com
 /*
 	ExeJson Jack M. Thompson WebKruncher.com
-	json is designed to read xml into a tight knit C++ hierarchy, and write it back out.
+	exejson is designed to read json into a tight knit C++ hierarchy, and write it back out.
 	Every node is based on a generic node, and can be customized.
 	The only dependency is C++ / STL.
 	The utility does not transform or validate.  
@@ -38,50 +38,50 @@
 #ifndef __EXECUTABLE_JSON__
 #define __EXECUTABLE_JSON__
 
-namespace JsonFamilyUtils {class XmlMapNode; class XmlNodeGuts;}
+namespace JsonFamilyUtils {class JsonMapNode; class JsonNodeGuts;}
 
 namespace JsonFamily
 {
-	class XmlException : public std::exception
+	class JsonException : public std::exception
 	{
-		friend void XmlError(const chartype* a);
-		friend void XmlError(const chartype* a,const chartype* b);
-		XmlException(){}
-		virtual ~XmlException() throw() {}
-		XmlException(chartype* a,chartype* b)  { stringstreamtype ss;ss<<a<<" "<<b; msg=ss.str();}
+		friend void JsonError(const chartype* a);
+		friend void JsonError(const chartype* a,const chartype* b);
+		JsonException(){}
+		virtual ~JsonException() throw() {}
+		JsonException(chartype* a,chartype* b)  { stringstreamtype ss;ss<<a<<" "<<b; msg=ss.str();}
 		public: virtual const chartype* what() const throw() {return msg.c_str();}
 		private: string msg;
 	};
 
-	inline void XmlError(const chartype* a){throw XmlException(const_cast<chartype*>(a),NULL);}
-	inline void XmlError(const chartype* a,const chartype* b) {throw XmlException(const_cast<chartype*>(a),const_cast<chartype*>(b));}
+	inline void JsonError(const chartype* a){throw JsonException(const_cast<chartype*>(a),NULL);}
+	inline void JsonError(const chartype* a,const chartype* b) {throw JsonException(const_cast<chartype*>(a),const_cast<chartype*>(b));}
 	#define whitespaces ((chartype*)" \f\v\r\n\t")
 
-	class XmlNode;class Xml;class XmlNodeBase; class XmlNodeSet; 
-	class TextElement; class XmlAttributes; class TextSegments;
+	class JsonNode;class Json;class JsonNodeBase; class JsonNodeSet; 
+	class TextElement; class JsonAttributes; class TextSegments;
 
-	Xml& DeadDoc();
-	XmlNode& DeadRoot();
+	Json& DeadDoc();
+	JsonNode& DeadRoot();
 	
 	class ElementBase
 	{
-		friend class Xml;
-		friend class JsonFamilyUtils::XmlNodeGuts; 
-		friend class XmlNodeBase;
-		friend class XmlNodeSet;
+		friend class Json;
+		friend class JsonFamilyUtils::JsonNodeGuts; 
+		friend class JsonNodeBase;
+		friend class JsonNodeSet;
 		friend class TextElement;
-		friend class XmlAttributes;
+		friend class JsonAttributes;
 		friend ostream& operator<<(ostream& o,ElementBase& e);
-		explicit ElementBase(Xml& _doc,const XmlNodeBase* _parent) : parent(_parent),Document(_doc) {}
+		explicit ElementBase(Json& _doc,const JsonNodeBase* _parent) : parent(_parent),Document(_doc) {}
 		virtual ~ElementBase() {}
-		const XmlNodeBase* parent;
+		const JsonNodeBase* parent;
 	public:
-		Xml& GetDoc(){return Document;}
-		const XmlNodeBase* Parent() {return (XmlNodeBase*) parent;}
+		Json& GetDoc(){return Document;}
+		const JsonNodeBase* Parent() {return (JsonNodeBase*) parent;}
 		virtual ostream& operator<<(ostream& o) = 0;
 		virtual void operator()(istream& i,ostream& o) {}
 	protected:
-		Xml& Document;
+		Json& Document;
 	};
 	inline ostream& operator<<(ostream& o,ElementBase& e){return e.operator<<(o);}
 
@@ -89,12 +89,12 @@ namespace JsonFamily
 	
 	class TextElement : public ElementBase, public stringtype
 	{
-		friend class JsonFamilyUtils::XmlNodeGuts;
-		friend class XmlAttributes;
+		friend class JsonFamilyUtils::JsonNodeGuts;
+		friend class JsonAttributes;
 		friend class TextSegments;
 	public:
- 		TextElement(Xml& _doc,const XmlNodeBase* _parent) : ElementBase(_doc,_parent)  {}
-		TextElement(Xml& _doc,const XmlNodeBase* _parent,stringtype s) : 
+ 		TextElement(Json& _doc,const JsonNodeBase* _parent) : ElementBase(_doc,_parent)  {}
+		TextElement(Json& _doc,const JsonNodeBase* _parent,stringtype s) : 
 			ElementBase(_doc,_parent),stringtype(s)  {}
 		TextElement(const TextElement& a) : ElementBase(Document,a.parent)	
 			{parent=a.parent;stringtype::operator=(a.c_str());}
@@ -111,7 +111,7 @@ namespace JsonFamily
 				size_t e(find_last_not_of(whitespaces));
 				if (e!=stringtype::npos)
 				{
-					e++; if (e>size()) XmlError("error handling text element");
+					e++; if (e>size()) JsonError("error handling text element");
 					o<<substr(s,e-s);
 				} else {
 					o<<substr(s,size()-s);
@@ -121,7 +121,7 @@ namespace JsonFamily
 				size_t e(find_last_not_of(whitespaces));
 				if (e!=stringtype::npos)
 				{
-					e++; if (e>size()) XmlError("error handling text element");
+					e++; if (e>size()) JsonError("error handling text element");
 					o<<substr(0,e);
 					if (e) o<<endl;
 				} else o<<endl;
@@ -132,10 +132,10 @@ namespace JsonFamily
 	
 	class TextSegments : public map<int,TextElement >
 	{
-		friend class JsonFamilyUtils::XmlNodeGuts; 
+		friend class JsonFamilyUtils::JsonNodeGuts; 
 		friend ostream& operator<<(ostream&,TextSegments&);
 	public:
-		TextSegments(Xml& _doc,const XmlNodeBase* _parent) :  parent(_parent), Document(_doc){}
+		TextSegments(Json& _doc,const JsonNodeBase* _parent) :  parent(_parent), Document(_doc){}
 		TextSegments& operator=(const TextSegments& a)
 			{if (&a!=this) ((map<int,TextElement>&) (*this)) = a; return *this;}
 		virtual ~TextSegments() {clear();}
@@ -143,67 +143,67 @@ namespace JsonFamily
 		{
 			if (find(ndx)==end()) 
 				insert(pair<int,TextElement>(ndx,TextElement(Document,parent)));
-			iterator it=find(ndx); if (it==end()) XmlError("out of memory");
+			iterator it=find(ndx); if (it==end()) JsonError("out of memory");
 			return it->second;
 		}
 		ostream& operator<<(ostream& o) 
 			{for (iterator it=begin();it!=end();it++) o<<it->second;  return o;}
 	private:
-		const XmlNodeBase* parent;
-		Xml& Document;
+		const JsonNodeBase* parent;
+		Json& Document;
 	};
 	inline ostream& operator<<(ostream& o,TextSegments& t){return t.operator<<(o);}
 	
-	class XmlAttributes : public map<stringtype,TextElement> 
+	class JsonAttributes : public map<stringtype,TextElement> 
 	{
 	public:
-		XmlAttributes(Xml& _doc,const XmlNodeBase* _parent) : parent(_parent), Document(_doc){}
-		XmlAttributes& operator=(XmlAttributes& a) 
+		JsonAttributes(Json& _doc,const JsonNodeBase* _parent) : parent(_parent), Document(_doc){}
+		JsonAttributes& operator=(JsonAttributes& a) 
 			{if (&a!=this) ((map<stringtype,TextElement>&) (*this)) = a; return *this;}
-		virtual ~XmlAttributes(){clear();}
+		virtual ~JsonAttributes(){clear();}
 		bool Exists(stringtype what) {return !(find(what)==end());}
 		TextElement& operator[](stringtype what)
 		{
 			if (find(what)==end()) 
 				insert(pair<stringtype,TextElement>(what,TextElement(Document,parent)));
-			iterator it=find(what); if (it==end()) XmlError("out of memory");
+			iterator it=find(what); if (it==end()) JsonError("out of memory");
 			return it->second;
 		}
 	private:
-		const XmlNodeBase* parent;
-		Xml& Document;
+		const JsonNodeBase* parent;
+		Json& Document;
 	};
 	
-	class XmlNodeBase : public ElementBase
+	class JsonNodeBase : public ElementBase
 	{
-		friend class JsonFamilyUtils::XmlNodeGuts;
-		friend class Xml;
-		XmlNodeBase(Xml& _doc,const XmlNodeBase* _p) : ElementBase(_doc,_p) {}
-		XmlNodeBase(Xml& _doc) : ElementBase(_doc,NULL) {}
-		virtual ~XmlNodeBase(){}
-		virtual XmlNodeBase& Copy(const XmlNodeBase& _a) = 0;
+		friend class JsonFamilyUtils::JsonNodeGuts;
+		friend class Json;
+		JsonNodeBase(Json& _doc,const JsonNodeBase* _p) : ElementBase(_doc,_p) {}
+		JsonNodeBase(Json& _doc) : ElementBase(_doc,NULL) {}
+		virtual ~JsonNodeBase(){}
+		virtual JsonNodeBase& Copy(const JsonNodeBase& _a) = 0;
 	public:
-		virtual XmlNodeBase& operator=(const XmlNodeBase& a) {if (&a==this) return *this; clear(); return Copy(a);}
+		virtual JsonNodeBase& operator=(const JsonNodeBase& a) {if (&a==this) return *this; clear(); return Copy(a);}
 		virtual stringtype& Name() = 0;
-		virtual XmlAttributes& Attributes() = 0;
+		virtual JsonAttributes& Attributes() = 0;
 		virtual void clear() = 0;
 		virtual int TabLevel() = 0;
 		virtual int SetTabLevel(int) = 0;
 	protected:
-		virtual  void appendChild(XmlNodeBase*) = 0;
+		virtual  void appendChild(JsonNodeBase*) = 0;
 		virtual ostream& operator<<(ostream& o) = 0;
 		virtual void operator()(istream& ,ostream&) = 0;
 		virtual void ParseAttrs(stringtype& txt) = 0;
-		virtual void Load(stringtype& text,JsonFamilyUtils::XmlMapNode& mn) = 0;
-		virtual JsonFamily::XmlNodeBase* 
-			NewNode(Xml& _doc,XmlNodeBase* parent,stringtype name) = 0;
+		virtual void Load(stringtype& text,JsonFamilyUtils::JsonMapNode& mn) = 0;
+		virtual JsonFamily::JsonNodeBase* 
+			NewNode(Json& _doc,JsonNodeBase* parent,stringtype name) = 0;
 	};
 
-	class XmlNodeSet : public vector<ElementBase*>
+	class JsonNodeSet : public vector<ElementBase*>
 	{
 	public:
-		XmlNodeSet(bool _bRef = true) : bReference(_bRef) {}
-		virtual ~XmlNodeSet() 
+		JsonNodeSet(bool _bRef = true) : bReference(_bRef) {}
+		virtual ~JsonNodeSet() 
 			{if (!bReference)  for (iterator it=begin();it!=end();it++)  if (*it) { delete (*it); *it=NULL; } }
 		void clear() 
 			{if (!bReference)  for (iterator it=begin();it!=end();it++)  if (*it) {delete (*it);  *it=NULL; } vector<ElementBase*>::clear();}
@@ -214,21 +214,21 @@ namespace JsonFamily
 
 namespace JsonFamilyUtils
 {
-	inline void XmlError(const string _a,const string _b)
+	inline void JsonError(const string _a,const string _b)
 	{
 		const char* a=const_cast<chartype*>(_a.c_str()); 
 		const char* b=const_cast<chartype*>(_b.c_str()); 
-		JsonFamily::XmlError(a,b);
+		JsonFamily::JsonError(a,b);
 	}
-	inline void XmlError(const string _a)
+	inline void JsonError(const string _a)
 	{
 		const char* a=const_cast<chartype*>(_a.c_str()); 
 		const char* b=NULL;
-		JsonFamily::XmlError(a,b);
+		JsonFamily::JsonError(a,b);
 	}
 
 
-	class XmlMapNode
+	class JsonMapNode
 	{
 	public:
 		enum TagType
@@ -245,14 +245,8 @@ namespace JsonFamilyUtils
 		#define whitespace_or_end_tag "\n\r\t >"
 		#define endofattribute "\""
 		#define whitespace_or_end_tag_or_slash "\n\r\t />"
-		#define cdatastart "<![CDATA["
-		#define cdataend   "]]>"
-		#define headerstarttag "<?"
-		#define headerendtag   "?>"
-		#define commentstarttag "<!--"
-		#define commentendtag "-->"
 
-		XmlMapNode(size_t p) : 
+		JsonMapNode(size_t p) : 
 			type(unknownTagSymbol), 
 			Mark1(NULL),		// Must always be lessThanSymbol
 			Mark2(NULL),		// May be greaterThanSymbol or endingGreaterThanSymbol
@@ -260,13 +254,13 @@ namespace JsonFamilyUtils
 			Mark4(NULL),		// May be NULL or greaterThanSymbol
 			bDone(false),
 			pos(p),prev(NULL),next(NULL),name("") {}
-		virtual ~XmlMapNode(){}
+		virtual ~JsonMapNode(){}
 		TagType type;
 		// these pointers are not to be deleted by this class - their lifetimes are managed elsewhere
-		XmlMapNode *Mark1,*Mark2,*Mark3,*Mark4;
+		JsonMapNode *Mark1,*Mark2,*Mark3,*Mark4;
 		bool bDone;
 		size_t pos;
-		XmlMapNode *prev,*next;
+		JsonMapNode *prev,*next;
 		stringtype name;
 		static void Rip
 			(stringtype& txt,const char* tokena,const char* tokenb,list<stringtype>& dest)
@@ -287,10 +281,10 @@ namespace JsonFamilyUtils
 		}
 	};
 
-	struct NodeMapBase : public list<XmlMapNode> 
+	struct NodeMapBase : public list<JsonMapNode> 
 	{
 		virtual void excavate(stringtype&,size_t,size_t) = 0; 
-		virtual void GreaterThan(XmlMapNode&,stringtype&,NodeMapBase&) = 0;
+		virtual void GreaterThan(JsonMapNode&,stringtype&,NodeMapBase&) = 0;
 	};
 
 	class NodeMapper : public NodeMapBase
@@ -298,37 +292,37 @@ namespace JsonFamilyUtils
 	public:
 		virtual ~NodeMapper(){clear();}
 		void excavate(stringtype& text,size_t p,size_t pend=0);
-		void Excavate(XmlMapNode& node,stringtype& text,NodeMapBase& xmap);
-			void Relate(XmlMapNode&,stringtype&,NodeMapBase&);
-			void ResolveType(XmlMapNode&,stringtype&,NodeMapBase&);
-			void GreaterThan(XmlMapNode&,stringtype&,NodeMapBase&);
-			void LessThan(XmlMapNode&,stringtype&,NodeMapBase&);
-			void EndingLessThan(XmlMapNode&,stringtype&,NodeMapBase&);
-			void EndingGreaterThan(XmlMapNode&,stringtype&,NodeMapBase&);
-			bool Eat(XmlMapNode&,stringtype&,NodeMapBase&,XmlMapNode&);
+		void Excavate(JsonMapNode& node,stringtype& text,NodeMapBase& xmap);
+			void Relate(JsonMapNode&,stringtype&,NodeMapBase&);
+			void ResolveType(JsonMapNode&,stringtype&,NodeMapBase&);
+			void GreaterThan(JsonMapNode&,stringtype&,NodeMapBase&);
+			void LessThan(JsonMapNode&,stringtype&,NodeMapBase&);
+			void EndingLessThan(JsonMapNode&,stringtype&,NodeMapBase&);
+			void EndingGreaterThan(JsonMapNode&,stringtype&,NodeMapBase&);
+			bool Eat(JsonMapNode&,stringtype&,NodeMapBase&,JsonMapNode&);
 	};
 
 
 	inline ostream& tab(ostream& o){o<<"\t";return o;}
 	
-	class XmlNodeGuts : public JsonFamily::XmlNodeBase
+	class JsonNodeGuts : public JsonFamily::JsonNodeBase
 	{
-		friend class JsonFamily::Xml;
+		friend class JsonFamily::Json;
 	public:
-		XmlNodeGuts(JsonFamily::Xml& _doc,const XmlNodeBase* _parent,stringtype _name) : 
-			XmlNodeBase(_doc,_parent),
+		JsonNodeGuts(JsonFamily::Json& _doc,const JsonNodeBase* _parent,stringtype _name) : 
+			JsonNodeBase(_doc,_parent),
 			__tablevel(0),
 			textsegments(_doc,_parent),
 			name(_name), 
 			children(false),// control lifetimes of children - not references here
 			attributes(_doc,_parent)
 		{ } 
-		virtual ~XmlNodeGuts() {clear();name.clear();textmarkers.clear();}
-		XmlNodeGuts& operator=(const XmlNodeGuts& a) 
+		virtual ~JsonNodeGuts() {clear();name.clear();textmarkers.clear();}
+		JsonNodeGuts& operator=(const JsonNodeGuts& a) 
 		{
 			if (&a==this) return *this; 
 			clear();  
-			return (XmlNodeGuts&)Copy((const XmlNodeBase&)a);
+			return (JsonNodeGuts&)Copy((const JsonNodeBase&)a);
 		}
 		int __tablevel;
 
@@ -337,45 +331,45 @@ namespace JsonFamilyUtils
 
 		JsonFamily::TextSegments textsegments;
 		stringtype name;
-		JsonFamily::XmlNodeSet children;
-		JsonFamily::XmlAttributes attributes;
+		JsonFamily::JsonNodeSet children;
+		JsonFamily::JsonAttributes attributes;
 		virtual stringtype& Name(){return name;}
-		virtual JsonFamily::XmlAttributes& Attributes(){return attributes;}
+		virtual JsonFamily::JsonAttributes& Attributes(){return attributes;}
 		virtual void Load(stringtype& text)
 		{
-			if (!text.size()) XmlError("malformed xml - no text");
-			if (text.find("<")==stringtype::npos) XmlError("malformed xml - no <");
-			if (text.find(">")==stringtype::npos) XmlError("malformed xml - no >");
-			if (text.find("/")==stringtype::npos) XmlError("malformed xml - no /");
+			if (!text.size()) JsonError("malformed Json - no text");
+			if (text.find("<")==stringtype::npos) JsonError("malformed Json - no <");
+			if (text.find(">")==stringtype::npos) JsonError("malformed Json - no >");
+			if (text.find("/")==stringtype::npos) JsonError("malformed Json - no /");
 			JsonFamilyUtils::NodeMapper xmap;
 			xmap.excavate(text,0,text.size());
 			if (xmap.begin()!=xmap.end()) Load(text,*xmap.begin());
 		}
-	        virtual void appendChild(XmlNodeBase* n){children.push_back(n);}
-		XmlNodeGuts& GetParent()
+	        virtual void appendChild(JsonNodeBase* n){children.push_back(n);}
+		JsonNodeGuts& GetParent()
 		{
-			const XmlNodeBase* p=Parent(); 
-			if (!p) XmlError("Can't get a reference to a null parent");
-			const XmlNodeGuts* gp=static_cast<const XmlNodeGuts*>(p);
-			return *const_cast<XmlNodeGuts*>(gp);
+			const JsonNodeBase* p=Parent(); 
+			if (!p) JsonError("Can't get a reference to a null parent");
+			const JsonNodeGuts* gp=static_cast<const JsonNodeGuts*>(p);
+			return *const_cast<JsonNodeGuts*>(gp);
 		}	
 		virtual void clear(){attributes.clear();textsegments.clear();children.clear();name="";}
 	private:
-		virtual XmlNodeBase& Copy(const XmlNodeBase& _a)
+		virtual JsonNodeBase& Copy(const JsonNodeBase& _a)
 		{
-			XmlNodeGuts& a((XmlNodeGuts&)_a);
+			JsonNodeGuts& a((JsonNodeGuts&)_a);
 			name=a.name;
 			__tablevel=a.__tablevel;
 			attributes=a.attributes;
 			textsegments=a.textsegments;
-			JsonFamily::XmlNodeSet& ac=(JsonFamily::XmlNodeSet&)a.children;
+			JsonFamily::JsonNodeSet& ac=(JsonFamily::JsonNodeSet&)a.children;
 
-			for (JsonFamily::XmlNodeSet::iterator it=ac.begin();it!=ac.end();it++)
+			for (JsonFamily::JsonNodeSet::iterator it=ac.begin();it!=ac.end();it++)
 			{
-				XmlNodeBase& that((XmlNodeBase&)**it);
-				JsonFamily::XmlNodeBase* c=(JsonFamily::XmlNodeBase*)
+				JsonNodeBase& that((JsonNodeBase&)**it);
+				JsonFamily::JsonNodeBase* c=(JsonFamily::JsonNodeBase*)
 					that.NewNode(Document,this,"");				
-				if (!c) XmlError("out of memory");
+				if (!c) JsonError("out of memory");
 				c->Copy(that);
 				appendChild(c);
 			}
@@ -388,7 +382,7 @@ namespace JsonFamilyUtils
 
 		virtual void operator()(istream& i,ostream& o) 
 		{
-			for (JsonFamily::XmlNodeSet::iterator 
+			for (JsonFamily::JsonNodeSet::iterator 
 				it=children.begin();it!=children.end();it++)
 			{
 				if (*it) (*it)->operator()(i,o);
@@ -399,7 +393,7 @@ namespace JsonFamilyUtils
 			tabs(0,o); o<<"<"<<name.c_str();
 			{
 				if (attributes.size()) o<<" ";
-				for(JsonFamily::XmlAttributes::iterator it=attributes.begin();
+				for(JsonFamily::JsonAttributes::iterator it=attributes.begin();
 					it!=attributes.end();it++)
 				{
 					o<<endl;
@@ -412,7 +406,7 @@ namespace JsonFamilyUtils
 			{
 				int ndx(0);
 				o<<">";
-				for (JsonFamily::XmlNodeSet::iterator 
+				for (JsonFamily::JsonNodeSet::iterator 
 					it=children.begin();it!=children.end();it++)
 				{
 					if (textsegments.find(ndx)!=textsegments.end()) o<<textsegments[ndx];
@@ -433,21 +427,21 @@ namespace JsonFamilyUtils
 			return o;
 		}
 	private:
-		class _nodemap_ : public map<int, pair<XmlMapNode*,XmlMapNode*> > // could be anonamous 
+		class _nodemap_ : public map<int, pair<JsonMapNode*,JsonMapNode*> > // could be anonamous 
 		{
 			virtual ~_nodemap_(){clear();}
-			friend class XmlNodeGuts;
-			void add(size_t childndx,XmlMapNode& tm,XmlMapNode& mn)
+			friend class JsonNodeGuts;
+			void add(size_t childndx,JsonMapNode& tm,JsonMapNode& mn)
 			{
-				if (find(childndx)!=end())  XmlError("textmarker error");
-				(*this)[childndx]=pair<XmlMapNode*,XmlMapNode*>(&tm,&mn);
+				if (find(childndx)!=end())  JsonError("textmarker error");
+				(*this)[childndx]=pair<JsonMapNode*,JsonMapNode*>(&tm,&mn);
 			}
-			void generate(const XmlNodeGuts* _parent,stringtype& intext,
+			void generate(const JsonNodeGuts* _parent,stringtype& intext,
 				JsonFamily::TextSegments& ts)
 			{
 				for(iterator it=begin();it!=end();it++)
 				{
-					XmlMapNode &a(*it->second.first), &b(*it->second.second);
+					JsonMapNode &a(*it->second.first), &b(*it->second.second);
 					int aa(a.pos+1),bb(b.pos);
 					ts[it->first].assign(intext,aa,bb-aa);
 				}
@@ -487,7 +481,7 @@ namespace JsonFamilyUtils
 				} else {
 					size_t e=txt.find_first_of(whitespace_or_end_tag,m);
 					if (e==stringtype::npos) e=txt.size();
-					if (e<=m) XmlError("Invalid xml - can't parse attributes");
+					if (e<=m) JsonError("Invalid Json - can't parse attributes");
 					stringtype a;
 					a.assign(txt,m,e-m);
 					attributes[a]=JsonFamily::TextElement(Document,this);
@@ -496,55 +490,55 @@ namespace JsonFamilyUtils
 			}
 		}
 		
-		virtual void IdentifyNode(stringtype& intext,JsonFamilyUtils::XmlMapNode& mn)
+		virtual void IdentifyNode(stringtype& intext,JsonFamilyUtils::JsonMapNode& mn)
 		{
 			name=mn.name.c_str();
 			stringtype txt;
 			size_t a=mn.pos+mn.name.size()+1;
-			if (mn.type==JsonFamilyUtils::XmlMapNode::endingLessThanSymbol) a++;
+			if (mn.type==JsonFamilyUtils::JsonMapNode::endingLessThanSymbol) a++;
 			size_t b=mn.Mark2->pos;
-			if (mn.Mark2->type==JsonFamilyUtils::XmlMapNode::endingGreaterThanSymbol) 
+			if (mn.Mark2->type==JsonFamilyUtils::JsonMapNode::endingGreaterThanSymbol) 
 				while(intext[b]!='/') 
 			b--;
 			txt.assign(intext,a,(b-a));
 			ParseAttrs(txt);
 		}
 
-		virtual void Load(stringtype& intext,XmlMapNode& mn)
+		virtual void Load(stringtype& intext,JsonMapNode& mn)
 		{
 			IdentifyNode(intext,mn);
 			if (mn.Mark3)
 			{
-				if (!mn.Mark2) XmlError("Invalid xml - no end of name tag");
-				XmlMapNode* nn=mn.Mark2;
+				if (!mn.Mark2) JsonError("Invalid Json - no end of name tag");
+				JsonMapNode* nn=mn.Mark2;
 				int depth=0;
 				while ( (nn) && (nn!=mn.Mark3) )
 				{
-					JsonFamilyUtils::XmlMapNode& wn=*nn;
+					JsonFamilyUtils::JsonMapNode& wn=*nn;
 					switch(nn->type)
 					{
-					case JsonFamilyUtils::XmlMapNode::unknownTagSymbol:
-					case JsonFamilyUtils::XmlMapNode::lessThanSymbol:
+					case JsonFamilyUtils::JsonMapNode::unknownTagSymbol:
+					case JsonFamilyUtils::JsonMapNode::lessThanSymbol:
 						if (!depth)
 						{
 							if (nn&&nn->prev) textmarkers.add
 								(children.size(),*nn->prev,*nn);
-							XmlNodeBase* nnode = (XmlNodeBase*)
+							JsonNodeBase* nnode = (JsonNodeBase*)
 								NewNode(Document,this,wn.name);
-							if (!nnode) XmlError("Out of memory");
+							if (!nnode) JsonError("Out of memory");
 							appendChild(nnode);
 							nnode->Load(intext,wn);
 						}
 						depth++;
 						break;
-					case JsonFamilyUtils::XmlMapNode::endingLessThanSymbol:
+					case JsonFamilyUtils::JsonMapNode::endingLessThanSymbol:
 						depth--;break;
-					case JsonFamilyUtils::XmlMapNode::endingGreaterThanSymbol:
+					case JsonFamilyUtils::JsonMapNode::endingGreaterThanSymbol:
 						depth--;break;
-					case JsonFamilyUtils::XmlMapNode::greaterThanSymbol:
+					case JsonFamilyUtils::JsonMapNode::greaterThanSymbol:
 						break;
 					}
-					if (depth<0) XmlError("Invalid xml - depth < 0");
+					if (depth<0) JsonError("Invalid Json - depth < 0");
 					nn=nn->next;
 				}
 				if (nn&&nn->prev) textmarkers.add(children.size(),*nn->prev,*nn);
@@ -556,39 +550,39 @@ namespace JsonFamilyUtils
 
 namespace JsonFamily
 {
-	class XmlNode : public JsonFamilyUtils::XmlNodeGuts
+	class JsonNode : public JsonFamilyUtils::JsonNodeGuts
 	{
-		friend class Xml;
-		virtual XmlNodeBase* NewNode(Xml& _doc,XmlNodeBase* parent,stringtype name)
-			{return static_cast<XmlNodeBase*>(new XmlNode(_doc,parent,name));}
+		friend class Json;
+		virtual JsonNodeBase* NewNode(Json& _doc,JsonNodeBase* parent,stringtype name)
+			{return static_cast<JsonNodeBase*>(new JsonNode(_doc,parent,name));}
 
-		friend ostream& operator<<(ostream& o,XmlNode& xmlnode);
+		friend ostream& operator<<(ostream& o,JsonNode& Jsonnode);
 	public:
-		virtual operator Xml* () { return NULL;}
-		virtual XmlNodeBase* Generate(XmlNodeBase* parent,string _name) 
+		virtual operator Json* () { return NULL;}
+		virtual JsonNodeBase* Generate(JsonNodeBase* parent,string _name) 
 		{ 
-			if (!parent) XmlError((char*)"Cannot produce a node with no parent");
-			XmlNodeBase* nn=NewNode(Document,this,_name); 
-			if (!nn) XmlError((char*)"Cannot produce a ",_name.c_str());
+			if (!parent) JsonError((char*)"Cannot produce a node with no parent");
+			JsonNodeBase* nn=NewNode(Document,this,_name); 
+			if (!nn) JsonError((char*)"Cannot produce a ",_name.c_str());
 			appendChild(nn);
 			return nn;
 		}
-		virtual const XmlNode* Root() 
+		virtual const JsonNode* Root() 
 			{if (!Parent()) return this; else return GetParent().Root();}
-		XmlNode& GetParent()
+		JsonNode& GetParent()
 		{
-			const XmlNodeBase* _p=Parent(); 
-			if (!_p) XmlError("Can't get a reference to a null parent");
-			const JsonFamilyUtils::XmlNodeGuts* p=static_cast<const JsonFamilyUtils::XmlNodeGuts*>(_p); 
-			const XmlNode* gp=static_cast<const XmlNode*>(p);
-			return *const_cast<XmlNode*>(gp);
+			const JsonNodeBase* _p=Parent(); 
+			if (!_p) JsonError("Can't get a reference to a null parent");
+			const JsonFamilyUtils::JsonNodeGuts* p=static_cast<const JsonFamilyUtils::JsonNodeGuts*>(_p); 
+			const JsonNode* gp=static_cast<const JsonNode*>(p);
+			return *const_cast<JsonNode*>(gp);
 		}	
 
 		virtual bool operator()() 
 		{
-			for (JsonFamily::XmlNodeSet::iterator it=children.begin();it!=children.end();it++) 
+			for (JsonFamily::JsonNodeSet::iterator it=children.begin();it!=children.end();it++) 
 			{
-				XmlNode& n=static_cast<XmlNode&>(*(*it));
+				JsonNode& n=static_cast<JsonNode&>(*(*it));
 				if (!n()) return false;
 			}
 			return true;
@@ -596,9 +590,9 @@ namespace JsonFamily
 
 		virtual bool operator()(ostream& o) 
 		{
-			for (JsonFamily::XmlNodeSet::iterator it=children.begin();it!=children.end();it++) 
+			for (JsonFamily::JsonNodeSet::iterator it=children.begin();it!=children.end();it++) 
 			{
-				XmlNode& n=static_cast<XmlNode&>(*(*it));
+				JsonNode& n=static_cast<JsonNode&>(*(*it));
 				if (!n(o)) return false;
 			}
 			return true;
@@ -606,9 +600,9 @@ namespace JsonFamily
 
 		virtual bool operator()(stringtype& s) 
 		{
-			for (JsonFamily::XmlNodeSet::iterator it=children.begin();it!=children.end();it++) 
+			for (JsonFamily::JsonNodeSet::iterator it=children.begin();it!=children.end();it++) 
 			{
-				XmlNode& n=static_cast<XmlNode&>(*(*it));
+				JsonNode& n=static_cast<JsonNode&>(*(*it));
 				if (!n(s)) return false;
 			}
 			return true;
@@ -617,57 +611,57 @@ namespace JsonFamily
 
 		virtual bool operator()(int& ndx, stringtype& s) 
 		{
-			for (JsonFamily::XmlNodeSet::iterator it=children.begin();it!=children.end();it++) 
+			for (JsonFamily::JsonNodeSet::iterator it=children.begin();it!=children.end();it++) 
 			{
-				XmlNode& n=static_cast<XmlNode&>(*(*it));
+				JsonNode& n=static_cast<JsonNode&>(*(*it));
 				if (!n(ndx,s)) return false;
 			}
 			return true;
 		}
 
-		virtual bool operator()(XmlNode& x) 
+		virtual bool operator()(JsonNode& x) 
 		{
-			for (JsonFamily::XmlNodeSet::iterator it=children.begin();it!=children.end();it++) 
+			for (JsonFamily::JsonNodeSet::iterator it=children.begin();it!=children.end();it++) 
 			{
-				XmlNode& n=static_cast<XmlNode&>(*(*it));
+				JsonNode& n=static_cast<JsonNode&>(*(*it));
 				if (!n(x)) return false;
 			}
 			return true;
 		}
 
-		virtual ~XmlNode() {}
-		virtual XmlNode& GetNode(string _name)
+		virtual ~JsonNode() {}
+		virtual JsonNode& GetNode(string _name)
 		{
-			for (JsonFamily::XmlNodeSet::iterator it=children.begin();it!=children.end();it++) 
+			for (JsonFamily::JsonNodeSet::iterator it=children.begin();it!=children.end();it++) 
 			{
-				XmlNode& n=static_cast<XmlNode&>(*(*it));
+				JsonNode& n=static_cast<JsonNode&>(*(*it));
 				if (n.name==_name) return n;
 			}
 			stringstreamtype ss; ss<<"Cannot find "<<_name<<" in "<<name<<endl;
-			XmlError((char*)ss.str().c_str());
+			JsonError((char*)ss.str().c_str());
 			return DeadRoot();
 		}
 		
-		virtual XmlNode* FindNode(string _name)
+		virtual JsonNode* FindNode(string _name)
 		{
-			for (JsonFamily::XmlNodeSet::iterator it=children.begin();it!=children.end();it++) 
+			for (JsonFamily::JsonNodeSet::iterator it=children.begin();it!=children.end();it++) 
 			{
-				XmlNode& n=static_cast<XmlNode&>(*(*it));
-				if (n.name==_name) return static_cast<XmlNode*>(*it);
+				JsonNode& n=static_cast<JsonNode&>(*(*it));
+				if (n.name==_name) return static_cast<JsonNode*>(*it);
 			}
 			return NULL;
 		}
 
 		virtual bool Exists(string _name)
 		{
-			for (JsonFamily::XmlNodeSet::iterator it=children.begin();it!=children.end();it++) 
+			for (JsonFamily::JsonNodeSet::iterator it=children.begin();it!=children.end();it++) 
 			{
-				XmlNode& n=static_cast<XmlNode&>(*(*it));
+				JsonNode& n=static_cast<JsonNode&>(*(*it));
 				if (n.name==_name) return true;
 			}
 			return false;
 		}
-		virtual XmlNode& RequireNode(string _name)
+		virtual JsonNode& RequireNode(string _name)
 		{
 			if (!Exists(_name)) Generate(this,_name);
 			return GetNode(_name);
@@ -686,45 +680,45 @@ namespace JsonFamily
 					textsegments[0]=JsonFamily::TextElement(GetDoc(),this,line); 
 			}
 		virtual void operator()(istream& i,ostream& o) 
-			{return JsonFamilyUtils::XmlNodeGuts::operator()(i,o);}
+			{return JsonFamilyUtils::JsonNodeGuts::operator()(i,o);}
 	protected:
 		virtual ostream& operator<<(ostream& o) 
-			{return JsonFamilyUtils::XmlNodeGuts::operator<<(o);}
-		XmlNode(Xml& _doc,const XmlNodeBase* _parent,stringtype _name) : 
-			JsonFamilyUtils::XmlNodeGuts(_doc,_parent,_name) {}
+			{return JsonFamilyUtils::JsonNodeGuts::operator<<(o);}
+		JsonNode(Json& _doc,const JsonNodeBase* _parent,stringtype _name) : 
+			JsonFamilyUtils::JsonNodeGuts(_doc,_parent,_name) {}
 	};
-	inline ostream& operator<<(ostream& o,XmlNode& xmlnode){return xmlnode.operator<<(o);}
-        inline XmlNode& operator<<(XmlNode& x,stringtype s)
+	inline ostream& operator<<(ostream& o,JsonNode& Jsonnode){return Jsonnode.operator<<(o);}
+        inline JsonNode& operator<<(JsonNode& x,stringtype s)
         {
                 x.textsegments[x.textsegments.size()]=JsonFamily::TextElement(x.GetDoc(),&x,s);
                 return x;
         }
-        inline XmlNode& operator<<(XmlNode& x,double n)
+        inline JsonNode& operator<<(JsonNode& x,double n)
         {
 		stringstream ss; ss<<n;
                 x.textsegments[x.textsegments.size()]=JsonFamily::TextElement(x.GetDoc(),&x,ss.str().c_str());
                 return x;
         }
 
-	class Xml 
+	class Json 
 	{
 	public:
-		Xml() : Root(NULL) {}
-		Xml(istream& in) : Root(NULL) {Load(in);}
-		Xml(const JsonFamily::Xml& a) : Root(NULL) {Copy(a);}
-		operator XmlNode& () { if (!Root) XmlError("No root node"); return *Root; }
-		void TabLevel(int tl) { if (!Root) XmlError("No root node"); Root->SetTabLevel(tl);}
-		const Xml& operator=(const Xml& a)
+		Json() : Root(NULL) {}
+		Json(istream& in) : Root(NULL) {Load(in);}
+		Json(const JsonFamily::Json& a) : Root(NULL) {Copy(a);}
+		operator JsonNode& () { if (!Root) JsonError("No root node"); return *Root; }
+		void TabLevel(int tl) { if (!Root) JsonError("No root node"); Root->SetTabLevel(tl);}
+		const Json& operator=(const Json& a)
 		{
 			if (&a==this) return *this; 
 			if (Root) delete Root; Root=NULL;
-			const Xml& ret=Copy(a);
+			const Json& ret=Copy(a);
 			return ret;
 		}
 
-		virtual ~Xml(){if (Root) delete Root; Root=NULL;Headers.clear();Comments.clear();}
+		virtual ~Json(){if (Root) delete Root; Root=NULL;Headers.clear();Comments.clear();}
 		virtual bool operator()() {if (Root) return (*Root)(); return false;}
-		virtual void Load(istream& in,JsonFamily::XmlNode* _root=NULL)
+		virtual void Load(istream& in,JsonFamily::JsonNode* _root=NULL)
 		{
 			if (_root) Root=_root;
 			else 
@@ -732,7 +726,7 @@ namespace JsonFamily
 				if (Root) delete Root;
 				Root = NewNode(*this,"root");
 			}
-			if (!Root) XmlError("out of memory");
+			if (!Root) JsonError("out of memory");
 			stringtype text; stringstreamtype ss;
 			while (!in.eof())
 			{
@@ -741,7 +735,6 @@ namespace JsonFamily
 				ss<<line<<endl;
 			}
 			text=ss.str().c_str();
-			RipHeaders(text);
 			Root->Load(text);
 			text.clear();
 		}
@@ -749,32 +742,30 @@ namespace JsonFamily
 		virtual void Load(char* txt)
 		{
 			Root = NewNode(*this,"root");
-			if (!Root) XmlError("out of memory");
+			if (!Root) JsonError("out of memory");
 			stringtype text(txt);
-			RipHeaders(text);
 			Root->Load(text);
 		}
 
-		virtual void Load(stringtype& text,JsonFamily::XmlNode* _root=NULL)
+		virtual void Load(stringtype& text,JsonFamily::JsonNode* _root=NULL)
 		{
 			if (_root) Root=_root;
 			else Root = NewNode(*this,"root");
-			if (!Root) XmlError("out of memory");
-			RipHeaders(text);
+			if (!Root) JsonError("out of memory");
 			Root->Load(text);
 		}
-		XmlNode *Root;
-		friend ostream& operator<<(ostream& o,Xml& xml);
+		JsonNode *Root;
+		friend ostream& operator<<(ostream& o,Json& Json);
         	list<stringtype> Headers,Comments;
-		virtual XmlNode* NewNode(Xml& _doc,stringtype name)
+		virtual JsonNode* NewNode(Json& _doc,stringtype name)
 		{
-			XmlNode* n = new XmlNode(_doc,NULL,name); 
-			if (!n) XmlError("Can't create node"); 
+			JsonNode* n = new JsonNode(_doc,NULL,name); 
+			if (!n) JsonError("Can't create node"); 
 			return n;
 		}
-		virtual const Xml& Copy(const Xml& a)
+		virtual const Json& Copy(const Json& a)
 		{
-			if (Root) XmlError("Trying to copy xml over xml");
+			if (Root) JsonError("Trying to copy Json over Json");
 			Headers=a.Headers;
 			if (!a.Root) return *this;
 			Root=NewNode(*this,a.Root->name);
@@ -782,10 +773,6 @@ namespace JsonFamily
 			return *this;
 		}
 	private:
-		virtual void RipHeaders(stringtype& text)
-		{
-			JsonFamilyUtils::XmlMapNode::Rip(text,headerstarttag,headerendtag,Headers);
-		}
 		
 	protected:
 		virtual void operator()(istream& i,ostream& o)
@@ -806,112 +793,42 @@ namespace JsonFamily
 			return o;
 		}
 	};
-	inline ostream& operator<<(ostream& o,Xml& xml){return xml.operator<<(o);}
-	inline Xml& DeadDoc()
+	inline ostream& operator<<(ostream& o,Json& Json){return Json.operator<<(o);}
+	inline Json& DeadDoc()
 	{
-		XmlError("Attempting to create a node with no document");
-		static Xml dangerzone_usewithcare_andfixthisup;
+		JsonError("Attempting to create a node with no document");
+		static Json dangerzone_usewithcare_andfixthisup;
 		return dangerzone_usewithcare_andfixthisup;
 	}
-	inline XmlNode& DeadRoot()
+	inline JsonNode& DeadRoot()
 	{
-		XmlError("Attempting to create a node with no document");
-		static Xml dangerzone_usewithcare_andfixthisup;
+		JsonError("Attempting to create a node with no document");
+		static Json dangerzone_usewithcare_andfixthisup;
 		return *dangerzone_usewithcare_andfixthisup.Root;
 	}
-	struct XmlFactory : std::vector<Xml*> { void operator+=(Xml* f){push_back(f);} };
+	struct JsonFactory : std::vector<Json*> { void operator+=(Json* f){push_back(f);} };
 
-	typedef JsonFamily::Xml xmldoc;
-	typedef JsonFamily::XmlNodeBase xmlnodebase;
-	typedef JsonFamily::XmlNode xmlnode;
-	typedef JsonFamily::XmlNodeSet xmlnodeset;
-	typedef list<xmlnodebase*>::iterator xmlit;
-	typedef list<xmlnodebase*>::reverse_iterator xmlrit;
-	#define xmlerror JsonFamily::XmlError
+	typedef JsonFamily::Json Jsondoc;
+	typedef JsonFamily::JsonNodeBase Jsonnodebase;
+	typedef JsonFamily::JsonNode Jsonnode;
+	typedef JsonFamily::JsonNodeSet Jsonnodeset;
+	typedef list<Jsonnodebase*>::iterator Jsonit;
+	typedef list<Jsonnodebase*>::reverse_iterator Jsonrit;
+	#define Jsonerror JsonFamily::JsonError
 } //JsonFamily
 
 namespace JsonFamilyUtils
 {
 
 
-	struct skipper
-	{
-		skipper(stringtype& _payload,string _startmark,string _endmark) 
-			: payload(_payload),startmark(_startmark),endmark(_endmark) {}
-		void operator()()
-		{
-			size_t cd(0);
-			do
-			{
-				cd=payload.find(startmark,cd);
-				if ((cd!=stringtype::npos)&&(cd<payload.size())) {startmarkers.push_back(cd);cd++;}
-			} while (cd!=stringtype::npos);
-			cd=0;
-			do
-			{
-				cd=payload.find(endmark,cd);
-				if ((cd!=stringtype::npos)&&(cd<payload.size())) {endmarkers.push_back(cd);cd++;}
-			} while (cd!=stringtype::npos);
-		}
-		size_t operator()(size_t p)
-		{
-			if (startmarkers.size())
-			{ 
-				if (startmarkers.size()!=endmarkers.size()) XmlError("Out of sync finding markers");
-				if (p>=startmarkers.front()) p=advance();
-			}
-			return p;
-		}
-		private:
-		bool nextIsStart()
-		{
-			if (!endmarkers.size()) return false;
-			if (!startmarkers.size()) return false;
-			return (startmarkers.front()<endmarkers.front()); 
-		}
-		size_t advance()
-		{
-			if (endmarkers.front()<=startmarkers.front()) XmlError("End marker came before start marker");
-			int r(0);
-			size_t p(0);
-			do {
-				p=endmarkers.front();
-				if (nextIsStart())
-				{
-					r++;
-					startmarkers.pop_front();
-				} else {
-					r--;
-					endmarkers.pop_front();
-				}
-			} while (r);
-			return p+endmark.size();
-		}
-		const stringtype& payload;
-		const stringtype startmark;
-		const stringtype endmark;
-		deque<size_t> startmarkers;
-		deque<size_t> endmarkers;
-	};
 
 
 	inline void NodeMapper::excavate(stringtype& text,size_t p,size_t pend)
 	{ 
-		skipper skipcdata(text,cdatastart,cdataend); skipcdata();
-		skipper skipcomments(text,commentstarttag,commentendtag); skipcomments();
 
 		if (!pend) pend=text.size();
 		while ( (p<=pend) && (p!=stringtype::npos) )
 		{
-			while (1)
-			{
-				p=(text.find_first_of("<>",p));
-				if (p==stringtype::npos)  return;
-				size_t c(p);
-				if (p) p=skipcdata(c);
-				if (p==c) if (p) p=skipcomments(c);
-				if (p==c) break;
-			}
 			if (p!=stringtype::npos) 
 			{
 				push_back(p);
@@ -921,11 +838,11 @@ namespace JsonFamilyUtils
 		}
 	}
 
-	inline bool NodeMapper::Eat(XmlMapNode& node,stringtype& text,NodeMapBase& xmap,XmlMapNode& mn)
+	inline bool NodeMapper::Eat(JsonMapNode& node,stringtype& text,NodeMapBase& xmap,JsonMapNode& mn)
 	{
 		if (mn.bDone) return true;
-		if (mn.type!=XmlMapNode::lessThanSymbol) XmlError("Did not get a < in  matching tag"); 
-		if (!(mn.name==node.Mark3->name)) XmlError(node.Mark3->name.c_str(), "Does not match"); 
+		if (mn.type!=JsonMapNode::lessThanSymbol) JsonError("Did not get a < in  matching tag"); 
+		if (!(mn.name==node.Mark3->name)) JsonError(node.Mark3->name.c_str(), "Does not match"); 
 		node.name=mn.name;
 		node.Mark1=&mn;
 		node.Mark2=mn.Mark2;
@@ -939,27 +856,27 @@ namespace JsonFamilyUtils
 	}
 
 
-	inline void NodeMapper::GreaterThan(XmlMapNode& node,stringtype& text,NodeMapBase& xmap)
+	inline void NodeMapper::GreaterThan(JsonMapNode& node,stringtype& text,NodeMapBase& xmap)
 	{
 		NodeMapBase::reverse_iterator relatives(xmap.rbegin());
-		if (&*relatives!=&node) XmlError("this is impossible");
+		if (&*relatives!=&node) JsonError("this is impossible");
 		relatives++;
-		if (relatives==xmap.rend()) XmlError("bad relative ",&text[node.pos]);
-		if ( (!(*relatives).bDone) && ((*relatives).type==XmlMapNode::endingLessThanSymbol) )
+		if (relatives==xmap.rend()) JsonError("bad relative ",&text[node.pos]);
+		if ( (!(*relatives).bDone) && ((*relatives).type==JsonMapNode::endingLessThanSymbol) )
 		{
-			if (xmap.begin()==xmap.end()) XmlError("Cannot parse end tag");
+			if (xmap.begin()==xmap.end()) JsonError("Cannot parse end tag");
 			node.Mark4=&node;
 			(*relatives).Mark4=&node;
 			node.Mark3=&(*relatives);
 			bool searching(true);	
 			while(searching)
 			{
-				relatives++; if (relatives==xmap.rend()) XmlError("bad relative ",&text[node.pos]);
+				relatives++; if (relatives==xmap.rend()) JsonError("bad relative ",&text[node.pos]);
 				searching=Eat(node,text,xmap,*relatives);
 			}
 		} else {
-			if ( ((*relatives).bDone) || ((*relatives).type!=XmlMapNode::lessThanSymbol) ) XmlError("bad relative ",&text[node.pos]);
-			XmlMapNode& mn=*relatives;
+			if ( ((*relatives).bDone) || ((*relatives).type!=JsonMapNode::lessThanSymbol) ) JsonError("bad relative ",&text[node.pos]);
+			JsonMapNode& mn=*relatives;
 			mn.Mark2=&node;
 			node.Mark1=&mn;
 			node.Mark2=&node;
@@ -969,67 +886,67 @@ namespace JsonFamilyUtils
 	}
 
 
-	inline void NodeMapper::Relate(XmlMapNode& node,stringtype& text,NodeMapBase& xmap)
+	inline void NodeMapper::Relate(JsonMapNode& node,stringtype& text,NodeMapBase& xmap)
 	{
 		NodeMapBase::reverse_iterator relatives=xmap.rbegin();
-		if (&*relatives!=&node) XmlError("invalid call to Excavate(...)");
+		if (&*relatives!=&node) JsonError("invalid call to Excavate(...)");
 		relatives++;
 		if (!(relatives==xmap.rend())) 
 		{
-			XmlMapNode& mn=*relatives;
+			JsonMapNode& mn=*relatives;
 			mn.next=&node;
 			node.prev=&mn;
 		}
 	}
 
-	inline void NodeMapper::ResolveType(XmlMapNode& node,stringtype& text,NodeMapBase& xmap)
+	inline void NodeMapper::ResolveType(JsonMapNode& node,stringtype& text,NodeMapBase& xmap)
 	{
 		chartype& chr(text[node.pos]);
 		if (chr=='<') 
 		{
-			node.type=JsonFamilyUtils::XmlMapNode::lessThanSymbol;
+			node.type=JsonFamilyUtils::JsonMapNode::lessThanSymbol;
 			size_t nnw = text.find_first_not_of(whitespace,node.pos+1);
 			chartype& tc=text[nnw];
-			if (tc=='/') node.type=JsonFamilyUtils::XmlMapNode::endingLessThanSymbol;
+			if (tc=='/') node.type=JsonFamilyUtils::JsonMapNode::endingLessThanSymbol;
 		}
 		if (chr=='>')
 		{
-			node.type=JsonFamilyUtils::XmlMapNode::greaterThanSymbol;
-			if (node.pos>1) if (text[node.pos-1]=='/') node.type=JsonFamilyUtils::XmlMapNode::endingGreaterThanSymbol;
+			node.type=JsonFamilyUtils::JsonMapNode::greaterThanSymbol;
+			if (node.pos>1) if (text[node.pos-1]=='/') node.type=JsonFamilyUtils::JsonMapNode::endingGreaterThanSymbol;
 		}
 	}
 
-	inline void NodeMapper::LessThan(XmlMapNode& node,stringtype& text,NodeMapBase& xmap)
+	inline void NodeMapper::LessThan(JsonMapNode& node,stringtype& text,NodeMapBase& xmap)
 	{
-		if ((node.pos+1)>text.size()) XmlError("Invalid xml - node pos > text size on lessThanSymbol");
+		if ((node.pos+1)>text.size()) JsonError("Invalid Json - node pos > text size on lessThanSymbol");
 		size_t soname(text.find_first_not_of(whitespace,node.pos+1));
-		if (soname==stringtype::npos) XmlError("Cannot deduce name for a node ",&text[node.pos]);
-		if (!isalnum(text[soname])) XmlError("Cannot deduce name for a node ",&text[node.pos]);
+		if (soname==stringtype::npos) JsonError("Cannot deduce name for a node ",&text[node.pos]);
+		if (!isalnum(text[soname])) JsonError("Cannot deduce name for a node ",&text[node.pos]);
 		size_t eoname(text.find_first_of(whitespace_or_end_tag,soname+1));
 		node.name.assign(text,soname,eoname-soname);
 		node.Mark1=&node;
 	}
 
-	inline void NodeMapper::EndingLessThan(XmlMapNode& node,stringtype& text,NodeMapBase& xmap)
+	inline void NodeMapper::EndingLessThan(JsonMapNode& node,stringtype& text,NodeMapBase& xmap)
 	{
-		if ((node.pos+1)>text.size()) XmlError("Invalid xml - node pos > text size on endingLessThanSymbol");
+		if ((node.pos+1)>text.size()) JsonError("Invalid Json - node pos > text size on endingLessThanSymbol");
 		size_t soname(text.find_first_not_of(whitespace_or_slash,node.pos+1));
-		if (soname==stringtype::npos) XmlError("Cannot deduce name for a node ",&text[node.pos]);
-		if (!isalnum(text[soname])) XmlError("Cannot deduce name for a node ",&text[node.pos]);
+		if (soname==stringtype::npos) JsonError("Cannot deduce name for a node ",&text[node.pos]);
+		if (!isalnum(text[soname])) JsonError("Cannot deduce name for a node ",&text[node.pos]);
 		size_t eoname(text.find_first_of(whitespace_or_end_tag,soname+1));
 		node.name.assign(text,soname,eoname-soname);
 		node.Mark3=&node;
 	}
 
-	inline void NodeMapper::EndingGreaterThan(XmlMapNode& node,stringtype& text,NodeMapBase& xmap)
+	inline void NodeMapper::EndingGreaterThan(JsonMapNode& node,stringtype& text,NodeMapBase& xmap)
 	{
-		if (xmap.begin()==xmap.end()) XmlError("Cannot parse end tag");
+		if (xmap.begin()==xmap.end()) JsonError("Cannot parse end tag");
 		NodeMapBase::reverse_iterator relatives=xmap.rbegin();
-		if (&*relatives!=&node) XmlError("this is impossible");
+		if (&*relatives!=&node) JsonError("this is impossible");
 		relatives++;
-		if (relatives==xmap.rend()) XmlError("bad relative ",&text[node.pos]);
-		XmlMapNode& mn(*relatives);
-		if (mn.type!=XmlMapNode::lessThanSymbol) XmlError("end tag cannot be matched");
+		if (relatives==xmap.rend()) JsonError("bad relative ",&text[node.pos]);
+		JsonMapNode& mn(*relatives);
+		if (mn.type!=JsonMapNode::lessThanSymbol) JsonError("end tag cannot be matched");
 		mn.Mark2=&node;
 		node.Mark1=&mn;
 		node.Mark2=&node;
@@ -1038,23 +955,23 @@ namespace JsonFamilyUtils
 		mn.bDone=true;
 	}
 
-	inline void NodeMapper::Excavate(XmlMapNode& node,stringtype& text,NodeMapBase& xmap)
+	inline void NodeMapper::Excavate(JsonMapNode& node,stringtype& text,NodeMapBase& xmap)
 	{
 		Relate(node,text,xmap);
 		ResolveType(node,text,xmap);
 		switch(node.type)
 		{
-			case XmlMapNode::lessThanSymbol:		LessThan(node,text,xmap); break;		//		<
-			case XmlMapNode::endingLessThanSymbol:		EndingLessThan(node,text,xmap); break;		//		</
-			case XmlMapNode::greaterThanSymbol:		GreaterThan(node,text,xmap); break;		//		>
-			case XmlMapNode::endingGreaterThanSymbol:	EndingGreaterThan(node,text,xmap); break; 	//		/>
-			default: 					XmlError("unknownTagSymbol");
+			case JsonMapNode::lessThanSymbol:		LessThan(node,text,xmap); break;		//		<
+			case JsonMapNode::endingLessThanSymbol:		EndingLessThan(node,text,xmap); break;		//		</
+			case JsonMapNode::greaterThanSymbol:		GreaterThan(node,text,xmap); break;		//		>
+			case JsonMapNode::endingGreaterThanSymbol:	EndingGreaterThan(node,text,xmap); break; 	//		/>
+			default: 					JsonError("unknownTagSymbol");
 		}
 	}
 } // JsonFamilyUtils
 
 
 #endif //__EXECUTABLE_JSON__
-// ExeXml.com / WebKruncher.com / JackMThompson.com
+// ExeJson.com / WebKruncher.com / JackMThompson.com
 
 
