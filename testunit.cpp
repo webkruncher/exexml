@@ -18,6 +18,7 @@ typedef stringstream stringstreamtype;
 #include <regex.h>
 #include "tools.h"
 #include "exeyaml.h"
+#include "exejson"
 #include "hypefactory.h"
 
 
@@ -94,6 +95,14 @@ int main(int argc,char** argv)
 			HypeFactory::ChainFactory yaml( 2, -1, NULL);
 			yaml << streaminput; 
 			cout << yaml;
+		}
+
+		if (mode=="-jsontest") 
+		{
+			//Yaml::stream streaminput( cin );
+			//HypeFactory::ChainFactory yaml( 2, -1, NULL);
+			//yaml << streaminput; 
+			//cout << yaml;
 		}
 
 		if (mode=="-run") 
