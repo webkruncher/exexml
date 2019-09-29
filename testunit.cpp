@@ -123,25 +123,11 @@ int main(int argc,char** argv)
 
 		if (mode=="-jsontest")
 		{
-			int t(0);
-			stringstream text;  string b;
-			while (!cin.eof()) {getline(cin,b); text<<b<<endl;}
-			int howbig(100); if (bigs.size()>1) howbig=atoi(&bigs[1]);	
-			cout<<"<multiplicity>"<<endl;
-			for (int big=0;big<howbig;big++)
-			{
-				t++;
-				cout<<"\t"<<"<sub "<<endl<<"\t\ttimes=\""<<t<<"\""<<endl<<"\t>"<<endl;	
-				string c; c=text.str();
-				JsonPayload::Payload config(JsonPayload::Payload::Multiply);
-				config.Load(c);
-				config.TabLevel(1);
-				JsonFamily::JsonNode& multiples(config);
-				multiples(cerr);
-				for (JsonFamily::JsonNodeSet::iterator it=multiples.children.begin();it!=multiples.children.end();it++) cout<<(*(*it))<<endl;
-				cout<<"\t"<<"</sub>"<<endl;	
-			}
-			cout<<"</multiplicity>"<<endl;
+			JsonFamily::Json config;
+			stringstream text;  
+			while (!cin.eof()) {string b; getline(cin,b); text<<b<<endl;}
+			config.Load(text);
+			cout<<config;
 		}
 
 

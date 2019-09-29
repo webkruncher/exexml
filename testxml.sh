@@ -12,23 +12,23 @@ fi
 v=$(svn info . | grep Revision | cut -d ' ' -f2)
 echo "ExeXml $v" 
 
-if [ ! -f generate ]; then
+if [ ! -f testunit ]; then
 	make
-	if [ ! -f generate ]; then
-		echo "generate program was not built successfully."
+	if [ ! -f testunit ]; then
+		echo "testunit program was not built successfully."
 		exit 0
 	fi
 fi
 
 
 echo "multiplying ${howmany} times, starting at $(date)" 
-cat myconfig.xml | ./generate -multiply -${howmany} 1> biggy.xml
+cat myconfig.xml | ./testunit -multiply -${howmany} 1> biggy.xml
 when=$(date)
 ls -lt biggy.xml 
 echo "$(cat biggy.xml | wc ) characters" 
 echo "${when} regergetating" 
 
-cat biggy.xml | ./generate -run -0 
+cat biggy.xml | ./testunit -run -0 
 echo "Started:  ${when}" 
 echo "Complete: $(date)" 
 echo "diff biggy.xml biggy.check.xml" 
