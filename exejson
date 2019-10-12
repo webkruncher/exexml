@@ -235,7 +235,9 @@ namespace JsonFamilyUtils
 		{
 			unknownTagSymbol=0,
 			openBrace,			//		{
-			closeBrace			//		}
+			closeBrace,			//		}
+			openBracket,			//		[	
+			closeBracket			//		]	
 		};
 
 		#define whitespace "\n\r\t "
@@ -246,8 +248,8 @@ namespace JsonFamilyUtils
 
 		JsonMapNode(size_t p) : 
 			type(unknownTagSymbol), 
-			Mark1(NULL),		// Must always be openBrace
-			Mark2(NULL),		// closeBrace
+			Mark1(NULL),		// Must always be openBrace or openBracket
+			Mark2(NULL),		// closeBrace or closeBracket
 			bDone(false),
 			pos(p),prev(NULL),next(NULL),name("") {}
 		virtual ~JsonMapNode(){}
@@ -293,11 +295,6 @@ namespace JsonFamilyUtils
 			void ResolveType(JsonMapNode&,stringtype&,NodeMapBase&);
 			void OpenNode(JsonMapNode&,stringtype&,NodeMapBase&);
 			void CloseNode(JsonMapNode&,stringtype&,NodeMapBase&);
-			//void GreaterThan(JsonMapNode&,stringtype&,NodeMapBase&);
-			//void LessThan(JsonMapNode&,stringtype&,NodeMapBase&);
-			//void EndingLessThan(JsonMapNode&,stringtype&,NodeMapBase&);
-			//void EndingGreaterThan(JsonMapNode&,stringtype&,NodeMapBase&);
-			bool Eat(JsonMapNode&,stringtype&,NodeMapBase&,JsonMapNode&);
 	};
 
 
@@ -335,6 +332,7 @@ namespace JsonFamilyUtils
 		virtual JsonFamily::JsonAttributes& Attributes(){return attributes;}
 		virtual void Load(stringtype& text)
 		{
+cerr << "Loading text" << endl;
 			if (!text.size()) JsonError("malformed Json - no text");
 
 			size_t firstnotwhite( text.find_first_not_of( whitespaces ) );
@@ -449,12 +447,14 @@ exit( 0 );
 			friend class JsonNodeGuts;
 			void add(size_t childndx,JsonMapNode& tm,JsonMapNode& mn)
 			{
+cerr << "Adding node map " << endl;
 				if (find(childndx)!=end())  JsonError("textmarker error");
 				(*this)[childndx]=pair<JsonMapNode*,JsonMapNode*>(&tm,&mn);
 			}
 			void generate(const JsonNodeGuts* _parent,stringtype& intext,
 				JsonFamily::TextSegments& ts)
 			{
+cerr << "Generating node map " << endl;
 				for(iterator it=begin();it!=end();it++)
 				{
 					JsonMapNode &a(*it->second.first), &b(*it->second.second);
@@ -484,6 +484,7 @@ exit( 0 );
 
 		virtual void Load(stringtype& intext,JsonMapNode& mn)
 		{
+cerr << "Loader" << endl;
 			IdentifyNode(intext,mn);
 			if (mn.Mark3)
 			{
@@ -800,11 +801,7 @@ namespace JsonFamily
 } //JsonFamily
 
 namespace JsonFamilyUtils
-{
-
-
-
-
+{ 
 	inline void NodeMapper::excavate(stringtype& text,size_t p,size_t pend)
 	{ 
 
@@ -821,124 +818,76 @@ cout << "Excavating: " << p << endl;
 		}
 	}
 
-	inline bool NodeMapper::Eat(JsonMapNode& node,stringtype& text,NodeMapBase& xmap,JsonMapNode& mn)
-	{
-		if (mn.bDone) return true;
-#if 0
-openBrace
-closeBrace
-		if (mn.type!=JsonMapNode::lessThanSymbol) JsonError("Did not get a < in  matching tag"); 
-		if (!(mn.name==node.Mark3->name)) JsonError(node.Mark3->name.c_str(), "Does not match"); 
-		node.name=mn.name;
-		node.Mark1=&mn;
-		node.Mark2=mn.Mark2;
-		mn.Mark3=node.Mark3;
-		mn.Mark4=node.Mark4;
-		node.bDone=true;
-		mn.bDone=true;
-		node.Mark3->bDone=true;
-		node.Mark2->Mark3=node.Mark3;
-#endif
-		return false;
-	}
-
-
-	inline void NodeMapper::OpenNode(JsonMapNode& node,stringtype& text,NodeMapBase& xmap)
-	{
-#if 0
-		NodeMapBase::reverse_iterator relatives(xmap.rbegin());
-		if (&*relatives!=&node) JsonError("this is impossible");
-		relatives++;
-		if (relatives==xmap.rend()) JsonError("bad relative ",&text[node.pos]);
-		if ( (!(*relatives).bDone) && ((*relatives).type==JsonMapNode::endingLessThanSymbol) )
-		{
-			if (xmap.begin()==xmap.end()) JsonError("Cannot parse end tag");
-			node.Mark4=&node;
-			(*relatives).Mark4=&node;
-			node.Mark3=&(*relatives);
-			bool searching(true);	
-			while(searching)
-			{
-				relatives++; if (relatives==xmap.rend()) JsonError("bad relative ",&text[node.pos]);
-				searching=Eat(node,text,xmap,*relatives);
-			}
-		} else {
-			if ( ((*relatives).bDone) || ((*relatives).type!=JsonMapNode::lessThanSymbol) ) JsonError("bad relative ",&text[node.pos]);
-			JsonMapNode& mn=*relatives;
-			mn.Mark2=&node;
-			node.Mark1=&mn;
-			node.Mark2=&node;
-			node.name=mn.name;
-			node.bDone=true;
-		} 
-#endif
-	}
-
-
-	inline void NodeMapper::Relate(JsonMapNode& node,stringtype& text,NodeMapBase& xmap)
-	{
-		NodeMapBase::reverse_iterator relatives=xmap.rbegin();
-		if (&*relatives!=&node) JsonError("invalid call to Excavate(...)");
-		relatives++;
-		if (!(relatives==xmap.rend())) 
-		{
-cerr << "NodeMapper::Relate: Setting relatives" << endl;
-			JsonMapNode& mn=*relatives;
-			mn.next=&node;
-			node.prev=&mn;
-		}
-	}
-
-	inline void NodeMapper::ResolveType(JsonMapNode& node,stringtype& text,NodeMapBase& xmap)
-	{
-		chartype& chr(text[node.pos]);
-
-		if (chr=='{') 
-		{
-			node.type=JsonFamilyUtils::JsonMapNode::openBrace;
-			//size_t nnw = text.find_first_not_of(whitespace,node.pos+1);
-			//chartype& tc=text[nnw];
-			//if (tc=='/') node.type=JsonFamilyUtils::JsonMapNode::endingLessThanSymbol;
-		}
-		if (chr=='}')
-		{
-			node.type=JsonFamilyUtils::JsonMapNode::closeBrace;
-			//if (node.pos>1) if (text[node.pos-1]=='/') node.type=JsonFamilyUtils::JsonMapNode::endingGreaterThanSymbol;
-		}
-
-	}
 
 
 	inline void NodeMapper::CloseNode(JsonMapNode& node,stringtype& text,NodeMapBase& xmap)
 	{
-#if 0
-		if ((node.pos+1)>text.size()) JsonError("Invalid Json - node pos > text size on endingLessThanSymbol");
-		size_t soname(text.find_first_not_of(whitespace_or_slash,node.pos+1));
-		if (soname==stringtype::npos) JsonError("Cannot deduce name for a node ",&text[node.pos]);
-		if (!isalnum(text[soname])) JsonError("Cannot deduce name for a node ",&text[node.pos]);
-		size_t eoname(text.find_first_of(whitespace_or_end_tag,soname+1));
-		node.name.assign(text,soname,eoname-soname);
-		node.Mark3=&node;
-#endif
-	}
-#if 0
-	inline void NodeMapper::EndingGreaterThan(JsonMapNode& node,stringtype& text,NodeMapBase& xmap)
-	{
-		if (xmap.begin()==xmap.end()) JsonError("Cannot parse end tag");
-		NodeMapBase::reverse_iterator relatives=xmap.rbegin();
+		char CloseChar( 0 );
+		switch ( node.type )
+		{
+			case JsonFamilyUtils::JsonMapNode::openBrace : CloseChar = JsonFamilyUtils::JsonMapNode::closeBrace; break;
+			case JsonFamilyUtils::JsonMapNode::openBracket : CloseChar = JsonFamilyUtils::JsonMapNode::closeBracket; break;
+			default: JsonError( "Cannot open node" );
+		}
+		NodeMapBase::reverse_iterator relatives(xmap.rbegin());
 		if (&*relatives!=&node) JsonError("this is impossible");
 		relatives++;
-		if (relatives==xmap.rend()) JsonError("bad relative ",&text[node.pos]);
-		JsonMapNode& mn(*relatives);
-		if (mn.type!=JsonMapNode::lessThanSymbol) JsonError("end tag cannot be matched");
+		if (relatives==xmap.rend()) JsonError("bad relative (1) ",&text[node.pos]);
+
+		if ( CloseChar == '}' )
+			if ( ((*relatives).bDone) || ((*relatives).type!=JsonMapNode::closeBrace) ) JsonError("bad relative (2)",&text[node.pos]);
+		if ( CloseChar == ']' )
+			if ( ((*relatives).bDone) || ((*relatives).type!=JsonMapNode::closeBracket) ) JsonError("bad relative (3)",&text[node.pos]);
+
+		JsonMapNode& mn=*relatives;
 		mn.Mark2=&node;
 		node.Mark1=&mn;
 		node.Mark2=&node;
 		node.name=mn.name;
 		node.bDone=true;
-		mn.bDone=true;
+
 	}
-#endif
+
+
+	inline void NodeMapper::Relate(JsonMapNode& node,stringtype& text,NodeMapBase& xmap)
+	{
+cerr << "Relating node: " << node.pos << endl;
+		NodeMapBase::reverse_iterator relatives=xmap.rbegin();
+		if (&*relatives!=&node) JsonError("invalid call to Excavate(...)");
+		relatives++;
+		if (!(relatives==xmap.rend())) 
+		{
+			JsonMapNode& mn=*relatives;
+			mn.next=&node;
+			node.prev=&mn;
+cerr << "NodeMapper::Relate: Setting relatives " << endl;
+		} else
+cerr << "NodeMapper::Relate: NOT Setting relatives " << endl;
+	}
+
+	inline void NodeMapper::ResolveType(JsonMapNode& node,stringtype& text,NodeMapBase& xmap)
+	{
+		chartype& chr(text[node.pos]); 
+cout << "Resolving " << chr << endl;
+		switch ( chr )
+		{
+			case '{' : node.type=JsonFamilyUtils::JsonMapNode::openBrace; break;
+			case '}' : node.type=JsonFamilyUtils::JsonMapNode::closeBrace; break;
+			case '[' : node.type=JsonFamilyUtils::JsonMapNode::openBracket; break;
+			case ']' : node.type=JsonFamilyUtils::JsonMapNode::closeBracket; break;
+			default: JsonError( "Bad node" );
+		}
+
+	}
+
+
+	inline void NodeMapper::OpenNode(JsonMapNode& node,stringtype& text,NodeMapBase& xmap)
+	{
+		if ((node.pos+1)>text.size()) JsonError("Invalid Json - node pos > text size on end");
+		node.name="NoNameYet";
+		node.Mark2=&node;
+	}
+
 	inline void NodeMapper::Excavate(JsonMapNode& node,stringtype& text,NodeMapBase& xmap)
 	{
 cerr << "Relate" << endl;
@@ -948,8 +897,10 @@ cerr << "ResolveType" << endl;
 cerr << "Switch:" << node.type << endl;
 		switch(node.type)
 		{
-			case JsonMapNode::openBrace:		OpenNode(node,text,xmap); break;		//		<
-			case JsonMapNode::closeBrace:		CloseNode(node,text,xmap); break; 	//		/>
+			case JsonMapNode::openBrace:		OpenNode(node,text,xmap); break;
+			case JsonMapNode::closeBrace:		CloseNode(node,text,xmap); break;
+			case JsonMapNode::openBracket:		OpenNode(node,text,xmap); break;
+			case JsonMapNode::closeBracket:		CloseNode(node,text,xmap); break;
 			default: 					JsonError("unknownTagSymbol");
 		}
 	}
