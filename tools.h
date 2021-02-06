@@ -36,12 +36,13 @@ namespace Tools
         inline ostream& operator<<(ostream& o,const stringvector& m)
                 { return m.operator<<(o); }
 
+
 	inline string trims( string s )
 	{ 
 		const size_t f( s.find_first_not_of( "\t ") );
 		if ( f != string::npos ) s.erase( 0, f );
-		const size_t l( s.find_last_not_of( "\t ") );
-		if ( l != string::npos ) s.erase( l+1, s.size()-(l+1) );
+		size_t l( s.find_last_not_of( "\t ") );
+		if ( l != string::npos ) {l+=1; s.erase( l, s.size() );}
 		return s;
 	}
 

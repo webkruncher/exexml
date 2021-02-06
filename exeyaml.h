@@ -132,7 +132,7 @@ namespace Yaml
         friend ostream& operator<<(ostream&,const yaml&);
         virtual ostream& operator<<(ostream& o) const = 0; 
 		protected:
-		void path( yamlstring& p )
+		void path( yamlstring& p ) const
 		{ 
 			if ( parent ) parent->path( p ); 
 			if ( !empty() ) { p+="/"; p+=c_str(); }
@@ -144,13 +144,21 @@ namespace Yaml
     inline ostream& operator<<(ostream& o,const yaml& m)
             { return m.operator<<(o); }
 
+	inline yamlstring trims( yamlstring& s )
+	{ 
+		const size_t f( s.find_first_not_of( "\t ") );
+		if ( f != string::npos ) s.erase( 0, f );
+		size_t l( s.find_last_not_of( "\t ") );
+		if ( l != string::npos ) {l+=1; s.erase( l, s.size() );}
+		return s;
+	}
 
 
 	inline stream& yaml::operator << ( stream& streaminput )
 	{
 		while ( streaminput )
 		{
-			const yamlstring& line( streaminput ); 
+			yamlstring& line( streaminput ); 
 
 			const size_t hash( line.find( "#" ));
 			const size_t notatab( line.find_first_not_of( " " )); 
@@ -179,6 +187,10 @@ namespace Yaml
 					if ( linetablevel == tablevel ) return streaminput;
 					yaml* y( generate( tabwidth, tablevel+1, line ) );
 					(*y) << streaminput; 
+                    yamlstring& s( *y );
+                    trims( s );
+                    if ( s.empty() ) continue;
+                    if ( s[ s.size()-1 ] == ':' ) s.resize( s.size()-1 );
 					matter.push_back( y );
 				}
 			}
