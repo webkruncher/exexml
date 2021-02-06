@@ -44,6 +44,12 @@ namespace Yaml
 	struct yamlstring : string
 	{
 		yamlstring(){} 
+        yamlstring( const yamlstring& yy) : string( yy ) {}
+        yamlstring& operator=( const yamlstring& yy) 
+        {
+            if ( this != &yy ) assign( yy );
+            return *this;
+        }
 		int ntabs( const int tabwidth) const
 		{
 			int ltl( 0 );
@@ -64,6 +70,12 @@ namespace Yaml
 	{ 
 		enum UsedFlag {used=1, unused, subobj};
 		stream( istream& _in ) : in( _in ), inuse( used ) { }
+        stream( const stream& ss) : in( ss.in ), line( ss.line ), inuse( ss.inuse ) { }
+        stream& operator=( const stream& ss) 
+        {
+            throw string("Don't use assignment operator for stream");
+            return *this;
+        }
 		operator yamlstring& ()
 		{
 			if ( unused == inuse ) return line;
@@ -81,11 +93,26 @@ namespace Yaml
 		UsedFlag inuse;
 	};
 
+	struct yaml;
+    struct Matter : vector<yaml*> 
+    {
+		Matter() {}
+    private:
+        Matter( const Matter& yy) : vector<yaml*>( yy ) { throw string("Don't copy matter"); }
+        Matter& operator=( const Matter& ss) { throw string("Dont use assignment operator for Matter"); return *this; }
+    };
+
 	struct yaml : yamlstring
 	{
 		yaml( int _tabwidth=2, int _tablevel=-1, yaml* _parent=NULL )
 			: tabwidth( _tabwidth ), tablevel( _tablevel ), 
 				parent( _parent ) {}
+        yaml( const yaml& yy) : yamlstring( yy ) { }
+        yaml& operator=( const yaml& ss) 
+        {
+            throw string("Dont use assignment operator for yaml");
+            return *this;
+        }
 
 		virtual ~yaml()
 		{
@@ -94,15 +121,16 @@ namespace Yaml
 		virtual yaml* generate( int _tabwidth, int _tablevel, yamlstring line, yaml* _parent=NULL) = 0;
 
 		virtual stream& operator << ( stream& streaminput );
+        operator const Matter& () const {return matter;}
 
 		private:
 		int tabwidth,tablevel;
 		protected:
-		vector<yaml*> matter;
+        Matter matter;
 
 
-                friend ostream& operator<<(ostream&,const yaml&);
-                virtual ostream& operator<<(ostream& o) const;
+        friend ostream& operator<<(ostream&,const yaml&);
+        virtual ostream& operator<<(ostream& o) const;
 		protected:
 		void path( yamlstring& p )
 		{ 
@@ -144,10 +172,6 @@ namespace Yaml
 				o << (*that) << endl;
 			found++;
 		}
-			
-	
-
-
 		return o;
 	}
 
@@ -166,7 +190,7 @@ namespace Yaml
 			if ( ( trimmed.empty() ) || ( trimmed.find("---") == 0 ) || ( comment ) )
 			{
 				if ( ! streaminput ) if ( trimmed.empty() ) return streaminput;
-				antimatter[ matter.size() ].push_back( line );
+				antimatter[ antimatter.size() ].push_back( line );
 				streaminput=stream::used; 
 				continue;
 			} 
@@ -190,9 +214,6 @@ namespace Yaml
 		}
 		return streaminput;
 	}
-
-
-
 } // Yaml
 
 #endif //BUILDER_YAML_H
