@@ -132,7 +132,7 @@ namespace Yaml
         friend ostream& operator<<(ostream&,const yaml&);
         virtual ostream& operator<<(ostream& o) const = 0; 
 		protected:
-		void path( yamlstring& p )
+		void path( yamlstring& p ) const
 		{ 
 			if ( parent ) parent->path( p ); 
 			if ( !empty() ) { p+="/"; p+=c_str(); }
