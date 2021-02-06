@@ -162,7 +162,7 @@ namespace Yaml
 
 			const size_t hash( line.find( "#" ));
 			const size_t notatab( line.find_first_not_of( " " )); 
-			const string trimmed( trims( line ) ); 
+			const string trimmed( Tools::trims( line ) ); 
 			const bool comment( ( hash != string::npos ) && ( notatab == hash ) );
 			const int linetablevel ( line.ntabs( tabwidth));
 
@@ -187,10 +187,11 @@ namespace Yaml
 					if ( linetablevel == tablevel ) return streaminput;
 					yaml* y( generate( tabwidth, tablevel+1, line ) );
 					(*y) << streaminput; 
+
                     yamlstring& s( *y );
                     trims( s );
-                    if ( s.empty() ) continue;
-                    if ( s[ s.size()-1 ] == ':' ) s.resize( s.size()-1 );
+                    if ( ! s.empty() ) 
+                        if ( s[ s.size()-1 ] == ':' ) s.resize( s.size()-1 );
 					matter.push_back( y );
 				}
 			}
