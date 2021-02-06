@@ -159,7 +159,7 @@ namespace Yaml
 
 			const size_t hash( line.find( "#" ));
 			const size_t notatab( line.find_first_not_of( " " )); 
-			const string trimmed( Tools::trims( line ) ); 
+			const string trimmed( trims( line ) ); 
 			const bool comment( ( hash != string::npos ) && ( notatab == hash ) );
 			const int linetablevel ( line.ntabs( tabwidth));
 

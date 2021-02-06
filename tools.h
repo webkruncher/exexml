@@ -4,7 +4,7 @@
 #define TOOLS_H
 namespace Tools
 {
-	string tabs( int j, int tw ) { stringstream ss; for ( int i=0;i<(j*tw);i++) ss<<" "; return ss.str().c_str(); }
+	inline string tabs( int j, int tw ) { stringstream ss; for ( int i=0;i<(j*tw);i++) ss<<" "; return ss.str().c_str(); }
         struct stringvector : vector<string>
         {
 
