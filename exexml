@@ -97,12 +97,11 @@ namespace XmlFamily
  		TextElement(Xml& _doc,const XmlNodeBase* _parent) : ElementBase(_doc,_parent)  {}
 		TextElement(Xml& _doc,const XmlNodeBase* _parent,stringtype s) : 
 			ElementBase(_doc,_parent),stringtype(s)  {}
-		TextElement(const TextElement& a) : ElementBase(Document,a.parent)	
-			{parent=a.parent;stringtype::operator=(a.c_str());}
+		//TextElement(const TextElement& a) : ElementBase(Document,a.parent)	{parent=a.parent;stringtype::operator=(a.c_str());}
 		TextElement& operator=(const TextElement& a)	
 			{ if (&a!=this) {parent=a.parent;stringtype::operator=(a.c_str());}return *this; }
 		virtual ~TextElement(){clear();}
-		operator stringtype& () {stringtype& s=(*this); return s;}
+		//operator stringtype& () {stringtype& s=(*this); return s;}
 	protected:
 		virtual ostream& operator<<(ostream& o) 
 		{
