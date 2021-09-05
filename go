@@ -1,42 +1,28 @@
 
-rm big*
+OStag=`uname -a | cut -d ' ' -f1`
+[ ${OStag} == "Linux" ] && export OS=LINUX
+[ ${OStag} == "OpenBSD" ] && export OS=UNIX
 
-if [ -z ${1} ]; then
-	howmany=3
-else
-	howmany=${1}
+
+if [ "${1}" == "rebuild" ]; then
+	sudo rm -rf ../src.build
+	pushd ~/informationkruncher/src
+	sudo rm -rf ../src.build
+	./go
+	sudo ./go install
+	popd
+	./go
+	sudo pkill webkruncher
+	sudo ./go install
+	sudo webkruncher ${2-}
 fi
 
 
+echo -ne "\033[32mBuilding WebKruncher for ${OS}\033[0m\n"
+mkdir -p ../src.build
+cmake  -S . -B ../src.build/  
+cmake  --build ../src.build/ 
+[ $? != 0 ] && exit -1
 
-v=$(svn info . | grep Revision | cut -d ' ' -f2)
-echo "ExeXml $v" 
-
-if [ ! -f generate ]; then
-	make
-	if [ ! -f generate ]; then
-		echo "generate program was not built successfully."
-		exit 0
-	fi
-fi
-
-
-echo "multiplying ${howmany} times, starting at $(date)" 
-cat myconfig.xml | ./generate -multiply -${howmany} 1> biggy.xml
-when=$(date)
-ls -lt biggy.xml 
-echo "$(cat biggy.xml | wc ) characters" 
-echo "${when} regergetating" 
-
-cat biggy.xml | ./generate -run -0 
-echo "Started:  ${when}" 
-echo "Complete: $(date)" 
-echo "diff biggy.xml biggy.check.xml" 
-ls -lt biggy.check.xml 
-diffs=$(diff biggy.xml biggy.check.xml | wc -l)
-echo "diff count: ${diffs}" 
-if [ $diffs -ne 0 ]; then
-	diff biggy.xml biggy.check.xml 
-fi	
-
-
+[ "${1}" == "install" ] &&  cmake --install ../src.build
+exit 0
