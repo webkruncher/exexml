@@ -38,11 +38,15 @@
 
 #ifndef __EXECUTABLE_XML__
 #define __EXECUTABLE_XML__
+#include <list>
 
 namespace XmlFamilyUtils {class XmlMapNode; class XmlNodeGuts;}
 
 namespace XmlFamily
 {
+	#define chartype char
+	#define stringtype string
+	#define stringstreamtype stringstream
 	class XmlException : public std::exception
 	{
 		friend void XmlError(const chartype* a);
@@ -269,7 +273,7 @@ namespace XmlFamilyUtils
 		XmlMapNode *prev,*next;
 		stringtype name;
 		static void Rip
-			(stringtype& txt,const char* tokena,const char* tokenb,list<stringtype>& dest)
+			(stringtype& txt,const char* tokena,const char* tokenb,std::list<stringtype>& dest)
 		{
 			size_t start,first(stringtype::npos),last(stringtype::npos),end(0);
 			while(1)
@@ -287,7 +291,7 @@ namespace XmlFamilyUtils
 		}
 	};
 
-	struct NodeMapBase : public list<XmlMapNode> 
+	struct NodeMapBase : public std::list<XmlMapNode> 
 	{
 		virtual void excavate(stringtype&,size_t,size_t) = 0; 
 		virtual void GreaterThan(XmlMapNode&,stringtype&,NodeMapBase&) = 0;
@@ -765,7 +769,7 @@ namespace XmlFamily
 		}
 		XmlNode *Root;
 		friend ostream& operator<<(ostream& o,Xml& xml);
-        	list<stringtype> Headers,Comments;
+        	std::list<stringtype> Headers,Comments;
 		virtual XmlNode* NewNode(Xml& _doc,stringtype name)
 		{
 			XmlNode* n = new XmlNode(_doc,NULL,name); 
@@ -799,7 +803,7 @@ namespace XmlFamily
 		{
 			if (Root) 
 			{
-				for (list<string>::iterator it=Headers.begin();it!=Headers.end();it++)
+				for (std::list<string>::iterator it=Headers.begin();it!=Headers.end();it++)
 					o<<(*it)<<endl;
 				o<<(*Root); 
 			}
@@ -825,8 +829,8 @@ namespace XmlFamily
 	typedef XmlFamily::XmlNodeBase xmlnodebase;
 	typedef XmlFamily::XmlNode xmlnode;
 	typedef XmlFamily::XmlNodeSet xmlnodeset;
-	typedef list<xmlnodebase*>::iterator xmlit;
-	typedef list<xmlnodebase*>::reverse_iterator xmlrit;
+	typedef std::list<xmlnodebase*>::iterator xmlit;
+	typedef std::list<xmlnodebase*>::reverse_iterator xmlrit;
 	#define xmlerror XmlFamily::XmlError
 } //XmlFamily
 
