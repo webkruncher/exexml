@@ -76,19 +76,19 @@ namespace XmlFamily
 		friend class XmlNodeSet;
 		friend class TextElement;
 		friend class XmlAttributes;
-		friend ostream& operator<<(ostream& o,ElementBase& e);
+		friend ostream& operator<<(ostream& o,const ElementBase& e);
 		explicit ElementBase(Xml& _doc,const XmlNodeBase* _parent) : parent(_parent),Document(_doc) {}
 		virtual ~ElementBase() {}
 		const XmlNodeBase* parent;
 	public:
 		Xml& GetDoc(){return Document;}
-		const XmlNodeBase* Parent() {return (XmlNodeBase*) parent;}
-		virtual ostream& operator<<(ostream& o) = 0;
+		const XmlNodeBase* Parent() const {return (XmlNodeBase*) parent;}
+		virtual ostream& operator<<(ostream& o) const = 0;
 		virtual void operator()(istream& i,ostream& o) {}
 	protected:
 		Xml& Document;
 	};
-	inline ostream& operator<<(ostream& o,ElementBase& e){return e.operator<<(o);}
+	inline ostream& operator<<(ostream& o,const ElementBase& e){return e.operator<<(o);}
 
 
 	
@@ -107,7 +107,7 @@ namespace XmlFamily
 		virtual ~TextElement(){clear();}
 		//operator stringtype& () {stringtype& s=(*this); return s;}
 	protected:
-		virtual ostream& operator<<(ostream& o) 
+		virtual ostream& operator<<(ostream& o) const
 		{
 			size_t s(find_first_not_of(whitespaces));
 			if (s!=stringtype::npos)
@@ -137,7 +137,7 @@ namespace XmlFamily
 	class TextSegments : public map<int,TextElement >
 	{
 		friend class XmlFamilyUtils::XmlNodeGuts; 
-		friend ostream& operator<<(ostream&,TextSegments&);
+		friend ostream& operator<<(ostream&,const TextSegments&);
 	public:
 		TextSegments(Xml& _doc,const XmlNodeBase* _parent) :  parent(_parent), Document(_doc){}
 		TextSegments& operator=(const TextSegments& a)
@@ -150,13 +150,13 @@ namespace XmlFamily
 			iterator it=find(ndx); if (it==end()) XmlError("out of memory");
 			return it->second;
 		}
-		ostream& operator<<(ostream& o) 
-			{for (iterator it=begin();it!=end();it++) o<<it->second;  return o;}
+		ostream& operator<<(ostream& o)  const
+			{for (const_iterator it=begin();it!=end();it++) o<<it->second;  return o;}
 	private:
 		const XmlNodeBase* parent;
 		Xml& Document;
 	};
-	inline ostream& operator<<(ostream& o,TextSegments& t){return t.operator<<(o);}
+	inline ostream& operator<<(ostream& o,const TextSegments& t){return t.operator<<(o);}
 	
 	class XmlAttributes : public map<stringtype,TextElement> 
 	{
@@ -191,16 +191,16 @@ namespace XmlFamily
 		virtual stringtype& Name() = 0;
 		virtual XmlAttributes& Attributes() = 0;
 		virtual void clear() = 0;
-		virtual int TabLevel() = 0;
-		virtual int SetTabLevel(int) = 0;
+		virtual int TabLevel() const = 0;
+		virtual int SetTabLevel(int) const = 0;
 	protected:
 		virtual  void appendChild(XmlNodeBase*) = 0;
-		virtual ostream& operator<<(ostream& o) = 0;
+		virtual ostream& operator<<(ostream& o) const = 0;
 		virtual void operator()(istream& ,ostream&) = 0;
 		virtual void ParseAttrs(stringtype& txt) = 0;
 		virtual void Load(stringtype& text,XmlFamilyUtils::XmlMapNode& mn) = 0;
 		virtual XmlFamily::XmlNodeBase* 
-			NewNode(Xml& _doc,XmlNodeBase* parent,stringtype name) = 0;
+			NewNode(Xml& _doc,XmlNodeBase* parent,stringtype name) const = 0;
 	};
 
 	class XmlNodeSet : public vector<ElementBase*>
@@ -334,10 +334,10 @@ namespace XmlFamilyUtils
 			clear();  
 			return (XmlNodeGuts&)Copy((const XmlNodeBase&)a);
 		}
-		int __tablevel;
+		mutable int __tablevel;
 
-		virtual int TabLevel(){if (Parent()) return (GetParent().TabLevel()+1); else return __tablevel;}
-		virtual int SetTabLevel(int tl){__tablevel=tl;return tl;}
+		virtual int TabLevel() const {if (Parent()) return (GetParent().TabLevel()+1); else return __tablevel;}
+		virtual int SetTabLevel(int tl) const {__tablevel=tl;return tl;}
 
 		XmlFamily::TextSegments textsegments;
 		stringtype name;
@@ -356,7 +356,7 @@ namespace XmlFamilyUtils
 			if (xmap.begin()!=xmap.end()) Load(text,*xmap.begin());
 		}
 	        virtual void appendChild(XmlNodeBase* n){children.push_back(n);}
-		XmlNodeGuts& GetParent()
+		XmlNodeGuts& GetParent() const
 		{
 			const XmlNodeBase* p=Parent(); 
 			if (!p) XmlError("Can't get a reference to a null parent");
@@ -386,7 +386,7 @@ namespace XmlFamilyUtils
 			return *this;
 		}
 	protected:
-		virtual void tabs(int tl,ostream& o) { for (int i=0;i<(TabLevel()+tl);i++) o<<tab;}
+		virtual void tabs(int tl,ostream& o) const { for (int i=0;i<(TabLevel()+tl);i++) o<<tab;}
 
 
 
@@ -398,12 +398,12 @@ namespace XmlFamilyUtils
 				if (*it) (*it)->operator()(i,o);
 			}
 		}
-		virtual ostream& operator<<(ostream& o)
+		virtual ostream& operator<<(ostream& o) const
 		{
 			tabs(0,o); o<<"<"<<name.c_str();
 			{
 				if (attributes.size()) o<<" ";
-				for(XmlFamily::XmlAttributes::iterator it=attributes.begin();
+				for(XmlFamily::XmlAttributes::const_iterator it=attributes.begin();
 					it!=attributes.end();it++)
 				{
 					o<<endl;
@@ -416,14 +416,14 @@ namespace XmlFamilyUtils
 			{
 				int ndx(0);
 				o<<">";
-				for (XmlFamily::XmlNodeSet::iterator 
+				for (XmlFamily::XmlNodeSet::const_iterator 
 					it=children.begin();it!=children.end();it++)
 				{
-					if (textsegments.find(ndx)!=textsegments.end()) o<<textsegments[ndx];
+					if (textsegments.find(ndx)!=textsegments.end()) o<<textsegments.at(ndx);
 					if (*it) (*it)->operator<<(o);
 					ndx++;
 				}
-				while (textsegments.find(ndx)!=textsegments.end()) {o<<textsegments[ndx]; ndx++;}
+				while (textsegments.find(ndx)!=textsegments.end()) {o<<textsegments.at(ndx); ndx++;}
 				tabs(0,o); 
 				o<<"</"<<name.c_str()<<">";
 			} else {
@@ -563,10 +563,10 @@ namespace XmlFamily
 	class XmlNode : public XmlFamilyUtils::XmlNodeGuts
 	{
 		friend class Xml;
-		virtual XmlNodeBase* NewNode(Xml& _doc,XmlNodeBase* parent,stringtype name)
+		virtual XmlNodeBase* NewNode(Xml& _doc,XmlNodeBase* parent,stringtype name) const
 			{return static_cast<XmlNodeBase*>(new XmlNode(_doc,parent,name));}
 
-		friend ostream& operator<<(ostream& o,XmlNode& xmlnode);
+		friend ostream& operator<<(ostream& o,const XmlNode& xmlnode);
 	public:
 		virtual operator Xml* () { return NULL;}
 		virtual XmlNodeBase* Generate(XmlNodeBase* parent,string _name) 
@@ -577,9 +577,9 @@ namespace XmlFamily
 			appendChild(nn);
 			return nn;
 		}
-		virtual const XmlNode* Root() 
+		virtual const XmlNode* Root() const
 			{if (!Parent()) return this; else return GetParent().Root();}
-		XmlNode& GetParent()
+		XmlNode& GetParent() const
 		{
 			const XmlNodeBase* _p=Parent(); 
 			if (!_p) XmlError("Can't get a reference to a null parent");
@@ -692,12 +692,12 @@ namespace XmlFamily
 		virtual void operator()(istream& i,ostream& o) 
 			{return XmlFamilyUtils::XmlNodeGuts::operator()(i,o);}
 	protected:
-		virtual ostream& operator<<(ostream& o) 
+		virtual ostream& operator<<(ostream& o)  const
 			{return XmlFamilyUtils::XmlNodeGuts::operator<<(o);}
 		XmlNode(Xml& _doc,const XmlNodeBase* _parent,stringtype _name) : 
 			XmlFamilyUtils::XmlNodeGuts(_doc,_parent,_name) {}
 	};
-	inline ostream& operator<<(ostream& o,XmlNode& xmlnode){return xmlnode.operator<<(o);}
+	inline ostream& operator<<(ostream& o,const XmlNode& xmlnode){return xmlnode.operator<<(o);}
         inline XmlNode& operator<<(XmlNode& x,stringtype s)
         {
                 x.textsegments[x.textsegments.size()]=XmlFamily::TextElement(x.GetDoc(),&x,s);
@@ -717,7 +717,7 @@ namespace XmlFamily
 		Xml(istream& in) : Root(NULL) {Load(in);}
 		Xml(const XmlFamily::Xml& a) : Root(NULL) {Copy(a);}
 		operator XmlNode& () { if (!Root) XmlError("No root node"); return *Root; }
-		void TabLevel(int tl) { if (!Root) XmlError("No root node"); Root->SetTabLevel(tl);}
+		//void TabLevel(int tl) const { if (!Root) XmlError("No root node"); Root->SetTabLevel(tl);}
 		const Xml& operator=(const Xml& a)
 		{
 			if (&a==this) return *this; 
@@ -768,9 +768,9 @@ namespace XmlFamily
 			Root->Load(text);
 		}
 		XmlNode *Root;
-		friend ostream& operator<<(ostream& o,Xml& xml);
+		friend ostream& operator<<(ostream& o,const Xml& xml);
         	std::list<stringtype> Headers,Comments;
-		virtual XmlNode* NewNode(Xml& _doc,stringtype name)
+		virtual XmlNode* NewNode(Xml& _doc,stringtype name) const
 		{
 			XmlNode* n = new XmlNode(_doc,NULL,name); 
 			if (!n) XmlError("Can't create node"); 
@@ -799,18 +799,18 @@ namespace XmlFamily
 				(*Root)(i,o); 
 			}
 		}
-		virtual ostream& operator<<(ostream& o)
+		virtual ostream& operator<<(ostream& o) const
 		{
 			if (Root) 
 			{
-				for (std::list<string>::iterator it=Headers.begin();it!=Headers.end();it++)
+				for (std::list<string>::const_iterator it=Headers.begin();it!=Headers.end();it++)
 					o<<(*it)<<endl;
 				o<<(*Root); 
 			}
 			return o;
 		}
 	};
-	inline ostream& operator<<(ostream& o,Xml& xml){return xml.operator<<(o);}
+	inline ostream& operator<<(ostream& o,const Xml& xml) {return xml.operator<<(o);}
 	inline Xml& DeadDoc()
 	{
 		XmlError("Attempting to create a node with no document");
