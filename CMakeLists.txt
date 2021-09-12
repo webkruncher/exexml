@@ -60,5 +60,6 @@ ENDIF()
 
 
 add_subdirectory( include )
+add_subdirectory( ut )
 
 
