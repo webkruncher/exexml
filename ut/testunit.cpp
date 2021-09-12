@@ -59,7 +59,7 @@ int main(int argc,char** argv)
 	if (argc>2) bigs=argv[2];
 	if (mode=="-run") Diagnose=true;
 	string except;
-cerr << "Mode:" << mode << endl;
+	cerr << "Mode:" << mode << endl;
 	try
 	{
 		if (mode=="-multiply")
@@ -97,6 +97,14 @@ cerr << "Mode:" << mode << endl;
 			cout<<multiples<<endl;
 		}
 
+		if (mode=="-check") 
+		{
+			XmlPayload::Payload config(XmlPayload::Payload::Run);
+			config.Load(cin);
+			XmlFamily::XmlNode& multiples(config);
+			cout<<config<<endl;
+			cout << "Check success" << endl;
+		}
 	}
 	catch(std::exception& e) {except=e.what();}
 	catch(string& s) {except=s;}
