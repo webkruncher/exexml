@@ -105,7 +105,7 @@ namespace XmlFamily
 		TextElement& operator=(const TextElement& a)	
 			{ if (&a!=this) {parent=a.parent;stringtype::operator=(a.c_str());}return *this; }
 		virtual ~TextElement(){clear();}
-		//operator stringtype& () {stringtype& s=(*this); return s;}
+		operator stringtype& () {stringtype& s=(*this); return s;}
 	protected:
 		virtual ostream& operator<<(ostream& o) const
 		{

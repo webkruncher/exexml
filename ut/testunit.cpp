@@ -11,14 +11,11 @@ using namespace std;
 typedef string stringtype;
 typedef char chartype;
 typedef stringstream stringstreamtype;
-#include "exexml"
+#include <exexml.h>
 #include <iomanip>
 
 
 #include <regex.h>
-#include "tools.h"
-#include "exeyaml.h"
-#include "hypefactory.h"
 
 
 namespace XmlPayload
@@ -62,6 +59,7 @@ int main(int argc,char** argv)
 	if (argc>2) bigs=argv[2];
 	if (mode=="-run") Diagnose=true;
 	string except;
+cerr << "Mode:" << mode << endl;
 	try
 	{
 		if (mode=="-multiply")
@@ -78,7 +76,7 @@ int main(int argc,char** argv)
 				string c; c=text.str();
 				XmlPayload::Payload config(XmlPayload::Payload::Multiply);
 				config.Load(c);
-				config.TabLevel(1);
+				//config.TabLevel(1);
 				XmlFamily::XmlNode& multiples(config);
 				multiples(cerr);
 				for (XmlFamily::XmlNodeSet::iterator it=multiples.children.begin();it!=multiples.children.end();it++) cout<<(*(*it))<<endl;
@@ -88,20 +86,12 @@ int main(int argc,char** argv)
 		}
 
 
-		if (mode=="-hype") 
-		{
-			Yaml::stream streaminput( cin );
-			HypeFactory::ChainFactory yaml( 2, -1, NULL);
-			yaml << streaminput; 
-			cout << yaml;
-		}
-
 		if (mode=="-run") 
 		{
 			XmlPayload::Payload config(XmlPayload::Payload::Run);
 			config.Load(cin);
 			XmlFamily::XmlNode& multiples(config);
-			config.TabLevel(0);
+			//config.TabLevel(0);
 			multiples(cerr);
 			Diagnose=true;
 			cout<<multiples<<endl;
