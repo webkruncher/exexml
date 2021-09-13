@@ -833,6 +833,27 @@ namespace XmlFamily
 	typedef std::list<xmlnodebase*>::iterator xmlit;
 	typedef std::list<xmlnodebase*>::reverse_iterator xmlrit;
 	#define xmlerror XmlFamily::XmlError
+
+
+	struct NodeMap : map< string, vector< XmlNodeBase* > >
+	{
+		void operator()( string name, XmlNodeBase* item )
+		{
+			iterator it( find( name ) );
+			if ( it == end() ) 
+			{
+				vector<XmlNodeBase*> blank;
+				insert( pair<string, vector< XmlNodeBase*> >( name, blank ) );
+			} 
+			iterator tit( find( name ) );
+			if ( tit == end() )  throw name;
+			tit->second.push_back( item );
+		}
+	};
+
+
+
+
 } //XmlFamily
 
 namespace XmlFamilyUtils
