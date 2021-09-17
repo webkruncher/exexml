@@ -8,10 +8,10 @@ if [ "${1}" == "rebuild" ]; then
 	sudo rm -rf ../src.build
 	pushd ~/Info/informationkruncher/src
 	sudo rm -rf ../src.build
-	sudo ./go install
+	sudo ./go -install
 	popd
 	./go
-	sudo ./go install
+	sudo ./go -install
 fi
 
 
@@ -27,5 +27,5 @@ if [ "${1}" == "-test" ]; then
 fi
 
 
-[ "${1}" == "install" ] &&  cmake --install ../src.build
+[ "${1}" == "-install" ] &&  cmake --install ../src.build
 exit 0

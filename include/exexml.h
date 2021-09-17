@@ -1077,6 +1077,18 @@ namespace XmlFamilyUtils
 			default: 					XmlError("unknownTagSymbol");
 		}
 	}
+
+	inline string StripCData( const string text )
+	{
+		const size_t socd( text.find( cdatastart  ) );
+		if ( socd == string::npos ) return text;
+		const size_t sotxt( socd + strlen( cdatastart ) );
+		const size_t eocd( text.find( cdataend, sotxt  ) );
+		if ( eocd == string::npos ) return text;
+		return text.substr( sotxt, eocd-sotxt );
+	}
+
+
 } // XmlFamilyUtils
 
 
