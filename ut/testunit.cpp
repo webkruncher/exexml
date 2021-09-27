@@ -7,15 +7,16 @@
 #include <iostream>
 #include <fstream>
 #include <deque>
+#include <regex.h>
 using namespace std;
+#include "tools.h"
 typedef string stringtype;
 typedef char chartype;
 typedef stringstream stringstreamtype;
 #include <exexml.h>
+#include <exeyaml.h>
 #include <iomanip>
-
-
-#include <regex.h>
+#include <hypefactory.h>
 
 
 namespace XmlPayload
@@ -49,6 +50,8 @@ namespace XmlPayload
 	inline ostream& operator<<(ostream& o,Payload& xml){return xml.operator<<(o);}
 
 } // XmlPayload
+
+
 
 
 bool Diagnose(false);
@@ -104,6 +107,16 @@ int main(int argc,char** argv)
 			XmlFamily::XmlNode& multiples(config);
 			cout<<config<<endl;
 			cout << "Check success" << endl;
+		}
+
+
+		if ( mode=="-yamlin" )
+		{
+			Yaml::stream streaminput( cin );
+			HypeFactory::ChainFactory yaml( 2, -1, NULL);
+			Yaml::yaml& y( yaml );
+			y << streaminput; 
+			cout << yaml;
 		}
 	}
 	catch(std::exception& e) {except=e.what();}

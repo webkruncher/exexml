@@ -123,7 +123,6 @@ namespace Yaml
 		virtual stream& operator << ( stream& streaminput );
 		operator const Matter& () const {return matter;}
 
-		private:
 		int tabwidth,tablevel;
 		protected:
 		Matter matter;
@@ -200,41 +199,40 @@ namespace Yaml
 	}
 
 
-
-} // Yaml
-
-#endif //BUILDER_YAML_H
-
-#if 0
-// Example ostream operation
-inline ostream& yaml::operator<<(ostream& o) const 
-{
-	map<int,vector<yamlstring> >::const_iterator found( antimatter.begin() );
-	//if ( ! empty() ) o << c_str() << endl;
-
-	int j( 0 );
-	for (vector<yaml*>::const_iterator it=matter.begin();it!=matter.end();j++,it++) 
+	inline ostream& yaml::operator<<(ostream& o) const 
 	{
-		const yaml& y( **it );
-		map<int,vector<yamlstring> >::const_iterator search( antimatter.find(j) );
-		if ( search != antimatter.end() ) 
+		map<int,vector<yamlstring> >::const_iterator found( antimatter.begin() );
+		//if ( ! empty() ) o << c_str() << endl;
+
+		int j( 0 );
+		for (vector<yaml*>::const_iterator it=matter.begin();it!=matter.end();j++,it++) 
 		{
-			found=search;
+			const yaml& y( **it );
+			map<int,vector<yamlstring> >::const_iterator search( antimatter.find(j) );
+			if ( search != antimatter.end() ) 
+			{
+				found=search;
+				const vector<yamlstring>& y( found->second );
+				for ( vector<yamlstring>::const_iterator that=y.begin();that!=y.end();that++) 
+					o << (*that) << endl;
+				found++;
+			}
+			o << y ;
+		} 
+
+		while ( found != antimatter.end() )
+		{
 			const vector<yamlstring>& y( found->second );
 			for ( vector<yamlstring>::const_iterator that=y.begin();that!=y.end();that++) 
 				o << (*that) << endl;
 			found++;
 		}
-		o << y ;
-	} 
-
-	while ( found != antimatter.end() )
-	{
-		const vector<yamlstring>& y( found->second );
-		for ( vector<yamlstring>::const_iterator that=y.begin();that!=y.end();that++) 
-			o << (*that) << endl;
-		found++;
+		return o;
 	}
-	return o;
-}
-#endif
+
+
+
+} // Yaml
+
+#endif //BUILDER_YAML_H
+
