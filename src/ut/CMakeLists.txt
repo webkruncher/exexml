@@ -14,6 +14,7 @@ target_include_directories(
     exeut
 	    PRIVATE
 		${INCLUDE_PATHS}
+		../include/
 		$<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}>
 		$<INSTALL_INTERFACE:include>
 )
