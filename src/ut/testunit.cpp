@@ -15,7 +15,6 @@ typedef char chartype;
 typedef stringstream stringstreamtype;
 #include <exexml.h>
 #include <exeyaml.h>
-#include <exejson.h>
 #include <iomanip>
 #include <hypefactory.h>
 
