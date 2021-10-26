@@ -15,6 +15,7 @@ typedef char chartype;
 typedef stringstream stringstreamtype;
 #include <exexml.h>
 #include <exeyaml.h>
+#include <exejson.h>
 #include <iomanip>
 #include <hypefactory.h>
 
@@ -104,7 +105,7 @@ int main(int argc,char** argv)
 		{
 			XmlPayload::Payload config(XmlPayload::Payload::Run);
 			config.Load(cin);
-			XmlFamily::XmlNode& multiples(config);
+			//XmlFamily::XmlNode& multiples(config);
 			cout<<config<<endl;
 			cout << "Check success" << endl;
 		}
@@ -123,7 +124,7 @@ int main(int argc,char** argv)
 	catch(string& s) {except=s;}
 	catch(...) {except="Unknown exception";}
 	if (except.size()) cerr<<except<<endl;
-	ostream& pout((mode=="-run")?cout:cerr);
+	//ostream& pout((mode=="-run")?cout:cerr);
 	cerr << endl;
 	return 0;
 }

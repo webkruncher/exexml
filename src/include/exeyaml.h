@@ -54,7 +54,7 @@ namespace Yaml
 		{
 			int ltl( 0 );
 			while ( 
-					( ltl < size() ) && 
+					( (size_t) ltl < size() ) && 
 					(
 					 ( ( (*this)[ ltl ] == ' '  ) ) || 	
 					 ( (*this)[ ltl ] == '-' ) 

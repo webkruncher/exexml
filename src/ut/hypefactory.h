@@ -24,8 +24,7 @@ namespace HypeFactory
 	struct ChainFactory : Yaml::yaml
 	{
 		ChainFactory( int _tabwidth=2, int _tablevel=-1, yaml* _parent=NULL)
-			: msprgx( "MSPDir" ),
-				Yaml::yaml( _tabwidth , _tablevel, _parent) {}
+			: Yaml::yaml( _tabwidth , _tablevel, _parent), msprgx( "MSPDir" ) {}
 		virtual yaml* generate( int _tabwidth, int _tablevel,  yamlstring line, yaml* _parent=NULL );
 		virtual ostream& operator<<(ostream& o) const ;
 		Tools::Matcher msprgx;

@@ -31,13 +31,30 @@
 
 #ifndef BUILDER_JSON_H
 #define BUILDER_JSON_H
+#include <map>
+#include <queue>
 
-namespace Json
+namespace ExeJson
 {
+	struct JsonToken
+	{
+	};
 
+	struct Excavator : map<int,JsonToken>
+	{
+		queue<char> recent;
+	};
 
+	struct JsonNode 
+	{
+		
+	};
 
-} // Json
+	struct Json
+	{
+	};
+
+} // ExeJson
 
 #endif //BUILDER_JSON_H
 
