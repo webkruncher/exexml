@@ -4,6 +4,16 @@ set(CMAKE_CXX_FLAGS "  -pthread " )
 
 get_filename_component(INCLUDES_PATH ../include/ REALPATH) 
 
+set(INCLUDE_PATHS)
+IncludeProjects(
+	krunchercore/src/include
+)
+set(LIBRARY_PATHS)
+set(LIBRARIES)
+IncludeLibraryPaths(
+	krunchercore
+)
+
 add_executable(
 	exeut
 		testunit.cpp

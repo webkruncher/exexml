@@ -15,6 +15,7 @@ typedef char chartype;
 typedef stringstream stringstreamtype;
 #include <exexml.h>
 #include <exeyaml.h>
+#include <exejson.h>
 #include <iomanip>
 #include <hypefactory.h>
 
@@ -117,6 +118,19 @@ int main(int argc,char** argv)
 			Yaml::yaml& y( yaml );
 			y << streaminput; 
 			cout << yaml;
+		}
+
+		if ( mode=="-jsonin" )
+		{
+			ExeJson::Json json;
+			stringstream ss;
+			while ( ! cin.eof() )
+			{
+				string s;
+				getline( cin, s );
+				ss << s << endl;
+			}
+			json+=ss.str();
 		}
 	}
 	catch(std::exception& e) {except=e.what();}

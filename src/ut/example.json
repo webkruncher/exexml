@@ -1,0 +1,15 @@
+{
+        "id": "noidea",
+        "name": "notreal",
+        "values": [
+                {
+                        "key": "somewhere in \"nowhwere\"",
+                        "value": "http://someurl:3000",
+                }
+        ],
+        "scope": "scoper",
+        "tf": true,
+        "integer": 1,
+        "float": 1.1
+}
+

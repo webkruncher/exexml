@@ -23,7 +23,15 @@ cmake  --build ../src.build/
 
 if [ "${1}" == "-test" ]; then
 	shift
-	cat ut/myconfig.xml | ../src.build/ut/exeut ${1}
+	if [ -z ${1} ]; then
+		cat ut/myconfig.xml | ../src.build/ut/exeut -run
+		cat ut/example.yaml | ../src.build/ut/exeut -yamlin
+		cat ut/example.json | ../src.build/ut/exeut -json
+	else
+		if [ "${1}" == "json" ]; then
+			cat ut/example.json | ../src.build/ut/exeut -jsonin
+		fi
+	fi
 fi
 
 
