@@ -112,7 +112,7 @@ namespace ExeJson
 	{
 		NodeBase() : level( 0 ) {}
 		NodeBase( const int _level ) : level( _level ) {}
-		virtual void operator()( QueString&, const JsonToken& ); 
+		virtual bool operator()( QueString&, const JsonToken& ); 
 		protected:
 		const int level;
 	};
@@ -122,15 +122,16 @@ namespace ExeJson
 		Node() : NodeBase( 0 ) {}
 		Node( const int _level ) : NodeBase( _level ) {}
 		~Node() { for ( iterator it=begin();it!=end();it++) delete *it; }
-		virtual void operator()( QueString& e, const JsonToken& c );
+		virtual bool operator()( QueString& e, const JsonToken& c );
 	};
 
 
-	inline void NodeBase::operator()( QueString& txt, const JsonToken& c )
+	inline bool NodeBase::operator()( QueString& txt, const JsonToken& c )
 	{
 		const TokenType tokentype( c );
 		string s(c);
 		cerr << s;
+		return true;
 	}
 
 
@@ -168,7 +169,7 @@ namespace ExeJson
 
 
 
-	inline void Node::operator()( QueString& txt, const JsonToken& c )
+	inline bool Node::operator()( QueString& txt, const JsonToken& c )
 	{
 		const TokenType tokentype( c );
 		//string s(c);
@@ -181,7 +182,7 @@ namespace ExeJson
 				push_back( new Object( level+1 ) );
 				txt.pop();
 				Excavator excavate( *back(), txt );
-				!!excavate;
+				if ( !excavate ) return false;
 			}
 			case ObjectClose: 
 			{
@@ -190,7 +191,7 @@ namespace ExeJson
 					cerr << level << ">" << ";" << endl;
 					txt.pop();
 				}
-				return;
+				return true;
 			}
 			case ListOpen:
 			{
@@ -198,7 +199,7 @@ namespace ExeJson
 				push_back( new List( level+1 ) );
 				txt.pop();
 				Excavator excavate( *back(), txt );
-				!!excavate;
+				if ( !excavate ) return false;
 			}
 			case ListClose: 
 			{
@@ -207,10 +208,11 @@ namespace ExeJson
 					cerr << level << "|" << ";";
 					txt.pop();
 				}
-				return;
+				return true;
 			}
 			default: NodeBase::operator()( txt, c );
 		}
+		return false;
 	}
 
 	struct Json
