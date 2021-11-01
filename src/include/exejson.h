@@ -38,16 +38,23 @@ using namespace KruncherTools;
 
 struct CBug : ofstream
 {
-	CBug() : ofstream( "/dev/null" ) {}
+	CBug() : ofstream( "/dev/stderr" ) {}
 } cbug;
 
 namespace ExeJson
 {
 	enum TokenType { None, Coma, Coln, Special, Character, ObjectOpen, ObjectClose, ListOpen, ListClose };
+	struct Markers : pair<size_t,size_t>
+	{
+		typedef pair<size_t,size_t> mtype;
+		Markers( const size_t _first, const size_t _second ) : mtype( _first, _second ) {}
+	};
+
+	struct QueString;
 	struct JsonToken
 	{
-		JsonToken( ) : tokentype( None ), c( 0 ) {}
-		JsonToken( TokenType _t, char _c ) : tokentype( _t ), c( _c ) {}
+		JsonToken( ) : pos( 0 ), tokentype( None ), c( 0 ) {}
+		JsonToken( const size_t _pos, TokenType _t, char _c ) : pos( _pos ), tokentype( _t ), c( _c ) {}
 		operator const char () { return c; }
 		void morph( const TokenType _t, const char _c ) const
 		{
@@ -60,35 +67,39 @@ namespace ExeJson
 			stringstream ss;
 			switch ( tokentype )
 			{
-				case Coma: ss << green << c << normal; break;
-				case Coln: ss << red << c << normal; break;
-				case ListOpen: ss << bold << c << normal; break;
-				case ListClose: ss << ulin << c << normal; break;
-				case ObjectOpen: ss << rvid << bold << c << normal; break;
-				case ObjectClose: ss << rvid << ulin << c << normal; break;
-				case Special: ss << yellow << c << normal; break;
-				default: ss << c;
+				case Coma: ss << green << pos << "#" << c << normal; break;
+				case Coln: ss << red << pos << "#" << c << normal; break;
+				case ListOpen: ss << bold << pos << "#" << c << normal; break;
+				case ListClose: ss << ulin << pos << "#" << c << normal; break;
+				case ObjectOpen: ss << rvid << bold << pos << "#" << c << normal; break;
+				case ObjectClose: ss << rvid << ulin << pos << "#" << c << normal; break;
+				case Special: ss << yellow << pos << "#" << c << normal; break;
+				default: ss << pos << "#" << c;
 			}
 			return ss.str();
 		}
 		private:
+		const size_t pos;
 		mutable TokenType tokentype;
 		mutable char c;
 	};
 
 	struct QueString : queue< JsonToken >
 	{
+		QueString() = delete;
+		QueString( const int _much ) : much( _much ) {}
 		void operator()( const char c )
 		{
+			much++;
 			if ( empty() )
 			{
 				if ( c == '{' ) 
 				{
-					JsonToken jc( ObjectOpen, c );
+					JsonToken jc( much, ObjectOpen, c );
 					push(jc);
 				} else {
-					JsonToken jc( Character, c );
-					push(jc);
+					//JsonToken jc( much, Character, c );
+					//push(jc);
 				}
 				return;
 			}
@@ -99,18 +110,21 @@ namespace ExeJson
 			} else {
 				switch ( c )
 				{
-					case ',': { JsonToken jc( Coma, c ); push( jc ); break; }
-					case ':': { JsonToken jc( Coln, c ); push( jc ); break; }
-					case '{': { JsonToken jc( ObjectOpen, c ); push( jc ); break; }
-					case '}': { JsonToken jc( ObjectClose, c ); push( jc ); break; }
-					case '[': { JsonToken jc( ListOpen, c ); push( jc ); break; }
-					case ']': { JsonToken jc( ListClose, c ); push( jc ); break; }
-					default: { JsonToken jc( Character, c ); push( jc ); }
+					case ',': { JsonToken jc( much, Coma, c ); push( jc ); break; }
+					case ':': { JsonToken jc( much, Coln, c ); push( jc ); break; }
+					case '{': { JsonToken jc( much, ObjectOpen, c ); push( jc ); break; }
+					case '}': { JsonToken jc( much, ObjectClose, c ); push( jc ); break; }
+					case '[': { JsonToken jc( much, ListOpen, c ); push( jc ); break; }
+					case ']': { JsonToken jc( much, ListClose, c ); push( jc ); break; }
+					//default: { JsonToken jc( much, Character, c ); push( jc ); }
 				}
 			}	
 		}
-
+		private:
+		int much;
 	};
+
+
 
 	struct Excavator;
 	struct NodeBase : vector< NodeBase* >
@@ -149,7 +163,7 @@ namespace ExeJson
 	{
 		Object() : Node( 0 ) {}
 		Object( const int _level ) : Node( _level ) {}
-		virtual operator bool () {return false;}
+		virtual operator bool () {return true;}
 	};
 
 	struct List : Node
@@ -188,7 +202,7 @@ namespace ExeJson
 		{
 			case ObjectOpen:
 			{
-				cbug << endl << "<" << level+1 <<";";
+				//cbug << endl << "<" << level+1 <<";";
 				push_back( new Object( level+1 ) );
 				txt.pop();
 				Excavator excavate( *back(), txt );
@@ -198,14 +212,14 @@ namespace ExeJson
 			{
 				if ( ! txt.empty() ) 
 				{
-					cbug << level << ">" << ";" << endl;
+					//cbug << level << ">" << ";" << endl;
 					txt.pop();
 				}
 				return true;
 			}
 			case ListOpen:
 			{
-				cbug << "|" << level+1 <<";";
+				//cbug << "|" << level+1 <<";";
 				push_back( new List( level+1 ) );
 				txt.pop();
 				Excavator excavate( *back(), txt );
@@ -215,7 +229,7 @@ namespace ExeJson
 			{
 				if ( ! txt.empty() ) 
 				{
-					cbug << level << "|" << ";";
+					//cbug << level << "|" << ";";
 					txt.pop();
 				}
 				return true;
@@ -229,11 +243,11 @@ namespace ExeJson
 	{
 		bool operator+=( const string& txt )
 		{
-			QueString text;
+			QueString text( 0 );
 			for ( string::const_iterator it=txt.begin();it!=txt.end();it++) 
 				text( *it );
 			Excavator excavator( root, text );
-			if ( !excavator ) return false;
+			if ( ! excavator ) return false;
 			return true;
 		}
 		private:

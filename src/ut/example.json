@@ -11,5 +11,13 @@
         "tf": true,
         "integer": 1,
         "float": 1.1
+        "other": [
+                {
+                        "key": "somewhere in \"nowhwere\"",
+                        "value": "http://someurl:3000",
+			[]
+                }
+        ],
+	"ender" : "the end"
 }
 
