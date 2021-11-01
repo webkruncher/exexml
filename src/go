@@ -29,8 +29,12 @@ if [ "${1}" == "-test" ]; then
 		cat ut/example.json | ../src.build/ut/exeut -json
 	else
 		if [ "${1}" == "json" ]; then
-			cat ut/example.json | ../src.build/ut/exeut -jsonin
-			#cat ut/ticker.json | ../src.build/ut/exeut -jsonin
+			shift
+			if [ "${1}" == "ticker" ]; then
+				cat ut/ticker.json | ../src.build/ut/exeut -jsonin
+			else
+				cat ut/example.json | ../src.build/ut/exeut -jsonin
+			fi
 		fi
 	fi
 fi
