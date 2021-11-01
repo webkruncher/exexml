@@ -176,26 +176,26 @@ namespace ExeJson
 
 	struct Excavator 
 	{
-		Excavator( NodeBase& _node, QueString& _text ) : node( _node ), text( _text ) {}
-		void operator()( char c ) { text( c ); }
+		Excavator( NodeBase& _node, QueString& _qtext ) : node( _node ), qtext( _qtext ) {}
+		void operator()( char c ) { qtext( c ); }
 		operator bool ()
 		{
-			while ( ! text.empty() )
+			while ( ! qtext.empty() )
 			{
-				const JsonToken c( text.front() );
-				if ( ! node( text, c ) ) return false;
-				if ( ! text.empty() ) text.pop();
+				const JsonToken c( qtext.front() );
+				if ( ! node( qtext, c ) ) return false;
+				if ( ! qtext.empty() ) qtext.pop();
 			}
 			return node;
 		}
 		private:
 		NodeBase& node;
-		QueString& text;
+		QueString& qtext;
 	};
 
 
 
-	inline bool Node::operator()( QueString& txt, const JsonToken& c )
+	inline bool Node::operator()( QueString& qtext, const JsonToken& c )
 	{
 		const TokenType tokentype( c );
 		switch ( tokentype )
@@ -204,16 +204,16 @@ namespace ExeJson
 			{
 				//cbug << endl << "<" << level+1 <<";";
 				push_back( new Object( level+1 ) );
-				txt.pop();
-				Excavator excavate( *back(), txt );
+				qtext.pop();
+				Excavator excavate( *back(), qtext );
 				if ( ! excavate ) return false;
 			}
 			case ObjectClose: 
 			{
-				if ( ! txt.empty() ) 
+				if ( ! qtext.empty() ) 
 				{
 					//cbug << level << ">" << ";" << endl;
-					txt.pop();
+					qtext.pop();
 				}
 				return true;
 			}
@@ -221,20 +221,20 @@ namespace ExeJson
 			{
 				//cbug << "|" << level+1 <<";";
 				push_back( new List( level+1 ) );
-				txt.pop();
-				Excavator excavate( *back(), txt );
+				qtext.pop();
+				Excavator excavate( *back(), qtext );
 				if ( ! excavate ) return false;
 			}
 			case ListClose: 
 			{
-				if ( ! txt.empty() ) 
+				if ( ! qtext.empty() ) 
 				{
 					//cbug << level << "|" << ";";
-					txt.pop();
+					qtext.pop();
 				}
 				return true;
 			}
-			default: return NodeBase::operator()( txt, c );
+			default: return NodeBase::operator()( qtext, c );
 		}
 		return false;
 	}
@@ -243,10 +243,10 @@ namespace ExeJson
 	{
 		bool operator+=( const string& txt )
 		{
-			QueString text( 0 );
+			QueString qtext( 0 );
 			for ( string::const_iterator it=txt.begin();it!=txt.end();it++) 
-				text( *it );
-			Excavator excavator( root, text );
+				qtext( *it );
+			Excavator excavator( root, qtext );
 			if ( ! excavator ) return false;
 			return true;
 		}
