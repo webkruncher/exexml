@@ -38,7 +38,7 @@ using namespace KruncherTools;
 
 struct CBug : ofstream
 {
-	CBug() : ofstream( "/dev/null" ) {}
+	CBug() : ofstream( "/dev/stderr" ) {}
 } cbug;
 
 namespace ExeJson
@@ -115,19 +115,24 @@ namespace ExeJson
 	struct Excavator;
 	struct NodeBase : vector< NodeBase* >
 	{
+		friend struct Excavator;
 		NodeBase() : level( 0 ) {}
 		NodeBase( const int _level ) : level( _level ) {}
+		virtual ~NodeBase() {}
 		virtual bool operator()( QueString&, const JsonToken& ); 
 		protected:
 		const int level;
+		private:
+		virtual operator bool () = 0;
 	};
 
 	struct Node : NodeBase
 	{
 		Node() : NodeBase( 0 ) {}
 		Node( const int _level ) : NodeBase( _level ) {}
-		~Node() { for ( iterator it=begin();it!=end();it++) delete *it; }
+		virtual ~Node() { for ( iterator it=begin();it!=end();it++) delete *it; }
 		virtual bool operator()( QueString& e, const JsonToken& c );
+		virtual operator bool () {return true;}
 	};
 
 
@@ -144,12 +149,14 @@ namespace ExeJson
 	{
 		Object() : Node( 0 ) {}
 		Object( const int _level ) : Node( _level ) {}
+		virtual operator bool () {return false;}
 	};
 
 	struct List : Node
 	{
 		List() : Node( 0 ) {}
 		List( const int _level ) : Node( _level ) {}
+		virtual operator bool () {return true;}
 	};
 
 
@@ -165,7 +172,7 @@ namespace ExeJson
 				if ( ! node( text, c ) ) return false;
 				if ( ! text.empty() ) text.pop();
 			}
-			return true;
+			return node;
 		}
 		private:
 		NodeBase& node;
@@ -177,8 +184,6 @@ namespace ExeJson
 	inline bool Node::operator()( QueString& txt, const JsonToken& c )
 	{
 		const TokenType tokentype( c );
-		//string s(c);
-		//cbug << s;
 		switch ( tokentype )
 		{
 			case ObjectOpen:

@@ -130,7 +130,8 @@ int main(int argc,char** argv)
 				getline( cin, s );
 				ss << s << endl;
 			}
-			json+=ss.str();
+			if ( ! (json+=ss.str()) )
+				throw string("Cannot load json");
 		}
 	}
 	catch(std::exception& e) {except=e.what();}
