@@ -133,7 +133,7 @@ namespace ExeJson
 		NodeBase() : level( 0 ) {}
 		NodeBase( const int _level ) : level( _level ) {}
 		virtual ~NodeBase() {}
-		virtual bool operator()( QueString&, const JsonToken& ); 
+		virtual bool operator()( const string&, QueString&, const JsonToken& ); 
 		protected:
 		const int level;
 		private:
@@ -145,12 +145,12 @@ namespace ExeJson
 		Node() : NodeBase( 0 ) {}
 		Node( const int _level ) : NodeBase( _level ) {}
 		virtual ~Node() { for ( iterator it=begin();it!=end();it++) delete *it; }
-		virtual bool operator()( QueString& e, const JsonToken& c );
+		virtual bool operator()( const string&, QueString&, const JsonToken&);
 		virtual operator bool () {return true;}
 	};
 
 
-	inline bool NodeBase::operator()( QueString& txt, const JsonToken& c )
+	inline bool NodeBase::operator()( const string& txt, QueString& qtext, const JsonToken& c )
 	{
 		const TokenType tokentype( c );
 		string s(c);
@@ -196,7 +196,7 @@ namespace ExeJson
 
 
 
-	inline bool Node::operator()( QueString& qtext, const JsonToken& c )
+	inline bool Node::operator()( const string& txt, QueString& qtext, const JsonToken& c )
 	{
 		const TokenType tokentype( c );
 		switch ( tokentype )
@@ -206,7 +206,7 @@ namespace ExeJson
 				//cbug << endl << "<" << level+1 <<";";
 				push_back( new Object( level+1 ) );
 				qtext.pop();
-				Excavator excavate( *back(), qtext );
+				Excavator excavate( txt, *back(), qtext );
 				if ( ! excavate ) return false;
 			}
 			case ObjectClose: 
@@ -223,7 +223,7 @@ namespace ExeJson
 				//cbug << "|" << level+1 <<";";
 				push_back( new List( level+1 ) );
 				qtext.pop();
-				Excavator excavate( *back(), qtext );
+				Excavator excavate( txt, *back(), qtext );
 				if ( ! excavate ) return false;
 			}
 			case ListClose: 
@@ -235,7 +235,7 @@ namespace ExeJson
 				}
 				return true;
 			}
-			default: return NodeBase::operator()( qtext, c );
+			default: return NodeBase::operator()( txt, qtext, c );
 		}
 		return false;
 	}
