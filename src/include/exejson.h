@@ -38,7 +38,7 @@ using namespace KruncherTools;
 
 struct CBug : ofstream
 {
-	CBug() : ofstream( "/dev/stderr" ) {}
+	CBug() : ofstream( "/dev/null" ) {}
 } cbug;
 
 namespace ExeJson
