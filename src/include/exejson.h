@@ -130,7 +130,7 @@ namespace ExeJson
 	{
 		const TokenType tokentype( c );
 		string s(c);
-		//cerr << s;
+		cerr << s;
 		return true;
 	}
 
@@ -178,7 +178,7 @@ namespace ExeJson
 		{
 			case ObjectOpen:
 			{
-				//cerr << endl << "<" << level+1 <<";";
+				cerr << endl << "<" << level+1 <<";";
 				push_back( new Object( level+1 ) );
 				txt.pop();
 				Excavator excavate( *back(), txt );
@@ -188,14 +188,14 @@ namespace ExeJson
 			{
 				if ( ! txt.empty() ) 
 				{
-					//cerr << level << ">" << ";" << endl;
+					cerr << level << ">" << ";" << endl;
 					txt.pop();
 				}
 				return true;
 			}
 			case ListOpen:
 			{
-				//cerr << "|" << level+1 <<";";
+				cerr << "|" << level+1 <<";";
 				push_back( new List( level+1 ) );
 				txt.pop();
 				Excavator excavate( *back(), txt );
@@ -205,7 +205,7 @@ namespace ExeJson
 			{
 				if ( ! txt.empty() ) 
 				{
-					//cerr << level << "|" << ";";
+					cerr << level << "|" << ";";
 					txt.pop();
 				}
 				return true;
