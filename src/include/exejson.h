@@ -157,7 +157,7 @@ namespace ExeJson
 			while ( ! text.empty() )
 			{
 				const JsonToken c( text.front() );
-				node( text, c );
+				if ( ! node( text, c ) ) return false;
 				if ( ! text.empty() ) text.pop();
 			}
 			return true;
