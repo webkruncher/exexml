@@ -36,6 +36,11 @@
 #include <infotools.h>
 using namespace KruncherTools;
 
+struct CBug : ofstream
+{
+	CBug() : ofstream( "/dev/null" ) {}
+} cbug;
+
 namespace ExeJson
 {
 	enum TokenType { None, Coma, Coln, Special, Character, ObjectOpen, ObjectClose, ListOpen, ListClose };
@@ -130,7 +135,7 @@ namespace ExeJson
 	{
 		const TokenType tokentype( c );
 		string s(c);
-		cerr << s;
+		cbug << s;
 		return true;
 	}
 
@@ -173,12 +178,12 @@ namespace ExeJson
 	{
 		const TokenType tokentype( c );
 		//string s(c);
-		//cerr << s;
+		//cbug << s;
 		switch ( tokentype )
 		{
 			case ObjectOpen:
 			{
-				cerr << endl << "<" << level+1 <<";";
+				cbug << endl << "<" << level+1 <<";";
 				push_back( new Object( level+1 ) );
 				txt.pop();
 				Excavator excavate( *back(), txt );
@@ -188,14 +193,14 @@ namespace ExeJson
 			{
 				if ( ! txt.empty() ) 
 				{
-					cerr << level << ">" << ";" << endl;
+					cbug << level << ">" << ";" << endl;
 					txt.pop();
 				}
 				return true;
 			}
 			case ListOpen:
 			{
-				cerr << "|" << level+1 <<";";
+				cbug << "|" << level+1 <<";";
 				push_back( new List( level+1 ) );
 				txt.pop();
 				Excavator excavate( *back(), txt );
@@ -205,7 +210,7 @@ namespace ExeJson
 			{
 				if ( ! txt.empty() ) 
 				{
-					cerr << level << "|" << ";";
+					cbug << level << "|" << ";";
 					txt.pop();
 				}
 				return true;
