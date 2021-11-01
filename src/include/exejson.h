@@ -176,19 +176,20 @@ namespace ExeJson
 
 	struct Excavator 
 	{
-		Excavator( NodeBase& _node, QueString& _qtext ) : node( _node ), qtext( _qtext ) {}
+		Excavator( const string& _txt, NodeBase& _node, QueString& _qtext ) : txt(_txt), node( _node ), qtext( _qtext ) {}
 		void operator()( char c ) { qtext( c ); }
 		operator bool ()
 		{
 			while ( ! qtext.empty() )
 			{
 				const JsonToken c( qtext.front() );
-				if ( ! node( qtext, c ) ) return false;
+				if ( ! node( txt, qtext, c ) ) return false;
 				if ( ! qtext.empty() ) qtext.pop();
 			}
 			return node;
 		}
 		private:
+		const string& txt;
 		NodeBase& node;
 		QueString& qtext;
 	};
@@ -246,7 +247,7 @@ namespace ExeJson
 			QueString qtext( 0 );
 			for ( string::const_iterator it=txt.begin();it!=txt.end();it++) 
 				qtext( *it );
-			Excavator excavator( root, qtext );
+			Excavator excavator( txt, root, qtext );
 			if ( ! excavator ) return false;
 			return true;
 		}
