@@ -182,7 +182,7 @@ namespace ExeJson
 				push_back( new Object( level+1 ) );
 				txt.pop();
 				Excavator excavate( *back(), txt );
-				if ( !excavate ) return false;
+				if ( ! excavate ) return false;
 			}
 			case ObjectClose: 
 			{
@@ -199,7 +199,7 @@ namespace ExeJson
 				push_back( new List( level+1 ) );
 				txt.pop();
 				Excavator excavate( *back(), txt );
-				if ( !excavate ) return false;
+				if ( ! excavate ) return false;
 			}
 			case ListClose: 
 			{
@@ -210,7 +210,7 @@ namespace ExeJson
 				}
 				return true;
 			}
-			default: NodeBase::operator()( txt, c );
+			default: return NodeBase::operator()( txt, c );
 		}
 		return false;
 	}
