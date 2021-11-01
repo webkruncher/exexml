@@ -154,7 +154,8 @@ namespace ExeJson
 	{
 		const TokenType tokentype( c );
 		string s(c);
-		cbug << s;
+		cbug << s << "(" << qtext.size() << ")" ;
+		
 		return true;
 	}
 
