@@ -38,7 +38,7 @@ using namespace KruncherTools;
 
 struct CBug : ofstream
 {
-	CBug() : ofstream( "/dev/stderr" ) {}
+	CBug() : ofstream( "/dev/null" ) {}
 } cbug;
 
 namespace ExeJson
@@ -65,6 +65,18 @@ namespace ExeJson
 	{
 		JsonToken( ) : pos( 0, 0 ), tokentype( None ), c( 0 ) {}
 		JsonToken( const size_t _pos, TokenType _t, char _c ) : pos( _pos, 0 ), tokentype( _t ), c( _c ) {}
+		JsonToken( const JsonToken& that )
+			: pos( that.pos ), tokentype( that.tokentype ), c( that.c ) { }
+		const JsonToken& operator=( const JsonToken& that ) const
+		{
+			if ( this != &that )
+			{
+				pos=that.pos;
+				tokentype=that.tokentype;
+				c=that.c;
+			}
+			return *this;
+		}
 		operator const char () { return c; }
 		void morph( const TokenType _t, const char _c ) const
 		{
@@ -147,26 +159,31 @@ namespace ExeJson
 		void operator = ( const size_t _endmarker ) { jc.pos.second=_endmarker; }
 		virtual ~NodeBase() { for ( iterator it=begin();it!=end();it++) delete *it; }
 		virtual bool operator()( const string&, QueString&, const JsonToken&, const size_t );
-		virtual operator bool () = 0;
+		void closure( const size_t closed ) const { jc.closure( closed ); }
 		protected:
 		const int level;
-		JsonToken jc;
+		const JsonToken jc;
+		private:
+		friend ostream& operator<<(ostream&,const NodeBase&);
+		virtual ostream& operator<<( ostream& ) const = 0;
 	};
+	inline ostream& operator<<(ostream& o,const NodeBase& n) { return n.operator<<(o); }
 
 	struct Node : NodeBase
 	{
 		Node()  {}
 		Node( const int _level, const JsonToken _jc ) : NodeBase( _level, _jc ) {}
-		virtual operator bool ()
+		private:
+		virtual ostream& operator<<( ostream& o ) const 
 		{
 			const string ss( jc );
-			//cbug << level << "->" << ss << " " ;
-			for ( iterator it=begin();it!=end();it++)
+			o << level << "->" << ss << " " ;
+			for ( const_iterator it=begin();it!=end();it++)
 			{
-				NodeBase& n( **it );
-				if ( ! n ) return false;
+				const NodeBase& n( **it );
+				o << n;
 			}
-			return true;
+			return o;
 		} 
 	};
 
@@ -192,12 +209,12 @@ namespace ExeJson
 		{
 			while ( ! qtext.empty() )
 			{
-				const JsonToken jc( qtext.front() );
+				const JsonToken& jc( qtext.front() );
 				qtext.pop();
 				if ( ! node( txt, qtext, jc, qtext.size() ) ) 
 					return false;
 			}
-			return node;
+			return true;
 		}
 		private:
 		const string& txt;
@@ -214,31 +231,29 @@ namespace ExeJson
 		{
 			case ObjectOpen:
 			{
-				//cbug << endl << "(OO)" << level+1 <<";";
 				push_back( new Object( level+1, jc ) );
 				Excavator excavate( txt, *back(), qtext );
 				if ( ! excavate ) return false;
+				NodeBase& closing( *back() );
+				closing.closure( closure );
 			}
 			break;
 			case ObjectClose: 
 			{
-				jc.closure( closure );
-				string cc( jc ); cbug << cc << endl;
 				return true;
 			}
 			break;
 			case ListOpen:
 			{
-				//cbug << endl << "|" << level+1 <<";";
 				push_back( new List( level+1, jc ) );
 				Excavator excavate( txt, *back(), qtext );
 				if ( ! excavate ) return false;
+				NodeBase& closing( *back() );
+				closing.closure( closure );
 			}
 			break;
 			case ListClose: 
 			{
-				jc.closure( closure );
-				string cc( jc ); cbug << cc << endl;
 				return true;
 			}
 			break;
@@ -261,7 +276,7 @@ return true;
 				qtext( *it );
 			Excavator excavator( txt, root, qtext );
 			if ( ! excavator ) return false;
-			if ( ! root ) return false;
+			cerr << root;
 			return true;
 		}
 		private:
