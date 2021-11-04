@@ -54,11 +54,28 @@ namespace XmlPayload
 
 
 
-
 bool Diagnose(false);
 int main(int argc,char** argv)
 {
 	string mode,bigs;
+
+	if ( argc < 2 )
+	{
+		stringstream ss;
+		ifstream in("ut/example.json" );
+		while ( ! in.eof() )
+		{
+			string line;
+			getline( in, line );
+			ss << line;
+		}
+		cout << "Read:" << ss.str() << endl;
+		ExeJson::Json json;
+		bool result(json+=ss.str());
+		cout << "Result:" << boolalpha << result << endl;	
+		return 0;
+	}
+
 	if (argc>1) mode=argv[1];
 	if (argc>2) bigs=argv[2];
 	if (mode=="-run") Diagnose=true;

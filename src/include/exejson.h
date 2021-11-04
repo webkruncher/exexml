@@ -48,13 +48,23 @@ namespace ExeJson
 	{
 		typedef pair<size_t,size_t> mtype;
 		Markers( const size_t _first, const size_t _second ) : mtype( _first, _second ) {}
-	};
+		private:
+		friend ostream& operator<<(ostream&,const Markers&);
+		ostream& operator<<(ostream& o) const
+		{
+			o << "(" << first << ":" << second << ")";
+			return o;
+		}
+	}; 
+
+	inline ostream& operator<<(ostream& o,const Markers& m) { return m.operator<<(o); }
 
 	struct QueString;
+	struct NodeBase;
 	struct JsonToken
 	{
-		JsonToken( ) : pos( 0 ), tokentype( None ), c( 0 ) {}
-		JsonToken( const size_t _pos, TokenType _t, char _c ) : pos( _pos ), tokentype( _t ), c( _c ) {}
+		JsonToken( ) : pos( 0, 0 ), tokentype( None ), c( 0 ) {}
+		JsonToken( const size_t _pos, TokenType _t, char _c ) : pos( _pos, 0 ), tokentype( _t ), c( _c ) {}
 		operator const char () { return c; }
 		void morph( const TokenType _t, const char _c ) const
 		{
@@ -68,18 +78,19 @@ namespace ExeJson
 			switch ( tokentype )
 			{
 				case Coma: ss << green << pos << "#" << c << normal; break;
-				case Coln: ss << red << pos << "#" << c << normal; break;
-				case ListOpen: ss << bold << pos << "#" << c << normal; break;
-				case ListClose: ss << ulin << pos << "#" << c << normal; break;
-				case ObjectOpen: ss << rvid << bold << pos << "#" << c << normal; break;
-				case ObjectClose: ss << rvid << ulin << pos << "#" << c << normal; break;
+				case Coln: ss << bold << pos << "#" << c << normal; break;
+				case ListOpen: ss << red << pos << "#" << "LO" << normal; break;
+				case ListClose: ss << ulin << pos << "#" << "LC" << normal; break;
+				case ObjectOpen: ss << rvid << bold << pos << "#" << "OO" << normal; break;
+				case ObjectClose: ss << rvid << ulin << pos << "#" << "OC" << normal; break;
 				case Special: ss << yellow << pos << "#" << c << normal; break;
 				default: ss << pos << "#" << c;
 			}
 			return ss.str();
 		}
 		private:
-		const size_t pos;
+		friend struct NodeBase;
+		Markers pos;
 		mutable TokenType tokentype;
 		mutable char c;
 	};
@@ -131,47 +142,43 @@ namespace ExeJson
 	{
 		friend struct Excavator;
 		NodeBase() : level( 0 ) {}
-		NodeBase( const int _level ) : level( _level ) {}
-		virtual ~NodeBase() {}
-		virtual bool operator()( const string&, QueString&, const JsonToken& ); 
+		NodeBase( const int _level, const JsonToken _jc ) : level( _level ), jc( _jc ) {}
+		void operator = ( const size_t _endmarker ) { jc.pos.second=_endmarker; }
+		virtual ~NodeBase() { for ( iterator it=begin();it!=end();it++) delete *it; }
+		virtual bool operator()( const string&, QueString&, const JsonToken& );
+		virtual operator bool () = 0;
 		protected:
 		const int level;
-		private:
-		virtual operator bool () = 0;
+		JsonToken jc;
 	};
 
 	struct Node : NodeBase
 	{
-		Node() : NodeBase( 0 ) {}
-		Node( const int _level ) : NodeBase( _level ) {}
-		virtual ~Node() { for ( iterator it=begin();it!=end();it++) delete *it; }
-		virtual bool operator()( const string&, QueString&, const JsonToken&);
-		virtual operator bool () {return true;}
+		Node()  {}
+		Node( const int _level, const JsonToken _jc ) : NodeBase( _level, _jc ) {}
+		virtual operator bool ()
+		{
+			const string ss( jc );
+			cout << level << "->" << ss << " " ;
+			for ( iterator it=begin();it!=end();it++)
+			{
+				NodeBase& n( **it );
+				if ( ! n ) return false;
+			}
+			return true;
+		} 
 	};
-
-
-	inline bool NodeBase::operator()( const string& txt, QueString& qtext, const JsonToken& c )
-	{
-		const TokenType tokentype( c );
-		string s(c);
-		cbug << s << "(" << qtext.size() << ")" ;
-		
-		return true;
-	}
-
 
 	struct Object : Node
 	{
-		Object() : Node( 0 ) {}
-		Object( const int _level ) : Node( _level ) {}
-		virtual operator bool () {return true;}
+		Object(){}
+		Object( const int _level, const JsonToken _jc ) : Node( _level, _jc ) {}
 	};
+
 
 	struct List : Node
 	{
-		List() : Node( 0 ) {}
-		List( const int _level ) : Node( _level ) {}
-		virtual operator bool () {return true;}
+		List( const int _level, const JsonToken _jc ) : Node( _level, _jc ) {}
 	};
 
 
@@ -183,9 +190,9 @@ namespace ExeJson
 		{
 			while ( ! qtext.empty() )
 			{
-				const JsonToken c( qtext.front() );
-				if ( ! node( txt, qtext, c ) ) return false;
-				if ( ! qtext.empty() ) qtext.pop();
+				const JsonToken jc( qtext.front() );
+				qtext.pop();
+				if ( ! node( txt, qtext, jc ) ) return false;
 			}
 			return node;
 		}
@@ -197,46 +204,45 @@ namespace ExeJson
 
 
 
-	inline bool Node::operator()( const string& txt, QueString& qtext, const JsonToken& c )
+	inline bool NodeBase::operator()( const string& txt, QueString& qtext, const JsonToken& jc )
 	{
-		const TokenType tokentype( c );
+		const TokenType tokentype( jc );
 		switch ( tokentype )
 		{
 			case ObjectOpen:
 			{
-				//cbug << endl << "<" << level+1 <<";";
-				push_back( new Object( level+1 ) );
-				qtext.pop();
+				//cbug << endl << "(OO)" << level+1 <<";";
+				push_back( new Object( level+1, jc ) );
 				Excavator excavate( txt, *back(), qtext );
 				if ( ! excavate ) return false;
 			}
 			case ObjectClose: 
 			{
-				if ( ! qtext.empty() ) 
 				{
-					//cbug << level << ">" << ";" << endl;
-					qtext.pop();
+					//cbug << endl << level << "(OC)" << ";" << endl;
 				}
+				if ( ! empty () ) *front()=99;
 				return true;
 			}
 			case ListOpen:
 			{
-				//cbug << "|" << level+1 <<";";
-				push_back( new List( level+1 ) );
-				qtext.pop();
+				//cbug << endl << "|" << level+1 <<";";
+				push_back( new List( level+1, jc ) );
 				Excavator excavate( txt, *back(), qtext );
 				if ( ! excavate ) return false;
 			}
 			case ListClose: 
 			{
-				if ( ! qtext.empty() ) 
 				{
 					//cbug << level << "|" << ";";
-					qtext.pop();
 				}
 				return true;
 			}
-			default: return NodeBase::operator()( txt, qtext, c );
+			default: 
+			{
+				return true;
+				//return NodeBase::operator()( txt, qtext, c );
+			}
 		}
 		return false;
 	}
@@ -250,6 +256,7 @@ namespace ExeJson
 				qtext( *it );
 			Excavator excavator( txt, root, qtext );
 			if ( ! excavator ) return false;
+			if ( ! root ) return false;
 			return true;
 		}
 		private:
