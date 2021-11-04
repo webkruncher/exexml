@@ -71,6 +71,7 @@ namespace ExeJson
 			c=_c;
 			tokentype=_t;
 		}
+		void closure( const size_t closed ) const { pos.second=closed; }
 		operator const TokenType () const { return tokentype; }
 		operator string () const
 		{
@@ -90,7 +91,7 @@ namespace ExeJson
 		}
 		private:
 		friend struct NodeBase;
-		Markers pos;
+		mutable Markers pos;
 		mutable TokenType tokentype;
 		mutable char c;
 	};
@@ -145,7 +146,7 @@ namespace ExeJson
 		NodeBase( const int _level, const JsonToken _jc ) : level( _level ), jc( _jc ) {}
 		void operator = ( const size_t _endmarker ) { jc.pos.second=_endmarker; }
 		virtual ~NodeBase() { for ( iterator it=begin();it!=end();it++) delete *it; }
-		virtual bool operator()( const string&, QueString&, const JsonToken& );
+		virtual bool operator()( const string&, QueString&, const JsonToken&, const size_t );
 		virtual operator bool () = 0;
 		protected:
 		const int level;
@@ -159,7 +160,7 @@ namespace ExeJson
 		virtual operator bool ()
 		{
 			const string ss( jc );
-			cout << level << "->" << ss << " " ;
+			//cbug << level << "->" << ss << " " ;
 			for ( iterator it=begin();it!=end();it++)
 			{
 				NodeBase& n( **it );
@@ -184,7 +185,8 @@ namespace ExeJson
 
 	struct Excavator 
 	{
-		Excavator( const string& _txt, NodeBase& _node, QueString& _qtext ) : txt(_txt), node( _node ), qtext( _qtext ) {}
+		Excavator( const string& _txt, NodeBase& _node, QueString& _qtext ) 
+			: txt(_txt), node( _node ), qtext( _qtext ) {}
 		void operator()( char c ) { qtext( c ); }
 		operator bool ()
 		{
@@ -192,7 +194,8 @@ namespace ExeJson
 			{
 				const JsonToken jc( qtext.front() );
 				qtext.pop();
-				if ( ! node( txt, qtext, jc ) ) return false;
+				if ( ! node( txt, qtext, jc, qtext.size() ) ) 
+					return false;
 			}
 			return node;
 		}
@@ -204,7 +207,7 @@ namespace ExeJson
 
 
 
-	inline bool NodeBase::operator()( const string& txt, QueString& qtext, const JsonToken& jc )
+	inline bool NodeBase::operator()( const string& txt, QueString& qtext, const JsonToken& jc, const size_t closure )
 	{
 		const TokenType tokentype( jc );
 		switch ( tokentype )
@@ -216,14 +219,14 @@ namespace ExeJson
 				Excavator excavate( txt, *back(), qtext );
 				if ( ! excavate ) return false;
 			}
+			break;
 			case ObjectClose: 
 			{
-				{
-					//cbug << endl << level << "(OC)" << ";" << endl;
-				}
-				if ( ! empty () ) *front()=99;
+				jc.closure( closure );
+				string cc( jc ); cbug << cc << endl;
 				return true;
 			}
+			break;
 			case ListOpen:
 			{
 				//cbug << endl << "|" << level+1 <<";";
@@ -231,19 +234,21 @@ namespace ExeJson
 				Excavator excavate( txt, *back(), qtext );
 				if ( ! excavate ) return false;
 			}
+			break;
 			case ListClose: 
 			{
-				{
-					//cbug << level << "|" << ";";
-				}
+				jc.closure( closure );
+				string cc( jc ); cbug << cc << endl;
 				return true;
 			}
+			break;
 			default: 
 			{
 				return true;
 				//return NodeBase::operator()( txt, qtext, c );
 			}
 		}
+return true;
 		return false;
 	}
 
