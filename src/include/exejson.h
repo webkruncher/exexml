@@ -232,29 +232,31 @@ namespace ExeJson
 			case ObjectOpen:
 			{
 				push_back( new Object( level+1, jc ) );
-				Excavator excavate( txt, *back(), qtext );
-				if ( ! excavate ) return false;
-				NodeBase& closing( *back() );
-				closing.closure( closure );
+				NodeBase& item( *back() );
+				Excavator excavate( txt, item, qtext );
+				bool done( !! excavate ) ;
+				item.closure( qtext.size() );
+				if ( done ) return false;
 			}
 			break;
 			case ObjectClose: 
 			{
-				return true;
+				return false;
 			}
 			break;
 			case ListOpen:
 			{
 				push_back( new List( level+1, jc ) );
-				Excavator excavate( txt, *back(), qtext );
-				if ( ! excavate ) return false;
-				NodeBase& closing( *back() );
-				closing.closure( closure );
+				NodeBase& item( *back() );
+				Excavator excavate( txt, item, qtext );
+				bool done( !! excavate ) ;
+				item.closure( qtext.size() );
+				if ( done ) return false;
 			}
 			break;
 			case ListClose: 
 			{
-				return true;
+				return false;
 			}
 			break;
 			default: 
@@ -275,7 +277,7 @@ return true;
 			for ( string::const_iterator it=txt.begin();it!=txt.end();it++) 
 				qtext( *it );
 			Excavator excavator( txt, root, qtext );
-			if ( ! excavator ) return false;
+			( !! excavator ); 
 			cerr << root;
 			return true;
 		}
