@@ -97,6 +97,7 @@ namespace ExeJson
 				case ObjectOpen: ss << rvid << bold << pos << "#" << "OO" << normal; break;
 				case ObjectClose: ss << rvid << ulin << pos << "#" << "OC" << normal; break;
 				case Special: ss << yellow << pos << "#" << c << normal; break;
+				case Character: ss << teal << pos << "#" << c << normal; break;
 				default: ss << pos << "#" << c;
 			}
 			return ss.str();
@@ -199,6 +200,15 @@ namespace ExeJson
 		List( const int _level, const JsonToken _jc ) : Node( _level, _jc ) {}
 	};
 
+	struct PlainCharacter : Node
+	{
+		PlainCharacter( const int _level, const JsonToken _jc ) : Node( _level, _jc ) {}
+	};
+
+	struct Comma : Node
+	{
+		Comma( const int _level, const JsonToken _jc ) : Node( _level, _jc ) {}
+	};
 
 	struct Excavator 
 	{
@@ -235,7 +245,7 @@ namespace ExeJson
 				NodeBase& item( *back() );
 				Excavator excavate( txt, item, qtext );
 				bool done( !! excavate ) ;
-				item.closure( qtext.size() );
+				item.closure( closure+qtext.size()+1 );
 				if ( done ) return false;
 			}
 			break;
@@ -250,7 +260,7 @@ namespace ExeJson
 				NodeBase& item( *back() );
 				Excavator excavate( txt, item, qtext );
 				bool done( !! excavate ) ;
-				item.closure( qtext.size() );
+				item.closure( closure+qtext.size()+1 );
 				if ( done ) return false;
 			}
 			break;
@@ -259,14 +269,26 @@ namespace ExeJson
 				return false;
 			}
 			break;
-			default: 
+			Coma: 
 			{
-				return true;
-				//return NodeBase::operator()( txt, qtext, c );
+				push_back( new Comma( level+1, jc ) );
+				NodeBase& item( *back() );
+				Excavator excavate( txt, item, qtext );
+				bool done( !! excavate ) ;
+				item.closure( closure+qtext.size()+1 );
+				if ( done ) return true;
+			}
+			Character: 
+			{
+				push_back( new PlainCharacter( level+1, jc ) );
+				NodeBase& item( *back() );
+				Excavator excavate( txt, item, qtext );
+				bool done( !! excavate ) ;
+				item.closure( closure+qtext.size()+1 );
+				if ( done ) return true;
 			}
 		}
-return true;
-		return false;
+		return true;
 	}
 
 	struct Json
