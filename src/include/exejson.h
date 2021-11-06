@@ -456,6 +456,7 @@ namespace ExeJson
 				push_back( new SpecialChar( level, jc ) );
 				return true;
 			}
+			case Root: 
 			break;
 		}
 		return true;
