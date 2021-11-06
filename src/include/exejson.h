@@ -225,7 +225,6 @@ namespace ExeJson
 
 	struct Node : NodeBase
 	{
-		//Node()  {}
 		Node( const int _level ) : NodeBase( _level ) {}
 		Node( const int _level, const JsonToken _jc ) : NodeBase( _level, _jc ) {}
 		virtual ostream& operator>>( ostream& o ) const 
@@ -245,7 +244,7 @@ namespace ExeJson
 
 	struct RootNode : Node
 	{
-		RootNode() : Node( -1 ) {}
+		RootNode() : Node( 0 ) {}
 		void operator()( const string& txt, stringstream& ss ) const
 		{
 			for ( const_iterator it=begin();it!=end();it++)
@@ -278,7 +277,7 @@ namespace ExeJson
 		void operator()( const string& txt, stringstream& ss ) const
 		{
 			const Markers& pos( *this );
-			ss << tracetabs( level-1 ) << teal << jc << green << pos << normal << endl;
+			ss << tracetabs( level-1 ) << blue << jc << green << pos << normal << endl;
 			for ( const_iterator it=begin();it!=end();it++)
 			{
 				const NodeBase& n( **it );
