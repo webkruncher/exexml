@@ -205,7 +205,6 @@ namespace ExeJson
 		void closure( Markers& pos ) const { jc.closure( pos ); }
 		operator Markers () const { return jc; }
 		virtual ostream& operator>>( ostream& o ) const = 0;
-		//virtual void operator()( const string& txt, stringstream& ss ) const = 0;
 		protected:
 		const int level;
 		const JsonToken jc;
@@ -233,7 +232,6 @@ namespace ExeJson
 			return o;
 		} 
 		private:
-		//virtual void operator()( const string& txt, stringstream& ss ) const {}
 		virtual ostream& operator<<(ostream& o) const { return o; } 
 		virtual ostream& operator<<(CBug& o) const { return o; } 
 	};
@@ -241,16 +239,6 @@ namespace ExeJson
 	struct RootNode : Node
 	{
 		RootNode() : Node( 0 ) {}
-#if 0
-		void operator()( const string& txt, stringstream& ss ) const
-		{
-			for ( const_iterator it=begin();it!=end();it++)
-			{
-				const NodeBase& n( **it );
-				n( txt, ss );
-			}
-		}
-#endif
 		private:
 		virtual ostream& operator<<(ostream& o) const { return o; } 
 		virtual ostream& operator<<(CBug& o) const 
@@ -267,18 +255,6 @@ namespace ExeJson
 	struct Object : Node
 	{
 		Object( const int _level, const JsonToken _jc ) : Node( _level, _jc ) {}
-#if 0
-		void operator()( const string& txt, stringstream& ss ) const
-		{
-			const Markers& pos( *this );
-			ss << tracetabs( level-1 ) << blue << jc << normal;
-			for ( const_iterator it=begin();it!=end();it++)
-			{
-				const NodeBase& n( **it );
-				n( txt, ss );
-			}
-		}
-#endif
 		private:
 		virtual ostream& operator<<(CBug& o) const 
 		{
@@ -296,18 +272,6 @@ namespace ExeJson
 	struct List : Node
 	{
 		List( const int _level, const JsonToken _jc ) : Node( _level, _jc ) {}
-#if 0
-		void operator()( const string& txt, stringstream& ss ) const
-		{
-			const Markers& pos( *this );
-			ss << ulin << jc << normal;
-			for ( const_iterator it=begin();it!=end();it++)
-			{
-				const NodeBase& n( **it );
-				n( txt, ss );
-			}
-		}
-#endif
 		private:
 		virtual ostream& operator<<(CBug& o) const 
 		{
@@ -324,12 +288,6 @@ namespace ExeJson
 	struct Comma : Node
 	{
 		Comma( const int _level, const JsonToken _jc ) : Node( _level, _jc ) {}
-#if 0
-		void operator()( const string& txt, stringstream& ss ) const
-		{
-			ss << blink << "," << normal;
-		}
-#endif
 		private:
 		virtual ostream& operator<<(CBug& o) const 
 		{
@@ -341,12 +299,6 @@ namespace ExeJson
 	struct Colon : Node
 	{
 		Colon( const int _level, const JsonToken _jc ) : Node( _level, _jc ) {}
-#if 0
-		void operator()( const string& txt, stringstream& ss ) const
-		{
-			ss << rvid << ":" << normal ;
-		}
-#endif
 		private:
 		virtual ostream& operator<<(CBug& o) const 
 		{
@@ -358,18 +310,6 @@ namespace ExeJson
 	struct QuotationMark : Node
 	{
 		QuotationMark( const int _level, const JsonToken _jc ) : Node( _level, _jc ) {}
-#if 0
-		void operator()( const string& txt, stringstream& ss ) const
-		{
-			const Markers& pos( *this );
-			ss << rvid << mgenta << blink << "\"" << normal;
-			for ( const_iterator it=begin();it!=end();it++)
-			{
-				const NodeBase& n( **it );
-				n( txt, ss );
-			}
-		}
-#endif
 		private:
 		virtual ostream& operator<<(CBug& o) const 
 		{
@@ -386,18 +326,6 @@ namespace ExeJson
 	struct SpecialChar : Node
 	{
 		SpecialChar( const int _level, const JsonToken _jc ) : Node( _level, _jc ) {}
-#if 0
-		void operator()( const string& txt, stringstream& ss ) const
-		{
-			const Markers& pos( *this );
-			ss << red << jc << normal;
-			for ( const_iterator it=begin();it!=end();it++)
-			{
-				const NodeBase& n( **it );
-				n( txt, ss );
-			}
-		}
-#endif
 		private:
 		virtual ostream& operator<<(CBug& o) const 
 		{
@@ -414,12 +342,6 @@ namespace ExeJson
 	struct RegularCharacter : Node
 	{
 		RegularCharacter( const int _level, const JsonToken _jc ) : Node( _level, _jc ) {}
-#if 0
-		void operator()( const string& txt, stringstream& ss ) const
-		{
-			ss << yellow << bold << jc << normal;
-		}
-#endif
 		private:
 		virtual ostream& operator<<(CBug& o) const 
 		{
@@ -564,7 +486,7 @@ namespace ExeJson
 			//cerr << ss.str();
 			cbug << root;
 			//cerr << endl << setw( 80 ) << setfill( '-' ) << "-" << endl;
-			//cerr << root;
+			cerr << root;
 			//JsonGlyphTypeLegend();
 			return true;
 		}
