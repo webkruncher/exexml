@@ -300,7 +300,7 @@ namespace ExeJson
 		Colon( const int _level, const JsonToken _jc ) : Node( _level, _jc ) {}
 		void operator()( const string& txt, stringstream& ss ) const
 		{
-			ss << ":";
+			ss << rvid << ":" << normal ;
 		}
 	};
 
