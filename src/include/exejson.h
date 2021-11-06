@@ -202,28 +202,28 @@ namespace ExeJson
 		virtual bool operator()( const string&, QueString&, const JsonToken& );
 		void closure( Markers& pos ) const { jc.closure( pos ); }
 		operator Markers () const { return jc; }
+		virtual ostream& operator>>( ostream& o ) const = 0;
 		protected:
 		const int level;
 		const JsonToken jc;
 		private:
-		friend ostream& operator<<(ostream&,const NodeBase&);
-		virtual ostream& operator<<( ostream& ) const = 0;
+		//friend ostream& operator<<(ostream&,const NodeBase&);
+		//virtual ostream& operator<<( ostream& ) const = 0;
 	};
-	inline ostream& operator<<(ostream& o,const NodeBase& n) { return n.operator<<(o); }
+	//inline ostream& operator<<(ostream& o,const NodeBase& n) { return n.operator<<(o); }
 
 	struct Node : NodeBase
 	{
 		Node()  {}
 		Node( const int _level, const JsonToken _jc ) : NodeBase( _level, _jc ) {}
-		private:
-		virtual ostream& operator<<( ostream& o ) const 
+		virtual ostream& operator>>( ostream& o ) const 
 		{
 			const string ss( jc );
 			o << tracetabs( level ) << "->" << ss << " " << endl;
 			for ( const_iterator it=begin();it!=end();it++)
 			{
 				const NodeBase& n( **it );
-				o << n;
+				n >> o;
 			}
 			o << tracetabs( level ) << "<-" << ss << " " << endl;
 			return o;
@@ -275,7 +275,7 @@ namespace ExeJson
 				qtext.pop();
 				if ( ! node( txt, qtext, jc ) )
 				{
-					const Markers m( jc );
+					const Markers m( node );
 					return m;
 				}
 			}
@@ -301,13 +301,14 @@ namespace ExeJson
 				NodeBase& item( *back() );
 				Excavator excavate( txt, item, qtext );
 				Markers m( excavate );
-cout << "O" << m << endl;
 				closure( m );
 				return true;
 			}
 			break;
 			case ObjectClose: 
 			{
+				Markers m( jc );
+				closure( m );
 				return false;
 			}
 			break;
@@ -317,29 +318,26 @@ cout << "O" << m << endl;
 				NodeBase& item( *back() );
 				Excavator excavate( txt, item, qtext );
 				Markers m( excavate );
-cout << "L" << m << endl;
 				closure( m );
 				return true;
 			}
 			break;
 			case ListClose: 
 			{
+				Markers m( jc );
+				closure( m );
 				return false;
 			}
 			break;
-#if 0
 			case Coma: 
 			{
 				push_back( new Comma( level, jc ) );
-				NodeBase& item( *back() );
-				Excavator excavate( txt, item, qtext );
-				Markers m( excavate );
 				return true;
 			}
 			break;
 			case Quots:
 			{
-				if (  qtext.enquoted() )
+				if (  ! qtext.enquoted() )
 				{
 					push_back( new QuotationMark( level+1, jc ) );
 					NodeBase& item( *back() );
@@ -352,17 +350,13 @@ cout << "L" << m << endl;
 				}
 			}
 			break;
+
 			case Special: 
 			{
 				push_back( new SpecialChar( level, jc ) );
-				NodeBase& item( *back() );
-				Excavator excavate( txt, item, qtext );
-				Markers m( excavate );
 				return true;
 			}
 			break;
-#endif
-			
 			//default: const string cc( jc ); cout << "D:" << cc << "; ";
 		}
 		return true;
@@ -379,7 +373,8 @@ cout << "L" << m << endl;
 				qtext( *it );
 			Excavator excavator( txt, root, qtext );
 			Markers m( excavator ); 
-			cbug << root;
+			//cbug << root;
+			root >> cbug;
 			//JsonGlyphTypeLegend();
 			return true;
 		}
