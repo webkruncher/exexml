@@ -38,16 +38,42 @@ using namespace KruncherTools;
 
 struct CBug : ofstream
 {
-	CBug() : ofstream( "/dev/null" ) {}
+	CBug() : ofstream( "/dev/stderr" ) {}
 } cbug;
 
 namespace ExeJson
 {
-	enum TokenType { None, Coma, Coln, Special, Character, ObjectOpen, ObjectClose, ListOpen, ListClose };
+	enum TokenType { 
+		None, 
+		ObjectOpen, ObjectClose, ListOpen, ListClose,
+		Coma, Coln, Quots, Special, Character
+	};
+
+	inline void JsonGlyphTypeLegend()
+	{
+		cbug << "None       :" << None       << endl;
+		cbug << "ObjectOpen :" << ObjectOpen << endl;
+		cbug << "ObjectClose:" << ObjectClose<< endl;
+		cbug << "ListOpen   :" << ListOpen   << endl;
+		cbug << "ListClose  :" << ListClose  << endl;
+		cbug << "Coma       :" << Coma       << endl;
+		cbug << "Coln       :" << Coln       << endl;
+		cbug << "Quots      :" << Quots      << endl;
+		cbug << "Special    :" << Special    << endl;
+		cbug << "Character  :" << Character  << endl;
+	}
+
 
 	struct GlyphDisposition
 	{
 		GlyphDisposition() : Enquoted( false ) {}
+		bool enquoted()
+		{
+			const bool ret( Enquoted );
+			Enquoted=!Enquoted;
+			return ret;
+		}
+		private:
 		bool Enquoted;
 	};
 
@@ -101,6 +127,7 @@ namespace ExeJson
 			{
 				case Coma: ss << green << pos << "#" << c << normal; break;
 				case Coln: ss << bold << pos << "#" << c << normal; break;
+				case Quots: ss << rvid << yellow << pos << "#" << c << normal; break;
 				case ListOpen: ss << red << pos << "#" << "LO" << normal; break;
 				case ListClose: ss << ulin << pos << "#" << "LC" << normal; break;
 				case ObjectOpen: ss << rvid << bold << pos << "#" << "OO" << normal; break;
@@ -145,6 +172,7 @@ namespace ExeJson
 			} else {
 				switch ( c )
 				{
+					case '"': { JsonToken jc( much, Quots, c ); push( jc ); break; }
 					case ',': { JsonToken jc( much, Coma, c ); push( jc ); break; }
 					case ':': { JsonToken jc( much, Coln, c ); push( jc ); break; }
 					case '{': { JsonToken jc( much, ObjectOpen, c ); push( jc ); break; }
@@ -155,6 +183,7 @@ namespace ExeJson
 				}
 			}	
 		}
+		bool enquoted() { return glyphs.enquoted(); }
 		private:
 		int much;
 		GlyphDisposition& glyphs;
@@ -219,6 +248,16 @@ namespace ExeJson
 		Comma( const int _level, const JsonToken _jc ) : Node( _level, _jc ) {}
 	};
 
+	struct QuotationMark : Node
+	{
+		QuotationMark( const int _level, const JsonToken _jc ) : Node( _level, _jc ) {}
+	};
+
+	struct SpecialChar : Node
+	{
+		SpecialChar( const int _level, const JsonToken _jc ) : Node( _level, _jc ) {}
+	};
+
 	struct Excavator 
 	{
 		Excavator( const string& _txt, NodeBase& _node, QueString& _qtext ) 
@@ -233,11 +272,10 @@ namespace ExeJson
 				if ( ! node( txt, qtext, jc ) )
 				{
 					Markers m( jc );
-					//node.closure( m );
 					return m;
 				}
 			}
-			Markers none( -1, -1 );
+			Markers none( 0, 0 );
 			return none;
 		}
 		private:
@@ -283,22 +321,41 @@ namespace ExeJson
 				return false;
 			}
 			break;
-			Coma: 
+			case Coma: 
 			{
-				push_back( new Comma( level+1, jc ) );
+				push_back( new Comma( level, jc ) );
 				NodeBase& item( *back() );
 				Excavator excavate( txt, item, qtext );
 				Markers m( excavate );
 				return true;
 			}
-			Character: 
+			break;
+			case Quots:
 			{
-				push_back( new PlainCharacter( level+1, jc ) );
+				if (  qtext.enquoted() )
+				{
+					push_back( new QuotationMark( level+1, jc ) );
+					NodeBase& item( *back() );
+					Excavator excavate( txt, item, qtext );
+					Markers m( excavate );
+					closure( m );
+					return true;
+				} else {
+					return false;
+				}
+			}
+			break;
+			case Special: 
+			{
+				push_back( new SpecialChar( level, jc ) );
 				NodeBase& item( *back() );
 				Excavator excavate( txt, item, qtext );
 				Markers m( excavate );
 				return true;
 			}
+			break;
+			
+			//default: const string cc( jc ); cout << "D:" << cc << "; ";
 		}
 		return true;
 	}
@@ -311,10 +368,13 @@ namespace ExeJson
 			GlyphDisposition glyphs;
 			QueString qtext( 0, glyphs );
 			for ( string::const_iterator it=txt.begin();it!=txt.end();it++) 
+			{
 				qtext( *it );
+			}
 			Excavator excavator( txt, root, qtext );
 			Markers m( excavator ); 
-			cerr << root;
+			cbug << root;
+			//JsonGlyphTypeLegend();
 			return true;
 		}
 		private:
