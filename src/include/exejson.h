@@ -38,7 +38,7 @@ using namespace KruncherTools;
 
 struct CBug : ofstream
 {
-	CBug() : ofstream( "/dev/stderr" ) {}
+	CBug() : ofstream( "/dev/null" ) {}
 } cbug;
 
 namespace ExeJson
@@ -169,19 +169,7 @@ namespace ExeJson
 		void operator()( const char c )
 		{
 			much++;
-			if ( empty() )
-			{
-				if ( c == '{' ) 
-				{
-					JsonToken jc( much, ObjectOpen, c );
-					push(jc);
-				} else {
-					//JsonToken jc( much, Character, c );
-					//push(jc);
-				}
-				return;
-			}
-			const char b4( back() );
+			const char b4( empty() ? '\0' : back() );
 			if ( b4 == '\\' )
 			{
 				back().morph( Special, c );
@@ -474,7 +462,7 @@ namespace ExeJson
 			Excavator excavator( txt, root, qtext );
 			Markers m( excavator ); 
 			root >> cbug;
-			cbug << endl << setw( 80 ) << setfill( '-' ) << "-" << endl;
+			//cerr << endl << setw( 80 ) << setfill( '-' ) << "-" << endl;
 			stringstream ss;
 			root( txt, ss );
 			cout << ss.str();
