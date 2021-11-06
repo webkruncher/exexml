@@ -87,7 +87,7 @@ namespace ExeJson
 		{
 			if ( second )
 				o << "(" << first << ":" << second << ")";
-			else o << red << "(" << first << ")" << normal; 
+			else o << green << whitebk << "(" << first << ")" << normal; 
 			return o;
 		}
 	}; 
@@ -136,7 +136,8 @@ namespace ExeJson
 				case ObjectClose: ss << rvid << ulin << pos << "#" << "OC" << normal; break;
 				case Special: ss << yellow << pos << "#" << c << normal; break;
 				case Character: ss << teal << pos << "#" << c << normal; break;
-				default: ss << pos << "#" << c;
+				case None: ss << bluebk << green << bold << pos << "#" << c << normal; break;
+				default: ss << tealbk << blue << pos << "#" << c;
 			}
 			return ss.str();
 		}
