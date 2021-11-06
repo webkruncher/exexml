@@ -210,6 +210,7 @@ namespace ExeJson
 		const int level;
 		const JsonToken jc;
 	};
+	inline ostream& operator<<(ostream& o, const NodeBase& n ) { return n.operator<<(o); }
 
 	struct Node : NodeBase
 	{
