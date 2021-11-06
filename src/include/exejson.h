@@ -44,14 +44,14 @@ struct CBug : ofstream
 namespace ExeJson
 {
 	enum TokenType { 
-		None, 
+		Root, 
 		ObjectOpen, ObjectClose, ListOpen, ListClose,
 		Coma, Coln, Quots, Special, Character
 	};
 
 	inline void JsonGlyphTypeLegend()
 	{
-		cbug << "None       :" << None       << endl;
+		cbug << "Root       :" << Root       << endl;
 		cbug << "ObjectOpen :" << ObjectOpen << endl;
 		cbug << "ObjectClose:" << ObjectClose<< endl;
 		cbug << "ListOpen   :" << ListOpen   << endl;
@@ -103,7 +103,7 @@ namespace ExeJson
 	struct NodeBase;
 	struct JsonToken
 	{
-		JsonToken( ) : pos( 0, 0 ), tokentype( None ), c( 0 ) {}
+		JsonToken( ) : pos( 0, 0 ), tokentype( Root ), c( 0 ) {}
 		JsonToken( const size_t _pos, TokenType _t, char _c ) : pos( _pos, 0 ), tokentype( _t ), c( _c ) {}
 		JsonToken( const size_t zero, const size_t _pos, TokenType _t, char _c ) : pos( zero, _pos ), tokentype( _t ), c( _c ) {}
 		JsonToken( const JsonToken& that )
@@ -141,7 +141,7 @@ namespace ExeJson
 				case ObjectClose: ss << rvid << ulin << c << normal; break;
 				case Special: ss << red << c << normal; break;
 				case Character: ss << teal << c << normal; break;
-				case None: ss << bluebk << green << bold << c << normal; break;
+				case Root: ss << bluebk << green << bold << c << normal; break;
 				default: ss << tealbk << blue << c;
 			}
 			return ss.str();
@@ -447,7 +447,6 @@ namespace ExeJson
 				qtext( *it );
 			Excavator excavator( txt, root, qtext );
 			Markers m( excavator ); 
-			//cbug << root;
 			root >> cbug;
 			cbug << endl << setw( 80 ) << setfill( '-' ) << "-" << endl;
 			stringstream ss;
