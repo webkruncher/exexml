@@ -44,6 +44,13 @@ struct CBug : ofstream
 namespace ExeJson
 {
 	enum TokenType { None, Coma, Coln, Special, Character, ObjectOpen, ObjectClose, ListOpen, ListClose };
+
+	struct GlyphDisposition
+	{
+		GlyphDisposition() : Enquoted( false ) {}
+		bool Enquoted;
+	};
+
 	struct Markers : pair<size_t,size_t>
 	{
 		typedef pair<size_t,size_t> mtype;
@@ -114,7 +121,8 @@ namespace ExeJson
 	struct QueString : queue< JsonToken >
 	{
 		QueString() = delete;
-		QueString( const int _much ) : much( _much ) {}
+		QueString( const int _much, GlyphDisposition& _glyphs ) 
+			: much( _much ), glyphs( _glyphs ) {}
 		void operator()( const char c )
 		{
 			much++;
@@ -149,6 +157,7 @@ namespace ExeJson
 		}
 		private:
 		int much;
+		GlyphDisposition& glyphs;
 	};
 
 	struct Excavator;
@@ -294,11 +303,13 @@ namespace ExeJson
 		return true;
 	}
 
+
 	struct Json
 	{
 		bool operator+=( const string& txt )
 		{
-			QueString qtext( 0 );
+			GlyphDisposition glyphs;
+			QueString qtext( 0, glyphs );
 			for ( string::const_iterator it=txt.begin();it!=txt.end();it++) 
 				qtext( *it );
 			Excavator excavator( txt, root, qtext );
