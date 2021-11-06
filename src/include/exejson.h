@@ -207,8 +207,8 @@ namespace ExeJson
 		const int level;
 		const JsonToken jc;
 		private:
-		//friend ostream& operator<<(ostream&,const NodeBase&);
-		//virtual ostream& operator<<( ostream& ) const = 0;
+		friend ostream& operator<<(ostream&,const NodeBase&);
+		virtual ostream& operator<<( ostream& ) const = 0;
 	};
 	//inline ostream& operator<<(ostream& o,const NodeBase& n) { return n.operator<<(o); }
 
@@ -228,6 +228,19 @@ namespace ExeJson
 			o << tracetabs( level ) << "<-" << ss << " " << endl;
 			return o;
 		} 
+		private:
+		virtual ostream& operator>>( ostream& o ) const 
+		{
+			const string ss( jc );
+			o << tracetabs( level ) << "->" << jc << " " << endl;
+			for ( const_iterator it=begin();it!=end();it++)
+			{
+				const NodeBase& n( **it );
+				o << n;
+			}
+			o << tracetabs( level ) << "<-" << jc << " " << endl;
+			return o;
+		}
 	};
 
 	struct Object : Node
@@ -375,6 +388,7 @@ namespace ExeJson
 			Markers m( excavator ); 
 			//cbug << root;
 			root >> cbug;
+			cout << root;
 			//JsonGlyphTypeLegend();
 			return true;
 		}
