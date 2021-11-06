@@ -242,18 +242,27 @@ namespace ExeJson
 		virtual void operator()( const string& txt, stringstream& ss ) const {}
 	};
 
+	struct RootNode : Node
+	{
+		RootNode(){}
+		RootNode( const int _level, const JsonToken _jc ) : Node( _level, _jc ) {}
+		void operator()( const string& txt, stringstream& ss ) const
+		{
+			for ( const_iterator it=begin();it!=end();it++)
+			{
+				const NodeBase& n( **it );
+				n( txt, ss );
+			}
+		}
+	};
+
 	struct Object : Node
 	{
-		Object(){}
 		Object( const int _level, const JsonToken _jc ) : Node( _level, _jc ) {}
 		void operator()( const string& txt, stringstream& ss ) const
 		{
-			if ( level ) // skip root
-			{
-				const Markers& pos( *this );
-				const string& s( txt.substr( pos.first, pos.second-pos.first ) );
-				ss << tracetabs( level ) << s << endl;
-			}
+			const Markers& pos( *this );
+			ss << tracetabs( level-1 ) << "\033[7m\033[34m" << jc << "\033[0m" << endl;
 			for ( const_iterator it=begin();it!=end();it++)
 			{
 				const NodeBase& n( **it );
@@ -269,8 +278,7 @@ namespace ExeJson
 		void operator()( const string& txt, stringstream& ss ) const
 		{
 			const Markers& pos( *this );
-			const string& s( txt.substr( pos.first, pos.second-pos.first ) );
-			ss << tracetabs( level ) << s << endl;
+			ss << tracetabs( level-1 ) << "\033[7m\033[35m" << jc << "\033[0m" << endl;
 			for ( const_iterator it=begin();it!=end();it++)
 			{
 				const NodeBase& n( **it );
@@ -354,7 +362,7 @@ namespace ExeJson
 			break;
 			case ObjectClose: 
 			{
-				push_back( new Object( level+1, jc ) );
+				push_back( new Object( level, jc ) );
 				Markers m( jc );
 				closure( m );
 				return false;
@@ -372,7 +380,7 @@ namespace ExeJson
 			break;
 			case ListClose: 
 			{
-				push_back( new List( level+1, jc ) );
+				push_back( new List( level, jc ) );
 				Markers m( jc );
 				closure( m );
 				return false;
@@ -425,7 +433,6 @@ namespace ExeJson
 				return true;
 			}
 			break;
-			//default: const string cc( jc ); cout << "D:" << cc << "; ";
 		}
 		return true;
 	}
@@ -451,7 +458,7 @@ namespace ExeJson
 			return true;
 		}
 		private:
-		Object root;
+		RootNode root;
 	};
 
 } // ExeJson

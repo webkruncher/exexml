@@ -15,7 +15,8 @@
                 {
                         "key": "somewhere in \"nowhwere\"",
                         "value": "http://someurl:3000",
-			[]
+			[],
+			["1","2","3"],
                 }
         ],
 	"ender" : "the end"
