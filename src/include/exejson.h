@@ -205,12 +205,17 @@ namespace ExeJson
 		void closure( Markers& pos ) const { jc.closure( pos ); }
 		operator Markers () const { return jc; }
 		virtual ostream& operator>>( ostream& o ) const = 0;
-		virtual void operator()( const string& txt, stringstream& ss ) const = 0;
+		//virtual void operator()( const string& txt, stringstream& ss ) const = 0;
 		protected:
 		const int level;
 		const JsonToken jc;
+		friend ostream& operator<<(ostream&, const NodeBase&);
+		virtual ostream& operator<<(ostream& o) const = 0;
+		friend ostream& operator<<(CBug&, const NodeBase&);
+		virtual ostream& operator<<(CBug& o) const = 0;
 	};
 	inline ostream& operator<<(ostream& o, const NodeBase& n ) { return n.operator<<(o); }
+	inline ostream& operator<<(CBug& o, const NodeBase& n ) { return n.operator<<(o); }
 
 	struct Node : NodeBase
 	{
@@ -228,12 +233,15 @@ namespace ExeJson
 			return o;
 		} 
 		private:
-		virtual void operator()( const string& txt, stringstream& ss ) const {}
+		//virtual void operator()( const string& txt, stringstream& ss ) const {}
+		virtual ostream& operator<<(ostream& o) const { return o; } 
+		virtual ostream& operator<<(CBug& o) const { return o; } 
 	};
 
 	struct RootNode : Node
 	{
 		RootNode() : Node( 0 ) {}
+#if 0
 		void operator()( const string& txt, stringstream& ss ) const
 		{
 			for ( const_iterator it=begin();it!=end();it++)
@@ -242,11 +250,24 @@ namespace ExeJson
 				n( txt, ss );
 			}
 		}
+#endif
+		private:
+		virtual ostream& operator<<(ostream& o) const { return o; } 
+		virtual ostream& operator<<(CBug& o) const 
+		{
+			for ( const_iterator it=begin();it!=end();it++)
+			{
+				const NodeBase& n( **it );
+				o << n;
+			}
+			return o;
+		}
 	};
 
 	struct Object : Node
 	{
 		Object( const int _level, const JsonToken _jc ) : Node( _level, _jc ) {}
+#if 0
 		void operator()( const string& txt, stringstream& ss ) const
 		{
 			const Markers& pos( *this );
@@ -257,12 +278,25 @@ namespace ExeJson
 				n( txt, ss );
 			}
 		}
+#endif
+		private:
+		virtual ostream& operator<<(CBug& o) const 
+		{
+			o << tracetabs( level-1 ) << blue << jc << normal;
+			for ( const_iterator it=begin();it!=end();it++)
+			{
+				const NodeBase& n( **it );
+				o << n;
+			}
+			return o;
+		}
 	};
 
 
 	struct List : Node
 	{
 		List( const int _level, const JsonToken _jc ) : Node( _level, _jc ) {}
+#if 0
 		void operator()( const string& txt, stringstream& ss ) const
 		{
 			const Markers& pos( *this );
@@ -273,29 +307,58 @@ namespace ExeJson
 				n( txt, ss );
 			}
 		}
+#endif
+		private:
+		virtual ostream& operator<<(CBug& o) const 
+		{
+			o << ulin << jc << normal;
+			for ( const_iterator it=begin();it!=end();it++)
+			{
+				const NodeBase& n( **it );
+				o << n;
+			}
+			return o;
+		}
 	};
 
 	struct Comma : Node
 	{
 		Comma( const int _level, const JsonToken _jc ) : Node( _level, _jc ) {}
+#if 0
 		void operator()( const string& txt, stringstream& ss ) const
 		{
 			ss << blink << "," << normal;
+		}
+#endif
+		private:
+		virtual ostream& operator<<(CBug& o) const 
+		{
+			o << blink << "," << normal;
+			return o;
 		}
 	};
 
 	struct Colon : Node
 	{
 		Colon( const int _level, const JsonToken _jc ) : Node( _level, _jc ) {}
+#if 0
 		void operator()( const string& txt, stringstream& ss ) const
 		{
 			ss << rvid << ":" << normal ;
+		}
+#endif
+		private:
+		virtual ostream& operator<<(CBug& o) const 
+		{
+			o << rvid << ":" << normal ;
+			return o;
 		}
 	};
 
 	struct QuotationMark : Node
 	{
 		QuotationMark( const int _level, const JsonToken _jc ) : Node( _level, _jc ) {}
+#if 0
 		void operator()( const string& txt, stringstream& ss ) const
 		{
 			const Markers& pos( *this );
@@ -306,11 +369,24 @@ namespace ExeJson
 				n( txt, ss );
 			}
 		}
+#endif
+		private:
+		virtual ostream& operator<<(CBug& o) const 
+		{
+			o << rvid << mgenta << blink << "\"" << normal;
+			for ( const_iterator it=begin();it!=end();it++)
+			{
+				const NodeBase& n( **it );
+				o << n;
+			}
+			return o;
+		}
 	};
 
 	struct SpecialChar : Node
 	{
 		SpecialChar( const int _level, const JsonToken _jc ) : Node( _level, _jc ) {}
+#if 0
 		void operator()( const string& txt, stringstream& ss ) const
 		{
 			const Markers& pos( *this );
@@ -321,14 +397,34 @@ namespace ExeJson
 				n( txt, ss );
 			}
 		}
+#endif
+		private:
+		virtual ostream& operator<<(CBug& o) const 
+		{
+			o << red << jc << normal;
+			for ( const_iterator it=begin();it!=end();it++)
+			{
+				const NodeBase& n( **it );
+				o << n;
+			}
+			return o;
+		}
 	};
 
 	struct RegularCharacter : Node
 	{
 		RegularCharacter( const int _level, const JsonToken _jc ) : Node( _level, _jc ) {}
+#if 0
 		void operator()( const string& txt, stringstream& ss ) const
 		{
 			ss << yellow << bold << jc << normal;
+		}
+#endif
+		private:
+		virtual ostream& operator<<(CBug& o) const 
+		{
+			o << yellow << bold << jc << normal;
+			return o;
 		}
 	};
 
@@ -463,11 +559,12 @@ namespace ExeJson
 			Excavator excavator( txt, root, qtext );
 			Markers m( excavator ); 
 			//root >> cbug;
-			stringstream ss;
-			root( txt, ss );
-			cerr << ss.str();
-			cerr << endl << setw( 80 ) << setfill( '-' ) << "-" << endl;
-			cerr << root;
+			//stringstream ss;
+			//root( txt, ss );
+			//cerr << ss.str();
+			cbug << root;
+			//cerr << endl << setw( 80 ) << setfill( '-' ) << "-" << endl;
+			//cerr << root;
 			//JsonGlyphTypeLegend();
 			return true;
 		}
