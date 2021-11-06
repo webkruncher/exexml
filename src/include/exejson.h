@@ -277,7 +277,7 @@ namespace ExeJson
 		void operator()( const string& txt, stringstream& ss ) const
 		{
 			const Markers& pos( *this );
-			ss << tracetabs( level-1 ) << blue << jc << green << pos << normal << endl;
+			ss << jc ;
 			for ( const_iterator it=begin();it!=end();it++)
 			{
 				const NodeBase& n( **it );
@@ -286,38 +286,61 @@ namespace ExeJson
 		}
 	};
 
-	struct PlainCharacter : Node
+	struct Comma : Node
 	{
-		PlainCharacter( const int _level, const JsonToken _jc ) : Node( _level, _jc ) {}
+		Comma( const int _level, const JsonToken _jc ) : Node( _level, _jc ) {}
 		void operator()( const string& txt, stringstream& ss ) const
 		{
 			ss << jc;
 		}
 	};
 
-	struct Comma : Node
-	{
-		Comma( const int _level, const JsonToken _jc ) : Node( _level, _jc ) {}
-	};
-
 	struct Colon : Node
 	{
 		Colon( const int _level, const JsonToken _jc ) : Node( _level, _jc ) {}
+		void operator()( const string& txt, stringstream& ss ) const
+		{
+			ss << jc;
+		}
 	};
 
 	struct QuotationMark : Node
 	{
 		QuotationMark( const int _level, const JsonToken _jc ) : Node( _level, _jc ) {}
+		void operator()( const string& txt, stringstream& ss ) const
+		{
+			const Markers& pos( *this );
+			ss << bluebk << rvid << (char) jc << normal;
+			for ( const_iterator it=begin();it!=end();it++)
+			{
+				const NodeBase& n( **it );
+				n( txt, ss );
+			}
+		}
 	};
 
 	struct SpecialChar : Node
 	{
 		SpecialChar( const int _level, const JsonToken _jc ) : Node( _level, _jc ) {}
+		void operator()( const string& txt, stringstream& ss ) const
+		{
+			const Markers& pos( *this );
+			ss << jc << normal;
+			for ( const_iterator it=begin();it!=end();it++)
+			{
+				const NodeBase& n( **it );
+				n( txt, ss );
+			}
+		}
 	};
 
 	struct RegularCharacter : Node
 	{
 		RegularCharacter( const int _level, const JsonToken _jc ) : Node( _level, _jc ) {}
+		void operator()( const string& txt, stringstream& ss ) const
+		{
+			ss << jc << normal;
+		}
 	};
 
 	struct Excavator 
@@ -345,8 +368,6 @@ namespace ExeJson
 		NodeBase& node;
 		QueString& qtext;
 	};
-
-
 
 	inline bool NodeBase::operator()( const string& txt, QueString& qtext, const JsonToken& jc )
 	{
