@@ -38,7 +38,7 @@ using namespace KruncherTools;
 
 struct CBug : ofstream
 {
-	CBug() : ofstream( "/dev/null" ) {}
+	CBug() : ofstream( "/dev/stderr" ) {}
 } cbug;
 
 namespace ExeJson
@@ -461,11 +461,12 @@ namespace ExeJson
 				qtext( *it );
 			Excavator excavator( txt, root, qtext );
 			Markers m( excavator ); 
-			root >> cbug;
-			//cerr << endl << setw( 80 ) << setfill( '-' ) << "-" << endl;
+			//root >> cbug;
 			stringstream ss;
 			root( txt, ss );
-			cout << ss.str();
+			cerr << ss.str();
+			cerr << endl << setw( 80 ) << setfill( '-' ) << "-" << endl;
+			cerr << root;
 			//JsonGlyphTypeLegend();
 			return true;
 		}
