@@ -262,7 +262,7 @@ namespace ExeJson
 		void operator()( const string& txt, stringstream& ss ) const
 		{
 			const Markers& pos( *this );
-			ss << tracetabs( level-1 ) << "\033[7m\033[34m" << jc << "\033[0m" << endl;
+			ss << tracetabs( level-1 ) << "\033[7m\033[34m" << jc << "\033[33m" << pos << normal << endl;
 			for ( const_iterator it=begin();it!=end();it++)
 			{
 				const NodeBase& n( **it );
@@ -278,7 +278,7 @@ namespace ExeJson
 		void operator()( const string& txt, stringstream& ss ) const
 		{
 			const Markers& pos( *this );
-			ss << tracetabs( level-1 ) << "\033[7m\033[35m" << jc << "\033[0m" << endl;
+			ss << tracetabs( level-1 ) << "\033[7m\033[35m" << jc << "\033[33m" << pos << normal << endl;
 			for ( const_iterator it=begin();it!=end();it++)
 			{
 				const NodeBase& n( **it );
