@@ -65,6 +65,7 @@ namespace ExeJson
 	{
 		JsonToken( ) : pos( 0, 0 ), tokentype( None ), c( 0 ) {}
 		JsonToken( const size_t _pos, TokenType _t, char _c ) : pos( _pos, 0 ), tokentype( _t ), c( _c ) {}
+		JsonToken( const size_t zero, const size_t _pos, TokenType _t, char _c ) : pos( zero, _pos ), tokentype( _t ), c( _c ) {}
 		JsonToken( const JsonToken& that )
 			: pos( that.pos ), tokentype( that.tokentype ), c( that.c ) { }
 		const JsonToken& operator=( const JsonToken& that ) const
@@ -83,8 +84,9 @@ namespace ExeJson
 			c=_c;
 			tokentype=_t;
 		}
-		void closure( const size_t closed ) const { pos.second=closed; }
 		operator const TokenType () const { return tokentype; }
+		operator Markers () const { return pos; }
+		void closure( const Markers& _pos ) const { pos.second=_pos.second; }
 		operator string () const
 		{
 			stringstream ss;
@@ -138,9 +140,9 @@ namespace ExeJson
 					case ',': { JsonToken jc( much, Coma, c ); push( jc ); break; }
 					case ':': { JsonToken jc( much, Coln, c ); push( jc ); break; }
 					case '{': { JsonToken jc( much, ObjectOpen, c ); push( jc ); break; }
-					case '}': { JsonToken jc( much, ObjectClose, c ); push( jc ); break; }
+					case '}': { JsonToken jc( 0, much, ObjectClose, c ); push( jc ); break; }
 					case '[': { JsonToken jc( much, ListOpen, c ); push( jc ); break; }
-					case ']': { JsonToken jc( much, ListClose, c ); push( jc ); break; }
+					case ']': { JsonToken jc( 0, much, ListClose, c ); push( jc ); break; }
 					//default: { JsonToken jc( much, Character, c ); push( jc ); }
 				}
 			}	
@@ -148,8 +150,6 @@ namespace ExeJson
 		private:
 		int much;
 	};
-
-
 
 	struct Excavator;
 	struct NodeBase : vector< NodeBase* >
@@ -159,8 +159,8 @@ namespace ExeJson
 		NodeBase( const int _level, const JsonToken _jc ) : level( _level ), jc( _jc ) {}
 		void operator = ( const size_t _endmarker ) { jc.pos.second=_endmarker; }
 		virtual ~NodeBase() { for ( iterator it=begin();it!=end();it++) delete *it; }
-		virtual bool operator()( const string&, QueString&, const JsonToken&, const size_t );
-		void closure( const size_t closed ) const { jc.closure( closed ); }
+		virtual bool operator()( const string&, QueString&, const JsonToken& );
+		void closure( Markers& pos ) const { jc.closure( pos ); }
 		protected:
 		const int level;
 		const JsonToken jc;
@@ -215,16 +215,21 @@ namespace ExeJson
 		Excavator( const string& _txt, NodeBase& _node, QueString& _qtext ) 
 			: txt(_txt), node( _node ), qtext( _qtext ) {}
 		void operator()( char c ) { qtext( c ); }
-		operator bool ()
+		operator Markers ()
 		{
 			while ( ! qtext.empty() )
 			{
 				const JsonToken& jc( qtext.front() );
 				qtext.pop();
-				if ( ! node( txt, qtext, jc, qtext.size() ) ) 
-					return false;
+				if ( ! node( txt, qtext, jc ) )
+				{
+					Markers m( jc );
+					//node.closure( m );
+					return m;
+				}
 			}
-			return true;
+			Markers none( -1, -1 );
+			return none;
 		}
 		private:
 		const string& txt;
@@ -234,7 +239,7 @@ namespace ExeJson
 
 
 
-	inline bool NodeBase::operator()( const string& txt, QueString& qtext, const JsonToken& jc, const size_t closure )
+	inline bool NodeBase::operator()( const string& txt, QueString& qtext, const JsonToken& jc )
 	{
 		const TokenType tokentype( jc );
 		switch ( tokentype )
@@ -244,9 +249,9 @@ namespace ExeJson
 				push_back( new Object( level+1, jc ) );
 				NodeBase& item( *back() );
 				Excavator excavate( txt, item, qtext );
-				bool done( !! excavate ) ;
-				item.closure( closure+qtext.size()+1 );
-				if ( done ) return false;
+				Markers m( excavate );
+				closure( m );
+				return true;
 			}
 			break;
 			case ObjectClose: 
@@ -259,9 +264,9 @@ namespace ExeJson
 				push_back( new List( level+1, jc ) );
 				NodeBase& item( *back() );
 				Excavator excavate( txt, item, qtext );
-				bool done( !! excavate ) ;
-				item.closure( closure+qtext.size()+1 );
-				if ( done ) return false;
+				Markers m( excavate );
+				closure( m );
+				return true;
 			}
 			break;
 			case ListClose: 
@@ -274,18 +279,16 @@ namespace ExeJson
 				push_back( new Comma( level+1, jc ) );
 				NodeBase& item( *back() );
 				Excavator excavate( txt, item, qtext );
-				bool done( !! excavate ) ;
-				item.closure( closure+qtext.size()+1 );
-				if ( done ) return true;
+				Markers m( excavate );
+				return true;
 			}
 			Character: 
 			{
 				push_back( new PlainCharacter( level+1, jc ) );
 				NodeBase& item( *back() );
 				Excavator excavate( txt, item, qtext );
-				bool done( !! excavate ) ;
-				item.closure( closure+qtext.size()+1 );
-				if ( done ) return true;
+				Markers m( excavate );
+				return true;
 			}
 		}
 		return true;
@@ -299,7 +302,7 @@ namespace ExeJson
 			for ( string::const_iterator it=txt.begin();it!=txt.end();it++) 
 				qtext( *it );
 			Excavator excavator( txt, root, qtext );
-			( !! excavator ); 
+			Markers m( excavator ); 
 			cerr << root;
 			return true;
 		}
