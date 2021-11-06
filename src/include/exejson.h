@@ -289,6 +289,10 @@ namespace ExeJson
 	struct PlainCharacter : Node
 	{
 		PlainCharacter( const int _level, const JsonToken _jc ) : Node( _level, _jc ) {}
+		void operator()( const string& txt, stringstream& ss ) const
+		{
+			ss << jc;
+		}
 	};
 
 	struct Comma : Node
