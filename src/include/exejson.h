@@ -67,11 +67,16 @@ namespace ExeJson
 	struct GlyphDisposition
 	{
 		GlyphDisposition() : Enquoted( false ) {}
-		bool enquoted()
+		bool enquoted( bool toggle=true )
 		{
-			const bool ret( Enquoted );
-			Enquoted=!Enquoted;
-			return ret;
+			if ( toggle )
+			{
+				const bool ret( Enquoted );
+				Enquoted=!Enquoted;
+				return ret;
+			} else {
+				return Enquoted;
+			}
 		}
 		private:
 		bool Enquoted;
@@ -127,17 +132,17 @@ namespace ExeJson
 			stringstream ss;
 			switch ( tokentype )
 			{
-				case Coma: ss << green << pos << "#" << c << normal; break;
-				case Coln: ss << bold << pos << "#" << c << normal; break;
-				case Quots: ss << rvid << yellow << pos << "#" << c << normal; break;
-				case ListOpen: ss << black << whitebk << pos << "#" << "LO" << normal; break;
-				case ListClose: ss << ulin << pos << "#" << "LC" << normal; break;
-				case ObjectOpen: ss << rvid << bold << pos << "#" << "OO" << normal; break;
-				case ObjectClose: ss << rvid << ulin << pos << "#" << "OC" << normal; break;
-				case Special: ss << yellow << pos << "#" << c << normal; break;
-				case Character: ss << teal << pos << "#" << c << normal; break;
-				case None: ss << bluebk << green << bold << pos << "#" << c << normal; break;
-				default: ss << tealbk << blue << pos << "#" << c;
+				case Coma: ss << green << c << normal; break;
+				case Coln: ss << bluebk << white << bold << c << normal; break;
+				case Quots: ss << rvid << yellow << c << normal; break;
+				case ListOpen: ss << black << whitebk << c << normal; break;
+				case ListClose: ss << black << whitebk << c << normal; break;
+				case ObjectOpen: ss << rvid << bold << c << normal; break;
+				case ObjectClose: ss << rvid << ulin << c << normal; break;
+				case Special: ss << red << c << normal; break;
+				case Character: ss << teal << c << normal; break;
+				case None: ss << bluebk << green << bold << c << normal; break;
+				default: ss << tealbk << blue << c;
 			}
 			return ss.str();
 		}
@@ -146,7 +151,15 @@ namespace ExeJson
 		mutable Markers pos;
 		mutable TokenType tokentype;
 		mutable char c;
+		friend ostream& operator<<( ostream&, const JsonToken& ); 
+		ostream& operator<<( ostream& o ) const 
+		{
+			o << c;
+			return o;
+		}
 	};
+
+	inline ostream& operator<<( ostream& o, const JsonToken& j ) { return j.operator<<(o); }
 
 	struct QueString : queue< JsonToken >
 	{
@@ -182,11 +195,11 @@ namespace ExeJson
 					case '}': { JsonToken jc( 0, much, ObjectClose, c ); push( jc ); break; }
 					case '[': { JsonToken jc( much, ListOpen, c ); push( jc ); break; }
 					case ']': { JsonToken jc( 0, much, ListClose, c ); push( jc ); break; }
-					//default: { JsonToken jc( much, Character, c ); push( jc ); }
+					default: { JsonToken jc( much, Character, c ); push( jc ); }
 				}
 			}	
 		}
-		bool enquoted() { return glyphs.enquoted(); }
+		bool enquoted( const bool toggle=true ) { return glyphs.enquoted( toggle ); }
 		private:
 		int much;
 		GlyphDisposition& glyphs;
@@ -216,14 +229,13 @@ namespace ExeJson
 		Node( const int _level, const JsonToken _jc ) : NodeBase( _level, _jc ) {}
 		virtual ostream& operator>>( ostream& o ) const 
 		{
-			const string ss( jc );
-			o << tracetabs( level ) << "->" << ss << " " << endl;
+			string ss( jc );
+			if ( level ) o << ss ;
 			for ( const_iterator it=begin();it!=end();it++)
 			{
 				const NodeBase& n( **it );
 				n >> o;
 			}
-			o << tracetabs( level ) << "<-" << ss << " " << endl;
 			return o;
 		} 
 		private:
@@ -277,6 +289,11 @@ namespace ExeJson
 		Comma( const int _level, const JsonToken _jc ) : Node( _level, _jc ) {}
 	};
 
+	struct Colon : Node
+	{
+		Colon( const int _level, const JsonToken _jc ) : Node( _level, _jc ) {}
+	};
+
 	struct QuotationMark : Node
 	{
 		QuotationMark( const int _level, const JsonToken _jc ) : Node( _level, _jc ) {}
@@ -285,6 +302,11 @@ namespace ExeJson
 	struct SpecialChar : Node
 	{
 		SpecialChar( const int _level, const JsonToken _jc ) : Node( _level, _jc ) {}
+	};
+
+	struct RegularCharacter : Node
+	{
+		RegularCharacter( const int _level, const JsonToken _jc ) : Node( _level, _jc ) {}
 	};
 
 	struct Excavator 
@@ -332,6 +354,7 @@ namespace ExeJson
 			break;
 			case ObjectClose: 
 			{
+				push_back( new Object( level+1, jc ) );
 				Markers m( jc );
 				closure( m );
 				return false;
@@ -349,14 +372,33 @@ namespace ExeJson
 			break;
 			case ListClose: 
 			{
+				push_back( new List( level+1, jc ) );
 				Markers m( jc );
 				closure( m );
 				return false;
 			}
 			break;
+			case Coln: 
+			{
+				if ( qtext.enquoted( false ) ) 
+				{
+					jc.morph( Special, ':' );
+					push_back( new SpecialChar( level, jc ) );
+				} else {
+					push_back( new Colon( level, jc ) );
+				}
+				return true;
+			}
+			break;
 			case Coma: 
 			{
 				push_back( new Comma( level, jc ) );
+				return true;
+			}
+			break;
+			case Character: 
+			{
+				push_back( new RegularCharacter( level, jc ) );
 				return true;
 			}
 			break;
@@ -371,6 +413,7 @@ namespace ExeJson
 					closure( m );
 					return true;
 				} else {
+					push_back( new QuotationMark( level+1, jc ) );
 					return false;
 				}
 			}
@@ -400,7 +443,7 @@ namespace ExeJson
 			Markers m( excavator ); 
 			//cbug << root;
 			root >> cbug;
-			cbug << setw( 80 ) << setfill( '-' ) << "-" << endl;
+			cbug << endl << setw( 80 ) << setfill( '-' ) << "-" << endl;
 			stringstream ss;
 			root( txt, ss );
 			cout << ss.str();
