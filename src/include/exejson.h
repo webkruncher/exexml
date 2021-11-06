@@ -235,9 +235,12 @@ namespace ExeJson
 		Object( const int _level, const JsonToken _jc ) : Node( _level, _jc ) {}
 		void operator()( const string& txt, stringstream& ss ) const
 		{
-			const Markers& pos( *this );
-			const string& s( txt.substr( pos.first, pos.second-pos.first ) );
-			ss << "O" << level << s << endl;
+			if ( level ) // skip root
+			{
+				const Markers& pos( *this );
+				const string& s( txt.substr( pos.first, pos.second-pos.first ) );
+				ss << tracetabs( level ) << s << endl;
+			}
 			for ( const_iterator it=begin();it!=end();it++)
 			{
 				const NodeBase& n( **it );
@@ -254,7 +257,7 @@ namespace ExeJson
 		{
 			const Markers& pos( *this );
 			const string& s( txt.substr( pos.first, pos.second-pos.first ) );
-			ss << "L" << level << s << endl;
+			ss << tracetabs( level ) << s << endl;
 			for ( const_iterator it=begin();it!=end();it++)
 			{
 				const NodeBase& n( **it );
