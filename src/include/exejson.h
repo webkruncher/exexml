@@ -85,7 +85,8 @@ namespace ExeJson
 		friend ostream& operator<<(ostream&,const Markers&);
 		ostream& operator<<(ostream& o) const
 		{
-			o << "(" << first << ":" << second << ")";
+			if ( second )
+				o << "(" << first << ":" << second << ")";
 			return o;
 		}
 	}; 
@@ -321,6 +322,7 @@ namespace ExeJson
 				return false;
 			}
 			break;
+#if 0
 			case Coma: 
 			{
 				push_back( new Comma( level, jc ) );
@@ -354,6 +356,7 @@ namespace ExeJson
 				return true;
 			}
 			break;
+#endif
 			
 			//default: const string cc( jc ); cout << "D:" << cc << "; ";
 		}
@@ -368,9 +371,7 @@ namespace ExeJson
 			GlyphDisposition glyphs;
 			QueString qtext( 0, glyphs );
 			for ( string::const_iterator it=txt.begin();it!=txt.end();it++) 
-			{
 				qtext( *it );
-			}
 			Excavator excavator( txt, root, qtext );
 			Markers m( excavator ); 
 			cbug << root;
