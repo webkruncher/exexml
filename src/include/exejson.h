@@ -38,8 +38,8 @@ using namespace KruncherTools;
 
 struct CBug : ofstream
 {
-	CBug() : ofstream( "/dev/stderr" ) {}
-} cbug;
+	CBug() : ofstream( "/dev/stdout" ) {}
+} ;
 
 namespace ExeJson
 {
@@ -49,18 +49,18 @@ namespace ExeJson
 		Coma, Coln, Quots, Special, Character
 	};
 
-	inline void JsonGlyphTypeLegend()
+	inline void JsonGlyphTypeLegend( ostream& o)
 	{
-		cbug << "Root       :" << Root       << endl;
-		cbug << "ObjectOpen :" << ObjectOpen << endl;
-		cbug << "ObjectClose:" << ObjectClose<< endl;
-		cbug << "ListOpen   :" << ListOpen   << endl;
-		cbug << "ListClose  :" << ListClose  << endl;
-		cbug << "Coma       :" << Coma       << endl;
-		cbug << "Coln       :" << Coln       << endl;
-		cbug << "Quots      :" << Quots      << endl;
-		cbug << "Special    :" << Special    << endl;
-		cbug << "Character  :" << Character  << endl;
+		o<< "Root       :" << Root       << endl;
+		o<< "ObjectOpen :" << ObjectOpen << endl;
+		o<< "ObjectClose:" << ObjectClose<< endl;
+		o<< "ListOpen   :" << ListOpen   << endl;
+		o<< "ListClose  :" << ListClose  << endl;
+		o<< "Coma       :" << Coma       << endl;
+		o<< "Coln       :" << Coln       << endl;
+		o<< "Quots      :" << Quots      << endl;
+		o<< "Special    :" << Special    << endl;
+		o<< "Character  :" << Character  << endl;
 	}
 
 
@@ -204,43 +204,31 @@ namespace ExeJson
 		virtual bool operator()( const string&, QueString&, const JsonToken& );
 		void closure( Markers& pos ) const { jc.closure( pos ); }
 		operator Markers () const { return jc; }
-		virtual ostream& operator>>( ostream& o ) const = 0;
 		protected:
 		const int level;
 		const JsonToken jc;
 		friend ostream& operator<<(ostream&, const NodeBase&);
 		virtual ostream& operator<<(ostream& o) const = 0;
-		friend ostream& operator<<(CBug&, const NodeBase&);
-		virtual ostream& operator<<(CBug& o) const = 0;
+		friend CBug& operator<<(CBug&, const NodeBase&);
+		virtual CBug& operator<<(CBug& o) const = 0;
 	};
 	inline ostream& operator<<(ostream& o, const NodeBase& n ) { return n.operator<<(o); }
-	inline ostream& operator<<(CBug& o, const NodeBase& n ) { return n.operator<<(o); }
+	inline CBug& operator<<(CBug& o, const NodeBase& n ) { return n.operator<<(o); }
 
 	struct Node : NodeBase
 	{
 		Node( const int _level ) : NodeBase( _level ) {}
 		Node( const int _level, const JsonToken _jc ) : NodeBase( _level, _jc ) {}
-		virtual ostream& operator>>( ostream& o ) const 
-		{
-			string ss( jc );
-			if ( level ) o << ss ;
-			for ( const_iterator it=begin();it!=end();it++)
-			{
-				const NodeBase& n( **it );
-				n >> o;
-			}
-			return o;
-		} 
 		private:
 		virtual ostream& operator<<(ostream& o) const = 0;
-		virtual ostream& operator<<(CBug& o) const = 0;
+		virtual CBug& operator<<(CBug& o) const = 0;
 	};
 
 	struct RootNode : Node
 	{
 		RootNode() : Node( 0 ) {}
 		private:
-		virtual ostream& operator<<(CBug& o) const 
+		virtual CBug& operator<<(CBug& o) const 
 		{
 			for ( const_iterator it=begin();it!=end();it++)
 			{
@@ -264,7 +252,7 @@ namespace ExeJson
 	{
 		Object( const int _level, const JsonToken _jc ) : Node( _level, _jc ) {}
 		private:
-		virtual ostream& operator<<(CBug& o) const 
+		virtual CBug& operator<<(CBug& o) const 
 		{
 			o << tracetabs( level-1 ) << blue << jc << normal;
 			for ( const_iterator it=begin();it!=end();it++)
@@ -291,7 +279,7 @@ namespace ExeJson
 	{
 		List( const int _level, const JsonToken _jc ) : Node( _level, _jc ) {}
 		private:
-		virtual ostream& operator<<(CBug& o) const 
+		virtual CBug& operator<<(CBug& o) const 
 		{
 			o << ulin << jc << normal;
 			for ( const_iterator it=begin();it!=end();it++)
@@ -317,7 +305,7 @@ namespace ExeJson
 	{
 		Comma( const int _level, const JsonToken _jc ) : Node( _level, _jc ) {}
 		private:
-		virtual ostream& operator<<(CBug& o) const 
+		virtual CBug& operator<<(CBug& o) const 
 		{
 			o << blink << "," << normal;
 			return o;
@@ -333,7 +321,7 @@ namespace ExeJson
 	{
 		Colon( const int _level, const JsonToken _jc ) : Node( _level, _jc ) {}
 		private:
-		virtual ostream& operator<<(CBug& o) const 
+		virtual CBug& operator<<(CBug& o) const 
 		{
 			o << rvid << ":" << normal ;
 			return o;
@@ -349,7 +337,7 @@ namespace ExeJson
 	{
 		QuotationMark( const int _level, const JsonToken _jc ) : Node( _level, _jc ) {}
 		private:
-		virtual ostream& operator<<(CBug& o) const 
+		virtual CBug& operator<<(CBug& o) const 
 		{
 			o << rvid << mgenta << blink << "\"" << normal;
 			for ( const_iterator it=begin();it!=end();it++)
@@ -375,7 +363,7 @@ namespace ExeJson
 	{
 		SpecialChar( const int _level, const JsonToken _jc ) : Node( _level, _jc ) {}
 		private:
-		virtual ostream& operator<<(CBug& o) const 
+		virtual CBug& operator<<(CBug& o) const 
 		{
 			o << red << jc << normal;
 			for ( const_iterator it=begin();it!=end();it++)
@@ -401,7 +389,7 @@ namespace ExeJson
 	{
 		RegularCharacter( const int _level, const JsonToken _jc ) : Node( _level, _jc ) {}
 		private:
-		virtual ostream& operator<<(CBug& o) const 
+		virtual CBug& operator<<(CBug& o) const 
 		{
 			o << yellow << bold << jc << normal;
 			return o;
@@ -543,14 +531,9 @@ namespace ExeJson
 				qtext( *it );
 			Excavator excavator( txt, root, qtext );
 			Markers m( excavator ); 
-			//root >> cbug;
-			//stringstream ss;
-			//root( txt, ss );
-			//cerr << ss.str();
-			cbug << root;
-			//cerr << endl << setw( 80 ) << setfill( '-' ) << "-" << endl;
+			if ( false ) { CBug cbug; cbug << root; cerr << endl << setw( 80 ) << setfill( '-' ) << "-" << endl; }
 			cerr << root;
-			//JsonGlyphTypeLegend();
+			//JsonGlyphTypeLegend( cout );
 			return true;
 		}
 		private:
