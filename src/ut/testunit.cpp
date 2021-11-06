@@ -149,8 +149,8 @@ int main(int argc,char** argv)
 			}
 			if ( ! (json+=ss.str()) )
 				throw string("Cannot load json");
-#if 0
 			ExeJson::Object& J( json );
+#if 0
 			const ExeJson::Index& index( J );
 			for ( ExeJson::Index::const_iterator ii=index.begin();ii!=index.end();ii++)
 			{
@@ -162,7 +162,6 @@ int main(int argc,char** argv)
 				}
 				
 			}
-#endif
 			const string what( "lst" );
 			const ExeJson::Items& lst( json[ what ] );
 			for ( ExeJson::Items::const_iterator lit=lst.begin();lit!=lst.end();lit++)
@@ -170,6 +169,7 @@ int main(int argc,char** argv)
 				const size_t ndx( *lit );
 				cout << "List:" << ndx << endl;
 			}
+#endif
 		}
 	}
 	catch(std::exception& e) {except=e.what();}

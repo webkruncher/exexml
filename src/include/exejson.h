@@ -608,10 +608,7 @@ namespace ExeJson
 			JsonGlyphTypeLegend( cout );
 			return true;
 		}
-		const Items& operator[]( const string& what )
-		{
-			return root[ what ];
-		}
+		const Object& operator() const { return root; }
 		private:
 		RootNode root;
 	};
