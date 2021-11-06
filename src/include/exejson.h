@@ -232,16 +232,24 @@ namespace ExeJson
 			return o;
 		} 
 		private:
-		virtual ostream& operator<<(ostream& o) const { return o; } 
-		virtual ostream& operator<<(CBug& o) const { return o; } 
+		virtual ostream& operator<<(ostream& o) const = 0;
+		virtual ostream& operator<<(CBug& o) const = 0;
 	};
 
 	struct RootNode : Node
 	{
 		RootNode() : Node( 0 ) {}
 		private:
-		virtual ostream& operator<<(ostream& o) const { return o; } 
 		virtual ostream& operator<<(CBug& o) const 
+		{
+			for ( const_iterator it=begin();it!=end();it++)
+			{
+				const NodeBase& n( **it );
+				o << n;
+			}
+			return o;
+		}
+		virtual ostream& operator<<(ostream& o) const 
 		{
 			for ( const_iterator it=begin();it!=end();it++)
 			{
@@ -266,6 +274,16 @@ namespace ExeJson
 			}
 			return o;
 		}
+		virtual ostream& operator<<(ostream& o) const 
+		{
+			o << jc;
+			for ( const_iterator it=begin();it!=end();it++)
+			{
+				const NodeBase& n( **it );
+				o << n;
+			}
+			return o;
+		}
 	};
 
 
@@ -276,6 +294,16 @@ namespace ExeJson
 		virtual ostream& operator<<(CBug& o) const 
 		{
 			o << ulin << jc << normal;
+			for ( const_iterator it=begin();it!=end();it++)
+			{
+				const NodeBase& n( **it );
+				o << n;
+			}
+			return o;
+		}
+		virtual ostream& operator<<(ostream& o) const 
+		{
+			o << jc ;
 			for ( const_iterator it=begin();it!=end();it++)
 			{
 				const NodeBase& n( **it );
@@ -294,6 +322,11 @@ namespace ExeJson
 			o << blink << "," << normal;
 			return o;
 		}
+		virtual ostream& operator<<(ostream& o) const 
+		{
+			o << "," ;
+			return o;
+		}
 	};
 
 	struct Colon : Node
@@ -305,6 +338,11 @@ namespace ExeJson
 			o << rvid << ":" << normal ;
 			return o;
 		}
+		virtual ostream& operator<<(ostream& o) const 
+		{
+			o << ":"; 
+			return o;
+		}
 	};
 
 	struct QuotationMark : Node
@@ -314,6 +352,16 @@ namespace ExeJson
 		virtual ostream& operator<<(CBug& o) const 
 		{
 			o << rvid << mgenta << blink << "\"" << normal;
+			for ( const_iterator it=begin();it!=end();it++)
+			{
+				const NodeBase& n( **it );
+				o << n;
+			}
+			return o;
+		}
+		virtual ostream& operator<<(ostream& o) const 
+		{
+			o << "\"" ;
 			for ( const_iterator it=begin();it!=end();it++)
 			{
 				const NodeBase& n( **it );
@@ -337,6 +385,16 @@ namespace ExeJson
 			}
 			return o;
 		}
+		virtual ostream& operator<<(ostream& o) const 
+		{
+			o << jc; 
+			for ( const_iterator it=begin();it!=end();it++)
+			{
+				const NodeBase& n( **it );
+				o << n;
+			}
+			return o;
+		}
 	};
 
 	struct RegularCharacter : Node
@@ -346,6 +404,11 @@ namespace ExeJson
 		virtual ostream& operator<<(CBug& o) const 
 		{
 			o << yellow << bold << jc << normal;
+			return o;
+		}
+		virtual ostream& operator<<(ostream& o) const 
+		{
+			o << jc;
 			return o;
 		}
 	};
