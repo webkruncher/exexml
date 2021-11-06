@@ -277,7 +277,7 @@ namespace ExeJson
 		void operator()( const string& txt, stringstream& ss ) const
 		{
 			const Markers& pos( *this );
-			ss << jc ;
+			ss << ulin << jc << normal;
 			for ( const_iterator it=begin();it!=end();it++)
 			{
 				const NodeBase& n( **it );
@@ -291,7 +291,7 @@ namespace ExeJson
 		Comma( const int _level, const JsonToken _jc ) : Node( _level, _jc ) {}
 		void operator()( const string& txt, stringstream& ss ) const
 		{
-			ss << ",";
+			ss << blink << "," << normal;
 		}
 	};
 
@@ -310,7 +310,7 @@ namespace ExeJson
 		void operator()( const string& txt, stringstream& ss ) const
 		{
 			const Markers& pos( *this );
-			ss << bluebk << rvid << "\"" << normal;
+			ss << rvid << mgenta << blink << "\"" << normal;
 			for ( const_iterator it=begin();it!=end();it++)
 			{
 				const NodeBase& n( **it );
@@ -339,7 +339,7 @@ namespace ExeJson
 		RegularCharacter( const int _level, const JsonToken _jc ) : Node( _level, _jc ) {}
 		void operator()( const string& txt, stringstream& ss ) const
 		{
-			ss << jc << normal;
+			ss << yellow << bold << jc << normal;
 		}
 	};
 
