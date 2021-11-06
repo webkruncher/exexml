@@ -87,6 +87,7 @@ namespace ExeJson
 		{
 			if ( second )
 				o << "(" << first << ":" << second << ")";
+			else o << red << "(" << first << ")" << normal; 
 			return o;
 		}
 	}; 
@@ -129,7 +130,7 @@ namespace ExeJson
 				case Coma: ss << green << pos << "#" << c << normal; break;
 				case Coln: ss << bold << pos << "#" << c << normal; break;
 				case Quots: ss << rvid << yellow << pos << "#" << c << normal; break;
-				case ListOpen: ss << red << pos << "#" << "LO" << normal; break;
+				case ListOpen: ss << black << whitebk << pos << "#" << "LO" << normal; break;
 				case ListClose: ss << ulin << pos << "#" << "LC" << normal; break;
 				case ObjectOpen: ss << rvid << bold << pos << "#" << "OO" << normal; break;
 				case ObjectClose: ss << rvid << ulin << pos << "#" << "OC" << normal; break;
@@ -200,6 +201,7 @@ namespace ExeJson
 		virtual ~NodeBase() { for ( iterator it=begin();it!=end();it++) delete *it; }
 		virtual bool operator()( const string&, QueString&, const JsonToken& );
 		void closure( Markers& pos ) const { jc.closure( pos ); }
+		operator Markers () const { return jc; }
 		protected:
 		const int level;
 		const JsonToken jc;
@@ -217,12 +219,13 @@ namespace ExeJson
 		virtual ostream& operator<<( ostream& o ) const 
 		{
 			const string ss( jc );
-			o << level << "->" << ss << " " ;
+			o << tracetabs( level ) << "->" << ss << " " << endl;
 			for ( const_iterator it=begin();it!=end();it++)
 			{
 				const NodeBase& n( **it );
 				o << n;
 			}
+			o << tracetabs( level ) << "<-" << ss << " " << endl;
 			return o;
 		} 
 	};
@@ -272,11 +275,11 @@ namespace ExeJson
 				qtext.pop();
 				if ( ! node( txt, qtext, jc ) )
 				{
-					Markers m( jc );
+					const Markers m( jc );
 					return m;
 				}
 			}
-			Markers none( 0, 0 );
+			Markers none( node );
 			return none;
 		}
 		private:
@@ -298,6 +301,7 @@ namespace ExeJson
 				NodeBase& item( *back() );
 				Excavator excavate( txt, item, qtext );
 				Markers m( excavate );
+cout << "O" << m << endl;
 				closure( m );
 				return true;
 			}
@@ -313,6 +317,7 @@ namespace ExeJson
 				NodeBase& item( *back() );
 				Excavator excavate( txt, item, qtext );
 				Markers m( excavate );
+cout << "L" << m << endl;
 				closure( m );
 				return true;
 			}
