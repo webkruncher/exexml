@@ -203,14 +203,11 @@ namespace ExeJson
 		void closure( Markers& pos ) const { jc.closure( pos ); }
 		operator Markers () const { return jc; }
 		virtual ostream& operator>>( ostream& o ) const = 0;
+		virtual void operator()( const string& txt, stringstream& ss ) const = 0;
 		protected:
 		const int level;
 		const JsonToken jc;
-		private:
-		friend ostream& operator<<(ostream&,const NodeBase&);
-		virtual ostream& operator<<( ostream& ) const = 0;
 	};
-	//inline ostream& operator<<(ostream& o,const NodeBase& n) { return n.operator<<(o); }
 
 	struct Node : NodeBase
 	{
@@ -229,30 +226,41 @@ namespace ExeJson
 			return o;
 		} 
 		private:
-		virtual ostream& operator>>( ostream& o ) const 
-		{
-			const string ss( jc );
-			o << tracetabs( level ) << "->" << jc << " " << endl;
-			for ( const_iterator it=begin();it!=end();it++)
-			{
-				const NodeBase& n( **it );
-				o << n;
-			}
-			o << tracetabs( level ) << "<-" << jc << " " << endl;
-			return o;
-		}
+		virtual void operator()( const string& txt, stringstream& ss ) const {}
 	};
 
 	struct Object : Node
 	{
 		Object(){}
 		Object( const int _level, const JsonToken _jc ) : Node( _level, _jc ) {}
+		void operator()( const string& txt, stringstream& ss ) const
+		{
+			const Markers& pos( *this );
+			const string& s( txt.substr( pos.first, pos.second-pos.first ) );
+			ss << "O" << level << s << endl;
+			for ( const_iterator it=begin();it!=end();it++)
+			{
+				const NodeBase& n( **it );
+				n( txt, ss );
+			}
+		}
 	};
 
 
 	struct List : Node
 	{
 		List( const int _level, const JsonToken _jc ) : Node( _level, _jc ) {}
+		void operator()( const string& txt, stringstream& ss ) const
+		{
+			const Markers& pos( *this );
+			const string& s( txt.substr( pos.first, pos.second-pos.first ) );
+			ss << "L" << level << s << endl;
+			for ( const_iterator it=begin();it!=end();it++)
+			{
+				const NodeBase& n( **it );
+				n( txt, ss );
+			}
+		}
 	};
 
 	struct PlainCharacter : Node
@@ -388,7 +396,10 @@ namespace ExeJson
 			Markers m( excavator ); 
 			//cbug << root;
 			root >> cbug;
-			cout << root;
+			cbug << setw( 80 ) << setfill( '-' ) << "-" << endl;
+			stringstream ss;
+			root( txt, ss );
+			cout << ss.str();
 			//JsonGlyphTypeLegend();
 			return true;
 		}
