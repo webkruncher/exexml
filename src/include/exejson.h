@@ -193,6 +193,9 @@ namespace ExeJson
 		GlyphDisposition& glyphs;
 	};
 
+	struct Items : set< size_t > {};
+	struct Index : map< string, Items > {};
+
 	struct Excavator;
 	struct NodeBase : vector< NodeBase* >
 	{
@@ -204,6 +207,11 @@ namespace ExeJson
 		virtual bool operator()( const string&, QueString&, const JsonToken& );
 		void closure( Markers& pos ) const { jc.closure( pos ); }
 		operator Markers () const { return jc; }
+		operator const TokenType () const { return jc; }
+		virtual operator const bool () = 0;
+		virtual operator string () const = 0;
+		virtual const NodeBase& operator[]( const size_t ndx ) const = 0;
+		virtual const Items& operator[]( const string& name ) const = 0;
 		protected:
 		const int level;
 		const JsonToken jc;
@@ -219,6 +227,31 @@ namespace ExeJson
 	{
 		Node( const int _level ) : NodeBase( _level ) {}
 		Node( const int _level, const JsonToken _jc ) : NodeBase( _level, _jc ) {}
+		virtual operator const bool () 
+		{
+			for ( iterator it=begin();it!=end();it++)
+			{
+				NodeBase& n( **it );
+				if ( ! n ) return false;
+			}
+			return true;
+		}
+		virtual operator string () const { return ""; }
+
+		virtual const NodeBase& operator[]( const size_t ndx ) const
+		{
+			const vector< NodeBase* >& me( *this );
+			return *me[ ndx ];
+		}
+		virtual const Items& operator[]( const string& name ) const
+		{
+			Index::const_iterator found( index.find( name ) );
+			if ( found == index.end() ) throw string("Cannot find " ) + name;
+			return found->second;
+		}
+
+		protected:
+		Index index;
 		private:
 		virtual ostream& operator<<(ostream& o) const = 0;
 		virtual CBug& operator<<(CBug& o) const = 0;
@@ -248,10 +281,37 @@ namespace ExeJson
 		}
 	};
 
+
+
 	struct Object : Node
 	{
 		Object( const int _level, const JsonToken _jc ) : Node( _level, _jc ) {}
+		operator const Index& () { return index; }
 		private:
+		virtual operator const bool () 
+		{
+			bool tillcoma( false );
+		
+			int ndx( 0 );	
+			for ( iterator it=begin();it!=end();it++,ndx++)
+			{
+				NodeBase& n( **it );
+				if ( ! n ) return false;
+				const TokenType t( n );
+				if ( t == Coln ) tillcoma=true;
+				if ( t == Coma ) tillcoma=false;
+				if ( ! tillcoma ) 
+				{
+					const string name( n );
+					if ( ! name.empty() ) 
+					{
+						cout << green << "<" << name << ">" << normal << endl;
+						index[ name ].insert( ndx );
+					}
+				}
+			}
+			return true;
+		}
 		virtual CBug& operator<<(CBug& o) const 
 		{
 			o << tracetabs( level-1 ) << blue << jc << normal;
@@ -337,6 +397,17 @@ namespace ExeJson
 	{
 		QuotationMark( const int _level, const JsonToken _jc ) : Node( _level, _jc ) {}
 		private:
+		virtual operator string () const 
+		{
+			stringstream ss;
+			for ( const_iterator it=begin();it!=end();it++)
+			{
+				const NodeBase& n( **it );
+				const TokenType t( n );
+				if ( t == Character ) ss << n;
+			}
+			return ss.str();
+		}
 		virtual CBug& operator<<(CBug& o) const 
 		{
 			o << rvid << mgenta << blink << "\"" << normal;
@@ -532,9 +603,14 @@ namespace ExeJson
 			Excavator excavator( txt, root, qtext );
 			Markers m( excavator ); 
 			if ( false ) { CBug cbug; cbug << root; cerr << endl << setw( 80 ) << setfill( '-' ) << "-" << endl; }
+			if ( ! root ) throw string( "Cannot index json" );
 			cerr << root;
-			//JsonGlyphTypeLegend( cout );
+			JsonGlyphTypeLegend( cout );
 			return true;
+		}
+		const Items& operator[]( const string& what )
+		{
+			return root[ what ];
 		}
 		private:
 		RootNode root;

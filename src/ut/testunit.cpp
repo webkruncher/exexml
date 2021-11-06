@@ -149,12 +149,33 @@ int main(int argc,char** argv)
 			}
 			if ( ! (json+=ss.str()) )
 				throw string("Cannot load json");
+#if 0
+			ExeJson::Object& J( json );
+			const ExeJson::Index& index( J );
+			for ( ExeJson::Index::const_iterator ii=index.begin();ii!=index.end();ii++)
+			{
+				cout << "Items" << endl;
+				const ExeJson::Items& items( ii->second );
+				for ( ExeJson::Items::const_iterator itm=items.begin();itm!=items.end();itm++)
+				{
+					cout << (int) *itm << endl;
+				}
+				
+			}
+#endif
+			const string what( "lst" );
+			const ExeJson::Items& lst( json[ what ] );
+			for ( ExeJson::Items::const_iterator lit=lst.begin();lit!=lst.end();lit++)
+			{
+				const size_t ndx( *lit );
+				cout << "List:" << ndx << endl;
+			}
 		}
 	}
 	catch(std::exception& e) {except=e.what();}
 	catch(string& s) {except=s;}
 	catch(...) {except="Unknown exception";}
-	if (except.size()) cerr<<except<<endl;
+	if (except.size()) cerr<<red<<except<<normal<<endl;
 	//ostream& pout((mode=="-run")?cout:cerr);
 	cerr << endl;
 	return 0;
