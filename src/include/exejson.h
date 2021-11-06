@@ -121,7 +121,7 @@ namespace ExeJson
 		}
 		operator const TokenType () const { return tokentype; }
 		operator Markers () const { return pos; }
-		void closure( const Markers& _pos ) const { pos.second=_pos.second; }
+		void closure( const Markers& _pos ) const { pos.second=_pos.second-1; }
 		operator string () const
 		{
 			stringstream ss;
