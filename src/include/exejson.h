@@ -197,6 +197,7 @@ namespace ExeJson
 	struct Index : map< string, Items > {};
 
 	struct Excavator;
+	struct Object;
 	struct NodeBase : vector< NodeBase* >
 	{
 		friend struct Excavator;
@@ -212,6 +213,7 @@ namespace ExeJson
 		virtual operator string () const = 0;
 		virtual const NodeBase& operator[]( const size_t ndx ) const = 0;
 		virtual const Items& operator[]( const string& name ) const = 0;
+		virtual operator const Object* () const { return nullptr; }
 		protected:
 		const int level;
 		const JsonToken jc;
@@ -257,9 +259,20 @@ namespace ExeJson
 		virtual CBug& operator<<(CBug& o) const = 0;
 	};
 
+	
 	struct RootNode : Node
 	{
 		RootNode() : Node( 0 ) {}
+		operator const Object* () const 
+		{
+			for ( const_iterator it=begin();it!=end();it++)
+			{
+				const NodeBase& n( **it );
+				const Object* oo( n );
+				if ( oo ) return oo;
+			}
+			return nullptr;	
+		}
 		private:
 		virtual CBug& operator<<(CBug& o) const 
 		{
@@ -287,6 +300,7 @@ namespace ExeJson
 	{
 		Object( const int _level, const JsonToken _jc ) : Node( _level, _jc ) {}
 		operator const Index& () { return index; }
+		operator const Object* () const { return this; }
 		private:
 		virtual operator const bool () 
 		{
@@ -608,7 +622,12 @@ namespace ExeJson
 			JsonGlyphTypeLegend( cout );
 			return true;
 		}
-		const Object& operator() const { return root; }
+		operator const Object& () const
+		{
+			const Object* o( root );
+			if ( ! o ) throw string( "Json is not loaded" );
+			return *o;
+		}
 		private:
 		RootNode root;
 	};
