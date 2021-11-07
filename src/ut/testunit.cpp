@@ -150,12 +150,18 @@ int main(int argc,char** argv)
 			if ( ! (json+=ss.str()) )
 				throw string("Cannot load json");
 			const ExeJson::Object& root( json );
-			const string what( "lst" );
-			const ExeJson::Items& lst( root[ what ] );
-			for ( ExeJson::Items::const_iterator lit=lst.begin();lit!=lst.end();lit++)
+
 			{
-				const size_t ndx( *lit );
-				cout << "List:" << root[ ndx ] << endl;
+				const string what( "txt" );
+				const ExeJson::Items& lst( root[ what ] );
+				for ( ExeJson::Items::const_iterator lit=lst.begin();lit!=lst.end();lit++)
+				{
+					const ExeJson::Item ndx( *lit );
+					const size_t n( ndx.Value() );
+					const ExeJson::NodeBase& node( root[ n ] );
+					const ExeJson::Value& value( node );
+					cout << "Text:" << value << endl;
+				}
 			}
 		}
 	}

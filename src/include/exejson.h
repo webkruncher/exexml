@@ -193,7 +193,39 @@ namespace ExeJson
 		GlyphDisposition& glyphs;
 	};
 
-	struct Items : set< size_t > {};
+	struct Value
+	{
+		int Int;
+		double Real;
+		string String;
+		bool IsInt;
+		bool IsReal;
+		private:
+		friend ostream& operator<<( ostream&, const Value& );
+		ostream& operator<<( ostream& o ) const
+		{
+			if ( ! String.empty() ) { o << String; return o; }
+			if ( IsInt ) { o << Int; return o; }
+			if ( IsReal ) { o << Real; return o; }
+			return o;
+		}
+	};
+	inline ostream& operator<<( ostream& o, const Value& v ) { return v.operator<<(o); }
+
+	struct Item
+	{
+		Item( const size_t _name ) : name( _name ), value( 0 ) {}
+		Item( const Item& that ) : name( that.name ), value( that.value ) {}
+		size_t operator < ( const Item& that ) const { return name < that.name; }
+		operator const size_t () const { return value; }
+		void SetValue( const int ndx ) const { value=ndx; }
+		const size_t Value() const { return value; }
+		private:
+		const size_t name;
+		mutable size_t value;
+	};
+
+	struct Items : set< Item > {};
 	struct Index : map< string, Items > {};
 
 	struct Excavator;
@@ -214,9 +246,11 @@ namespace ExeJson
 		virtual const NodeBase& operator[]( const size_t ndx ) const = 0;
 		virtual const Items& operator[]( const string& name ) const = 0;
 		virtual operator const Object* () const { return nullptr; }
+		virtual operator const Value& () const { return value; }
 		protected:
 		const int level;
 		const JsonToken jc;
+		mutable Value value;
 		friend ostream& operator<<(ostream&, const NodeBase&);
 		virtual ostream& operator<<(ostream& o) const = 0;
 		friend CBug& operator<<(CBug&, const NodeBase&);
@@ -319,12 +353,39 @@ namespace ExeJson
 					const string name( n );
 					if ( ! name.empty() ) 
 					{
-						cout << green << "<" << name << ">" << normal << endl;
-						index[ name ].insert( ndx );
+						Item i( ndx );
+						if ( index.find( name ) == index.end() )
+						{
+							Items items;
+							index.insert( pair<string,Items>( name, items ) );
+						}
+						index[ name ].insert( i );
+						Items::const_iterator tat( index[name].find( i ) );
+						const Item& tit( *tat );
+						addvalue( it, ndx, tit );
 					}
 				}
 			}
 			return true;
+		}
+		void addvalue( iterator it, int ndx, const Item& tit )
+		{
+			bool ctrigger( false );
+			while ( true )
+			{
+				it++;
+				ndx++;
+				NodeBase& n( **it );
+				if ( ! n ) return;
+				const TokenType t( n );
+				if ( it == end () ) return;
+				if ( t == Coln ) ctrigger=true;
+				if ( ctrigger ) 
+				{
+					tit.SetValue( ndx + 2 );
+					return;
+				}
+			}
 		}
 		virtual CBug& operator<<(CBug& o) const 
 		{
@@ -411,6 +472,19 @@ namespace ExeJson
 	{
 		QuotationMark( const int _level, const JsonToken _jc ) : Node( _level, _jc ) {}
 		private:
+		operator const Value& () const
+		{ 
+			stringstream ss;
+			bool trigger( true );
+			for ( const_iterator it=begin();it!=end();it++)
+			{
+				const NodeBase& n( **it );
+				const TokenType t( n );
+				if ( t != Quots ) ss << n;
+			}
+			value.String=ss.str();
+			return value; 
+		}
 		virtual operator string () const 
 		{
 			stringstream ss;
@@ -473,6 +547,21 @@ namespace ExeJson
 	struct RegularCharacter : Node
 	{
 		RegularCharacter( const int _level, const JsonToken _jc ) : Node( _level, _jc ) {}
+		operator const Value& () const
+		{ 
+cout << "V";
+			stringstream ss;
+			bool trigger( true );
+			for ( const_iterator it=begin();it!=end();it++)
+			{
+				const NodeBase& n( **it );
+				const TokenType t( n );
+				if ( trigger ) if ( t == Character ) ss << n;
+			}
+			value.String=ss.str();
+cout << value.String;
+			return value;
+		}
 		private:
 		virtual CBug& operator<<(CBug& o) const 
 		{
@@ -619,7 +708,7 @@ namespace ExeJson
 			if ( false ) { CBug cbug; cbug << root; cerr << endl << setw( 80 ) << setfill( '-' ) << "-" << endl; }
 			if ( ! root ) throw string( "Cannot index json" );
 			cerr << root;
-			JsonGlyphTypeLegend( cout );
+			//JsonGlyphTypeLegend( cout );
 			return true;
 		}
 		operator const Object& () const
