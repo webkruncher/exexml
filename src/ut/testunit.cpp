@@ -150,11 +150,15 @@ int main(int argc,char** argv)
 			if ( ! (json+=ss.str()) )
 				throw string("Cannot load json");
 			const ExeJson::Object& root( json );
-			{ const string name( "lst" ); cout << name << "->" << json( name ) << endl; }
+			{ const string name( "txt" ); cout << name << "->" << json[ name ] << endl; }
+			{ const string name( "lst" ); cout << name << "->" << json[ name ] << endl; }
+#if 0
 			{ const string name( "txt" ); cout << name << "->" << json( name ) << endl; }
 			{ const string name( "other" ); cout << name << "->" << json( name ) << endl; }
 			{ const string name( "ender" ); cout << name << "->" << json( name ) << endl; }
 			{ const string name( "name" ); cout << name << "->" << json( name ) << endl; }
+			{ const string name( "results" ); cout << name << "->" << json( name ) << endl; }
+#endif
 		}
 	}
 	catch(std::exception& e) {except=e.what();}

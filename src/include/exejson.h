@@ -125,7 +125,8 @@ namespace ExeJson
 			tokentype=_t;
 		}
 		operator const TokenType () const { return tokentype; }
-		operator Markers () const { return pos; }
+		operator Markers& () const { return pos; }
+		void swap() const { const size_t s( pos.second ); pos.second=pos.first; pos.first=s;}
 		void closure( const Markers& _pos ) const { pos.second=_pos.second-1; }
 		operator string () const
 		{
@@ -217,9 +218,9 @@ namespace ExeJson
 		Item( const size_t _name ) : name( _name ), value( 0 ) {}
 		Item( const Item& that ) : name( that.name ), value( that.value ) {}
 		size_t operator < ( const Item& that ) const { return name < that.name; }
-		operator const size_t () const { return value; }
-		void SetValue( const int ndx ) const { value=ndx; }
-		const size_t Value() const { return value; }
+		//operator const size_t () const { return value; }
+		void SetValueIndex( const int ndx ) const { value=ndx; }
+		const size_t ValueIndex() const { return value; }
 		private:
 		const size_t name;
 		mutable size_t value;
@@ -238,15 +239,15 @@ namespace ExeJson
 		void operator = ( const size_t _endmarker ) { jc.pos.second=_endmarker; }
 		virtual ~NodeBase() { for ( iterator it=begin();it!=end();it++) delete *it; }
 		virtual bool operator()( const string&, QueString&, const JsonToken& );
-		void closure( Markers& pos ) const { jc.closure( pos ); }
+		void closure( const Markers& pos ) const { jc.closure( pos ); }
 		operator Markers () const { return jc; }
 		operator const TokenType () const { return jc; }
 		virtual operator const bool () = 0;
 		virtual operator string () const = 0;
 		virtual const NodeBase& operator[]( const size_t ndx ) const = 0;
-		virtual const Items* operator[]( const string& name ) const = 0;
 		virtual operator const Object* () const { return nullptr; }
 		virtual operator const Value& () const { return value; }
+		operator const JsonToken () const { return jc; }
 		protected:
 		const int level;
 		const JsonToken jc;
@@ -279,12 +280,14 @@ namespace ExeJson
 			const vector< NodeBase* >& me( *this );
 			return *me[ ndx ];
 		}
+#if 0
 		virtual const Items* operator[]( const string& name ) const
 		{
 			Index::const_iterator found( index.find( name ) );
 			if ( found == index.end() ) return nullptr;
 			return &found->second;
 		}
+#endif
 
 		protected:
 		Index index;
@@ -335,7 +338,7 @@ namespace ExeJson
 		Object( const int _level, const JsonToken _jc ) : Node( _level, _jc ) {}
 		operator const Index& () { return index; }
 		operator const Object* () const { return this; }
-		const string operator()( const string& name ) const;
+		const Value& operator()( const string& name ) const;
 		private:
 		virtual operator const bool () ;
 		void addvalue( iterator it, int ndx, const Item& tit );
@@ -626,7 +629,10 @@ namespace ExeJson
 					closure( m );
 					return true;
 				} else {
-					push_back( new QuotationMark( level+1, jc ) );
+					push_back( new QuotationMark( level-1, jc ) );
+					const Markers& m( jc);
+					jc.swap();
+					closure( m );
 					return false;
 				}
 			}
@@ -654,9 +660,10 @@ namespace ExeJson
 				qtext( *it );
 			Excavator excavator( txt, root, qtext );
 			Markers m( excavator ); 
+
 			if ( false ) { CBug cbug; cbug << root; cerr << endl << setw( 80 ) << setfill( '-' ) << "-" << endl; }
 			if ( ! root ) throw string( "Cannot index json" );
-			cerr << root;
+			cerr << green << rvid << root << normal;
 			//JsonGlyphTypeLegend( cout );
 			return true;
 		}
@@ -666,92 +673,100 @@ namespace ExeJson
 			if ( ! o ) throw string( "Json is not loaded" );
 			return *o;
 		}
-		const string operator()( const string name ) const
+
+		const Value& operator[]( const string name ) const
 		{
 			const Json& me( *this );
 			const Object& root( me );
-			const string result( root( name ) );
+			const Value& result( root( name ) );
 			return result;
 		}
+
 		private:
 		RootNode root;
 	};
 
 
 
-		Object::operator const bool () 
+	Object::operator const bool () 
+	{
+		bool tillcoma( false );
+	
+		int ndx( 0 );	
+		for ( iterator it=begin();it!=end();it++,ndx++)
 		{
-			bool tillcoma( false );
-		
-			int ndx( 0 );	
-			for ( iterator it=begin();it!=end();it++,ndx++)
+			NodeBase& n( **it );
+			if ( ! n ) return false;
+			const TokenType t( n );
+			if ( t == Coln ) tillcoma=true;
+			if ( t == Coma ) tillcoma=false;
+			if ( ! tillcoma ) 
 			{
-				NodeBase& n( **it );
-				if ( ! n ) return false;
-				const TokenType t( n );
-				if ( t == Coln ) tillcoma=true;
-				if ( t == Coma ) tillcoma=false;
-				if ( ! tillcoma ) 
+				const string name( n );
+				if ( ! name.empty() ) 
 				{
-					const string name( n );
-					if ( ! name.empty() ) 
+					Item i( ndx );
+					if ( index.find( name ) == index.end() )
 					{
-						Item i( ndx );
-						if ( index.find( name ) == index.end() )
-						{
-							Items items;
-							index.insert( pair<string,Items>( name, items ) );
-						}
-						index[ name ].insert( i );
-						Items::const_iterator tat( index[name].find( i ) );
-						const Item& tit( *tat );
-						addvalue( it, ndx, tit );
+						Items items;
+						index.insert( pair<string,Items>( name, items ) );
 					}
-				}
-			}
-			return true;
-		}
-
-		void Object::addvalue( iterator it, int ndx, const Item& tit )
-		{
-			bool ctrigger( false );
-			while ( true )
-			{
-				it++;
-				ndx++;
-				NodeBase& n( **it );
-				if ( ! n ) return;
-				const TokenType t( n );
-				if ( it == end () ) return;
-				if ( t == Coln ) ctrigger=true;
-				if ( ctrigger ) 
-				{
-					// Needs work
-					tit.SetValue( ndx + 2 );
-					return;
+					index[ name ].insert( i );
+					Items::const_iterator tat( index[name].find( i ) );
+					const Item& tit( *tat );
+					addvalue( it, ndx, tit );
 				}
 			}
 		}
+		return true;
+	}
 
-
-	const string Object::operator()( const string& name ) const
+	void Object::addvalue( iterator it, int ndx, const Item& tit )
 	{
 		const Object& me( *this );
-		const Items* lp( me[ name ] );
-		if ( ! lp ) return "";
-		const Items& lst( *lp );
+		bool ctrigger( false );
+		while ( true )
+		{
+			it++;
+			ndx++;
+			NodeBase& n( **it );
+			if ( ! n ) return;
+			const TokenType t( n );
+			if ( it == end () ) return;
+			if ( ctrigger ) 
+			{
+				const NodeBase& nb( me[ ndx+1 ] );
+				const TokenType nt( nb );
+				const JsonToken& jj( nb );
+				const Markers& pos( jj );
+				cout << "TT:" << nt << " " << jj << " " << pos << endl;
+				tit.SetValueIndex( ndx + 1 );
+				return;
+			}
+			if ( t == Coln ) ctrigger=true;
+		}
+	}
+
+	const Value& Object::operator()( const string& name ) const
+	{
+		const Object& me( *this );
+		Index::const_iterator found( index.find( name ) );
+		if ( found == index.end() ) return value;
+		const Items& lst( found->second );
 		
-		stringstream ss;
 		for ( Items::const_iterator lit=lst.begin();lit!=lst.end();lit++)
 		{
 			const Item ndx( *lit );
-			const size_t n( ndx.Value() );
+			const size_t n( ndx.ValueIndex() );
 			const NodeBase& node( me[ n ] );
-			const Value& value( node );
-			ss << value;
+			const Value& v( node );
+			return v;
 		}
-		return ss.str();
+
+		return value;
 	}
+
+
 
 } // ExeJson
 
