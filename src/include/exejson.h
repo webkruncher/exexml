@@ -334,6 +334,7 @@ namespace ExeJson
 		const Value& operator()( const string& name ) const;
 		private:
 		virtual operator const bool () ;
+		const NodeBase& getmarkers( int ndx ) const;
 		void addvalue( iterator it, int ndx, const Item& tit );
 		virtual CBug& operator<<(CBug& o) const 
 		{
@@ -632,7 +633,7 @@ namespace ExeJson
 			if ( false ) { CBug cbug; cbug << root; cerr << endl << setw( 80 ) << setfill( '-' ) << "-" << endl; }
 			if ( ! root ) throw string( "Cannot index json" );
 			cerr << green << rvid << root << normal;
-			//JsonGlyphTypeLegend( cout );
+			JsonGlyphTypeLegend( cout );
 			return true;
 		}
 		operator const Object& () const
@@ -690,6 +691,19 @@ namespace ExeJson
 		return true;
 	}
 
+	const NodeBase& Object::getmarkers( int ndx ) const
+	{
+		const Object& me( *this );
+		while( ndx < jtxt.size() )
+		{
+			const NodeBase& nb( me[ ndx ] );
+			const TokenType nt( nb );
+			if ( nt == Quots ) return nb;
+			if ( nt == ListOpen ) return nb;
+			ndx++;
+		}
+		throw string("cannot get markers");
+	}
 	void Object::addvalue( iterator it, int ndx, const Item& tit )
 	{
 		const Object& me( *this );
@@ -704,7 +718,7 @@ namespace ExeJson
 			if ( it == end () ) return;
 			if ( ctrigger ) 
 			{
-				const NodeBase& nb( me[ ndx+1 ] );
+				const NodeBase& nb( getmarkers( ndx ) );
 				const TokenType nt( nb );
 				const JsonToken& jj( nb );
 				const Markers& pos( jj );
@@ -727,7 +741,6 @@ namespace ExeJson
 			const Item ndx( *lit );
 			const Markers& n( ndx.ValueIndex() );
 			const string t( jtxt.substr( n.first, n.second-n.first ) );
-			cout << n << "->" << t ;
 		}
 
 		return value;
