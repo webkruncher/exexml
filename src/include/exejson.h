@@ -45,18 +45,18 @@ namespace ExeJson
 {
 	struct Value
 	{
+		void operator=( const string& s )
+		{
+			if ( ! Text.empty() ) throw s;
+			Text=s;
+		}
+		void clear() { Text.clear(); }
 		private:
-		int Int;
-		double Real;
-		string String;
-		bool IsInt;
-		bool IsReal;
+		string Text;
 		friend ostream& operator<<( ostream&, const Value& );
 		ostream& operator<<( ostream& o ) const
 		{
-			if ( ! String.empty() ) { o << String; return o; }
-			if ( IsInt ) { o << Int; return o; }
-			if ( IsReal ) { o << Real; return o; }
+			if ( ! Text.empty() ) { o << Text; return o; }
 			return o;
 		}
 	};
@@ -731,6 +731,7 @@ namespace ExeJson
 
 	const Value& Object::operator()( const string& name ) const
 	{
+		value.clear();
 		const Object& me( *this );
 		Index::const_iterator found( index.find( name ) );
 		if ( found == index.end() ) return value;
@@ -741,6 +742,7 @@ namespace ExeJson
 			const Item ndx( *lit );
 			const Markers& n( ndx.ValueIndex() );
 			const string t( jtxt.substr( n.first, n.second-n.first ) );
+			value=t;
 		}
 
 		return value;

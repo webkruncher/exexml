@@ -144,7 +144,7 @@ int main(int argc,char** argv)
 	catch(std::exception& e) {except=e.what();}
 	catch(string& s) {except=s;}
 	catch(...) {except="Unknown exception";}
-	if (except.size()) cerr<<red<<except<<normal<<endl;
+	if (except.size()) cerr<<red<<"Exception:" << except<<normal<<endl;
 	cerr << endl;
 	return 0;
 }
