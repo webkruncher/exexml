@@ -727,7 +727,7 @@ namespace ExeJson
 			const Item ndx( *lit );
 			const Markers& n( ndx.ValueIndex() );
 			const string t( jtxt.substr( n.first, n.second-n.first ) );
-			cout << "->" << n << "->" << t ;
+			cout << n << "->" << t ;
 		}
 
 		return value;
