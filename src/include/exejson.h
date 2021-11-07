@@ -337,58 +337,8 @@ namespace ExeJson
 		operator const Object* () const { return this; }
 		const string operator()( const string& name ) const;
 		private:
-		virtual operator const bool () 
-		{
-			bool tillcoma( false );
-		
-			int ndx( 0 );	
-			for ( iterator it=begin();it!=end();it++,ndx++)
-			{
-				NodeBase& n( **it );
-				if ( ! n ) return false;
-				const TokenType t( n );
-				if ( t == Coln ) tillcoma=true;
-				if ( t == Coma ) tillcoma=false;
-				if ( ! tillcoma ) 
-				{
-					const string name( n );
-					if ( ! name.empty() ) 
-					{
-						Item i( ndx );
-						if ( index.find( name ) == index.end() )
-						{
-							Items items;
-							index.insert( pair<string,Items>( name, items ) );
-						}
-						index[ name ].insert( i );
-						Items::const_iterator tat( index[name].find( i ) );
-						const Item& tit( *tat );
-						addvalue( it, ndx, tit );
-					}
-				}
-			}
-			return true;
-		}
-		void addvalue( iterator it, int ndx, const Item& tit )
-		{
-			bool ctrigger( false );
-			while ( true )
-			{
-				it++;
-				ndx++;
-				NodeBase& n( **it );
-				if ( ! n ) return;
-				const TokenType t( n );
-				if ( it == end () ) return;
-				if ( t == Coln ) ctrigger=true;
-				if ( ctrigger ) 
-				{
-					// Needs work
-					tit.SetValue( ndx + 2 );
-					return;
-				}
-			}
-		}
+		virtual operator const bool () ;
+		void addvalue( iterator it, int ndx, const Item& tit );
 		virtual CBug& operator<<(CBug& o) const 
 		{
 			o << tracetabs( level-1 ) << blue << jc << normal;
@@ -729,6 +679,59 @@ namespace ExeJson
 
 
 
+		Object::operator const bool () 
+		{
+			bool tillcoma( false );
+		
+			int ndx( 0 );	
+			for ( iterator it=begin();it!=end();it++,ndx++)
+			{
+				NodeBase& n( **it );
+				if ( ! n ) return false;
+				const TokenType t( n );
+				if ( t == Coln ) tillcoma=true;
+				if ( t == Coma ) tillcoma=false;
+				if ( ! tillcoma ) 
+				{
+					const string name( n );
+					if ( ! name.empty() ) 
+					{
+						Item i( ndx );
+						if ( index.find( name ) == index.end() )
+						{
+							Items items;
+							index.insert( pair<string,Items>( name, items ) );
+						}
+						index[ name ].insert( i );
+						Items::const_iterator tat( index[name].find( i ) );
+						const Item& tit( *tat );
+						addvalue( it, ndx, tit );
+					}
+				}
+			}
+			return true;
+		}
+
+		void Object::addvalue( iterator it, int ndx, const Item& tit )
+		{
+			bool ctrigger( false );
+			while ( true )
+			{
+				it++;
+				ndx++;
+				NodeBase& n( **it );
+				if ( ! n ) return;
+				const TokenType t( n );
+				if ( it == end () ) return;
+				if ( t == Coln ) ctrigger=true;
+				if ( ctrigger ) 
+				{
+					// Needs work
+					tit.SetValue( ndx + 2 );
+					return;
+				}
+			}
+		}
 
 
 	const string Object::operator()( const string& name ) const
