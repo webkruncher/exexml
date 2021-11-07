@@ -234,8 +234,8 @@ namespace ExeJson
 	struct NodeBase : vector< NodeBase* >
 	{
 		friend struct Excavator;
-		NodeBase( const int _level ) : level( _level ) {}
-		NodeBase( const int _level, const JsonToken _jc ) : level( _level ), jc( _jc ) {}
+		NodeBase( const string& _jtxt, const int _level ) : jtxt( _jtxt ), level( _level ) {}
+		NodeBase( const string& _jtxt, const int _level, const JsonToken _jc ) : jtxt( _jtxt ), level( _level ), jc( _jc ) {}
 		void operator = ( const size_t _endmarker ) { jc.pos.second=_endmarker; }
 		virtual ~NodeBase() { for ( iterator it=begin();it!=end();it++) delete *it; }
 		virtual bool operator()( const string&, QueString&, const JsonToken& );
@@ -249,6 +249,7 @@ namespace ExeJson
 		virtual operator const Value& () const { return value; }
 		operator const JsonToken () const { return jc; }
 		protected:
+		const string& jtxt;
 		const int level;
 		const JsonToken jc;
 		mutable Value value;
@@ -262,8 +263,8 @@ namespace ExeJson
 
 	struct Node : NodeBase
 	{
-		Node( const int _level ) : NodeBase( _level ) {}
-		Node( const int _level, const JsonToken _jc ) : NodeBase( _level, _jc ) {}
+		Node( const string& _jtxt, const int _level ) : NodeBase( _jtxt, _level ) {}
+		Node( const string& _jtxt, const int _level, const JsonToken _jc ) : NodeBase( _jtxt, _level, _jc ) {}
 		virtual operator const bool () 
 		{
 			for ( iterator it=begin();it!=end();it++)
@@ -280,14 +281,6 @@ namespace ExeJson
 			const vector< NodeBase* >& me( *this );
 			return *me[ ndx ];
 		}
-#if 0
-		virtual const Items* operator[]( const string& name ) const
-		{
-			Index::const_iterator found( index.find( name ) );
-			if ( found == index.end() ) return nullptr;
-			return &found->second;
-		}
-#endif
 
 		protected:
 		Index index;
@@ -299,7 +292,7 @@ namespace ExeJson
 	
 	struct RootNode : Node
 	{
-		RootNode() : Node( 0 ) {}
+		RootNode( const string& _jtxt ) : Node( _jtxt, 0 ) {}
 		operator const Object* () const 
 		{
 			for ( const_iterator it=begin();it!=end();it++)
@@ -335,7 +328,7 @@ namespace ExeJson
 
 	struct Object : Node
 	{
-		Object( const int _level, const JsonToken _jc ) : Node( _level, _jc ) {}
+		Object( const string& _jtxt, const int _level, const JsonToken _jc ) : Node( _jtxt, _level, _jc ) {}
 		operator const Index& () { return index; }
 		operator const Object* () const { return this; }
 		const Value& operator()( const string& name ) const;
@@ -366,7 +359,7 @@ namespace ExeJson
 
 	struct List : Node
 	{
-		List( const int _level, const JsonToken _jc ) : Node( _level, _jc ) {}
+		List( const string& _jtxt, const int _level, const JsonToken _jc ) : Node( _jtxt, _level, _jc ) {}
 		private:
 		operator const Value& () const
 		{ 
@@ -405,7 +398,7 @@ namespace ExeJson
 
 	struct Comma : Node
 	{
-		Comma( const int _level, const JsonToken _jc ) : Node( _level, _jc ) {}
+		Comma( const string& _jtxt, const int _level, const JsonToken _jc ) : Node( _jtxt, _level, _jc ) {}
 		private:
 		virtual CBug& operator<<(CBug& o) const 
 		{
@@ -421,7 +414,7 @@ namespace ExeJson
 
 	struct Colon : Node
 	{
-		Colon( const int _level, const JsonToken _jc ) : Node( _level, _jc ) {}
+		Colon( const string& _jtxt, const int _level, const JsonToken _jc ) : Node( _jtxt, _level, _jc ) {}
 		private:
 		virtual CBug& operator<<(CBug& o) const 
 		{
@@ -437,7 +430,7 @@ namespace ExeJson
 
 	struct QuotationMark : Node
 	{
-		QuotationMark( const int _level, const JsonToken _jc ) : Node( _level, _jc ) {}
+		QuotationMark( const string& _jtxt, const int _level, const JsonToken _jc ) : Node( _jtxt, _level, _jc ) {}
 		private:
 		operator const Value& () const
 		{ 
@@ -487,7 +480,7 @@ namespace ExeJson
 
 	struct SpecialChar : Node
 	{
-		SpecialChar( const int _level, const JsonToken _jc ) : Node( _level, _jc ) {}
+		SpecialChar( const string& _jtxt, const int _level, const JsonToken _jc ) : Node( _jtxt, _level, _jc ) {}
 		private:
 		virtual CBug& operator<<(CBug& o) const 
 		{
@@ -513,7 +506,7 @@ namespace ExeJson
 
 	struct RegularCharacter : Node
 	{
-		RegularCharacter( const int _level, const JsonToken _jc ) : Node( _level, _jc ) {}
+		RegularCharacter( const string& _jtxt, const int _level, const JsonToken _jc ) : Node( _jtxt, _level, _jc ) {}
 		private:
 		virtual CBug& operator<<(CBug& o) const 
 		{
@@ -560,7 +553,7 @@ namespace ExeJson
 		{
 			case ObjectOpen:
 			{
-				push_back( new Object( level+1, jc ) );
+				push_back( new Object( txt, level+1, jc ) );
 				NodeBase& item( *back() );
 				Excavator excavate( txt, item, qtext );
 				Markers m( excavate );
@@ -570,7 +563,7 @@ namespace ExeJson
 			break;
 			case ObjectClose: 
 			{
-				push_back( new Object( level, jc ) );
+				push_back( new Object( txt, level, jc ) );
 				Markers m( jc );
 				closure( m );
 				return false;
@@ -578,7 +571,7 @@ namespace ExeJson
 			break;
 			case ListOpen:
 			{
-				push_back( new List( level+1, jc ) );
+				push_back( new List( txt, level+1, jc ) );
 				NodeBase& item( *back() );
 				Excavator excavate( txt, item, qtext );
 				Markers m( excavate );
@@ -588,7 +581,7 @@ namespace ExeJson
 			break;
 			case ListClose: 
 			{
-				push_back( new List( level, jc ) );
+				push_back( new List( txt, level, jc ) );
 				Markers m( jc );
 				closure( m );
 				return false;
@@ -599,22 +592,22 @@ namespace ExeJson
 				if ( qtext.enquoted( false ) ) 
 				{
 					jc.morph( Special, ':' );
-					push_back( new SpecialChar( level, jc ) );
+					push_back( new SpecialChar( txt, level, jc ) );
 				} else {
-					push_back( new Colon( level, jc ) );
+					push_back( new Colon( txt, level, jc ) );
 				}
 				return true;
 			}
 			break;
 			case Coma: 
 			{
-				push_back( new Comma( level, jc ) );
+				push_back( new Comma( txt, level, jc ) );
 				return true;
 			}
 			break;
 			case Character: 
 			{
-				push_back( new RegularCharacter( level, jc ) );
+				push_back( new RegularCharacter( txt, level, jc ) );
 				return true;
 			}
 			break;
@@ -622,14 +615,14 @@ namespace ExeJson
 			{
 				if (  ! qtext.enquoted() )
 				{
-					push_back( new QuotationMark( level+1, jc ) );
+					push_back( new QuotationMark( txt, level+1, jc ) );
 					NodeBase& item( *back() );
 					Excavator excavate( txt, item, qtext );
 					Markers m( excavate );
 					closure( m );
 					return true;
 				} else {
-					push_back( new QuotationMark( level-1, jc ) );
+					push_back( new QuotationMark( txt, level-1, jc ) );
 					const Markers& m( jc);
 					jc.swap();
 					closure( m );
@@ -640,7 +633,7 @@ namespace ExeJson
 
 			case Special: 
 			{
-				push_back( new SpecialChar( level, jc ) );
+				push_back( new SpecialChar( txt, level, jc ) );
 				return true;
 			}
 			case Root: 
@@ -652,13 +645,14 @@ namespace ExeJson
 
 	struct Json
 	{
-		bool operator+=( const string& txt )
+		Json( const string& _jtxt ) : root( _jtxt ), jtxt( _jtxt ) {}
+		operator bool ()
 		{
 			GlyphDisposition glyphs;
 			QueString qtext( 0, glyphs );
-			for ( string::const_iterator it=txt.begin();it!=txt.end();it++) 
+			for ( string::const_iterator it=jtxt.begin();it!=jtxt.end();it++) 
 				qtext( *it );
-			Excavator excavator( txt, root, qtext );
+			Excavator excavator( jtxt, root, qtext );
 			Markers m( excavator ); 
 
 			if ( false ) { CBug cbug; cbug << root; cerr << endl << setw( 80 ) << setfill( '-' ) << "-" << endl; }
@@ -684,6 +678,7 @@ namespace ExeJson
 
 		private:
 		RootNode root;
+		const string& jtxt;
 	};
 
 
@@ -757,7 +752,8 @@ namespace ExeJson
 		{
 			const Item ndx( *lit );
 			const Markers& n( ndx.ValueIndex() );
-			cout << name << "->" << n << endl;
+			const string t( jtxt.substr( n.first, n.second-n.first ) );
+			cout << "->" << n << "->" << t ;
 		}
 
 		return value;

@@ -59,22 +59,6 @@ int main(int argc,char** argv)
 {
 	string mode,bigs;
 
-	if ( argc < 2 )
-	{
-		stringstream ss;
-		ifstream in("ut/example.json" );
-		while ( ! in.eof() )
-		{
-			string line;
-			getline( in, line );
-			ss << line;
-		}
-		cout << "Read:" << ss.str() << endl;
-		ExeJson::Json json;
-		bool result(json+=ss.str());
-		cout << "Result:" << boolalpha << result << endl;	
-		return 0;
-	}
 
 	if (argc>1) mode=argv[1];
 	if (argc>2) bigs=argv[2];
@@ -139,16 +123,15 @@ int main(int argc,char** argv)
 
 		if ( mode=="-jsonin" )
 		{
-			ExeJson::Json json;
-			stringstream ss;
+			string ss;
 			while ( ! cin.eof() )
 			{
 				string s;
 				getline( cin, s );
-				ss << s << endl;
+				ss+=s; ss+="\n";
 			}
-			if ( ! (json+=ss.str()) )
-				throw string("Cannot load json");
+			ExeJson::Json json( ss );
+			if ( ! json ) throw string("Cannot load json");
 			const ExeJson::Object& root( json );
 			{ const string name( "txt" ); cout << name << "->" << json[ name ] << endl; }
 			{ const string name( "lst" ); cout << name << "->" << json[ name ] << endl; }
