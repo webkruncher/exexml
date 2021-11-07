@@ -382,6 +382,7 @@ namespace ExeJson
 				if ( t == Coln ) ctrigger=true;
 				if ( ctrigger ) 
 				{
+					// Needs work
 					tit.SetValue( ndx + 2 );
 					return;
 				}
@@ -409,11 +410,23 @@ namespace ExeJson
 		}
 	};
 
-
 	struct List : Node
 	{
 		List( const int _level, const JsonToken _jc ) : Node( _level, _jc ) {}
 		private:
+		operator const Value& () const
+		{ 
+			stringstream ss;
+			bool trigger( true );
+			for ( const_iterator it=begin();it!=end();it++)
+			{
+				const NodeBase& n( **it );
+				const TokenType t( n );
+				ss << n;
+			}
+			value.String=ss.str();
+			return value; 
+		}
 		virtual CBug& operator<<(CBug& o) const 
 		{
 			o << ulin << jc << normal;

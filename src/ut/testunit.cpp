@@ -152,6 +152,18 @@ int main(int argc,char** argv)
 			const ExeJson::Object& root( json );
 
 			{
+				const string what( "lst" );
+				const ExeJson::Items& lst( root[ what ] );
+				for ( ExeJson::Items::const_iterator lit=lst.begin();lit!=lst.end();lit++)
+				{
+					const ExeJson::Item ndx( *lit );
+					const size_t n( ndx.Value() );
+					const ExeJson::NodeBase& node( root[ n ] );
+					const ExeJson::Value& value( node );
+					cout << "List:" << value << endl;
+				}
+			}
+			{
 				const string what( "txt" );
 				const ExeJson::Items& lst( root[ what ] );
 				for ( ExeJson::Items::const_iterator lit=lst.begin();lit!=lst.end();lit++)
@@ -169,7 +181,6 @@ int main(int argc,char** argv)
 	catch(string& s) {except=s;}
 	catch(...) {except="Unknown exception";}
 	if (except.size()) cerr<<red<<except<<normal<<endl;
-	//ostream& pout((mode=="-run")?cout:cerr);
 	cerr << endl;
 	return 0;
 }
