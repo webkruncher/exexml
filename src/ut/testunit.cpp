@@ -138,7 +138,12 @@ int main(int argc,char** argv)
 				{ "txt", "lst", "other", "ender", "name", "results" }; 
 
 			for ( vector<string>::iterator sit=v.begin();sit!=v.end();sit++)
-				{ const string name( *sit ); cout << name << "->" << json[ name ] << endl; }
+			{
+				const string name( *sit ); 
+				const ExeJson::Value& value( json[ name ] );
+				if ( ! value.empty() ) 
+					cout << name << "->" << value << endl;
+			}
 		}
 	}
 	catch(std::exception& e) {except=e.what();}

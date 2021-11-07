@@ -38,7 +38,7 @@ using namespace KruncherTools;
 
 struct CBug : ofstream
 {
-	CBug() : ofstream( "/dev/stdout" ) {}
+	CBug() : ofstream( "/dev/null" ) {}
 } ;
 
 namespace ExeJson
@@ -51,6 +51,7 @@ namespace ExeJson
 			Text=s;
 		}
 		void clear() { Text.clear(); }
+		const bool empty() const { return Text.empty(); }
 		private:
 		string Text;
 		friend ostream& operator<<( ostream&, const Value& );
@@ -632,8 +633,9 @@ namespace ExeJson
 
 			if ( false ) { CBug cbug; cbug << root; cerr << endl << setw( 80 ) << setfill( '-' ) << "-" << endl; }
 			if ( ! root ) throw string( "Cannot index json" );
-			cerr << green << rvid << root << normal;
-			JsonGlyphTypeLegend( cout );
+			CBug cbug;
+			cbug << green << rvid << root << normal;
+			JsonGlyphTypeLegend( cbug );
 			return true;
 		}
 		operator const Object& () const
