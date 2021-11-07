@@ -244,7 +244,7 @@ namespace ExeJson
 		virtual operator const bool () = 0;
 		virtual operator string () const = 0;
 		virtual const NodeBase& operator[]( const size_t ndx ) const = 0;
-		virtual const Items& operator[]( const string& name ) const = 0;
+		virtual const Items* operator[]( const string& name ) const = 0;
 		virtual operator const Object* () const { return nullptr; }
 		virtual operator const Value& () const { return value; }
 		protected:
@@ -279,11 +279,11 @@ namespace ExeJson
 			const vector< NodeBase* >& me( *this );
 			return *me[ ndx ];
 		}
-		virtual const Items& operator[]( const string& name ) const
+		virtual const Items* operator[]( const string& name ) const
 		{
 			Index::const_iterator found( index.find( name ) );
-			if ( found == index.end() ) throw string("Cannot find " ) + name;
-			return found->second;
+			if ( found == index.end() ) return nullptr;
+			return &found->second;
 		}
 
 		protected:
@@ -335,6 +335,7 @@ namespace ExeJson
 		Object( const int _level, const JsonToken _jc ) : Node( _level, _jc ) {}
 		operator const Index& () { return index; }
 		operator const Object* () const { return this; }
+		const string operator()( const string& name ) const;
 		private:
 		virtual operator const bool () 
 		{
@@ -560,21 +561,6 @@ namespace ExeJson
 	struct RegularCharacter : Node
 	{
 		RegularCharacter( const int _level, const JsonToken _jc ) : Node( _level, _jc ) {}
-		operator const Value& () const
-		{ 
-cout << "V";
-			stringstream ss;
-			bool trigger( true );
-			for ( const_iterator it=begin();it!=end();it++)
-			{
-				const NodeBase& n( **it );
-				const TokenType t( n );
-				if ( trigger ) if ( t == Character ) ss << n;
-			}
-			value.String=ss.str();
-cout << value.String;
-			return value;
-		}
 		private:
 		virtual CBug& operator<<(CBug& o) const 
 		{
@@ -730,9 +716,39 @@ cout << value.String;
 			if ( ! o ) throw string( "Json is not loaded" );
 			return *o;
 		}
+		const string operator()( const string name ) const
+		{
+			const Json& me( *this );
+			const Object& root( me );
+			const string result( root( name ) );
+			return result;
+		}
 		private:
 		RootNode root;
 	};
+
+
+
+
+
+	const string Object::operator()( const string& name ) const
+	{
+		const Object& me( *this );
+		const Items* lp( me[ name ] );
+		if ( ! lp ) return "";
+		const Items& lst( *lp );
+		
+		stringstream ss;
+		for ( Items::const_iterator lit=lst.begin();lit!=lst.end();lit++)
+		{
+			const Item ndx( *lit );
+			const size_t n( ndx.Value() );
+			const NodeBase& node( me[ n ] );
+			const Value& value( node );
+			ss << value;
+		}
+		return ss.str();
+	}
 
 } // ExeJson
 
