@@ -43,6 +43,26 @@ struct CBug : ofstream
 
 namespace ExeJson
 {
+	struct Value
+	{
+		private:
+		int Int;
+		double Real;
+		string String;
+		bool IsInt;
+		bool IsReal;
+		friend ostream& operator<<( ostream&, const Value& );
+		ostream& operator<<( ostream& o ) const
+		{
+			if ( ! String.empty() ) { o << String; return o; }
+			if ( IsInt ) { o << Int; return o; }
+			if ( IsReal ) { o << Real; return o; }
+			return o;
+		}
+	};
+	inline ostream& operator<<( ostream& o, const Value& v ) { return v.operator<<(o); }
+
+
 	enum TokenType { 
 		Root, 
 		ObjectOpen, ObjectClose, ListOpen, ListClose,
@@ -194,31 +214,12 @@ namespace ExeJson
 		GlyphDisposition& glyphs;
 	};
 
-	struct Value
-	{
-		int Int;
-		double Real;
-		string String;
-		bool IsInt;
-		bool IsReal;
-		private:
-		friend ostream& operator<<( ostream&, const Value& );
-		ostream& operator<<( ostream& o ) const
-		{
-			if ( ! String.empty() ) { o << String; return o; }
-			if ( IsInt ) { o << Int; return o; }
-			if ( IsReal ) { o << Real; return o; }
-			return o;
-		}
-	};
-	inline ostream& operator<<( ostream& o, const Value& v ) { return v.operator<<(o); }
 
 	struct Item
 	{
 		Item( const size_t _name ) : name( _name ), value( 0, 0 )  {}
 		Item( const Item& that ) : name( that.name ), value( that.value )  {}
 		size_t operator < ( const Item& that ) const { return name < that.name; }
-		//operator const size_t () const { return value; }
 		void SetValueIndex( const Markers& pos ) const { value=pos; }
 		const Markers& ValueIndex() const { return value; }
 		private:
@@ -246,7 +247,6 @@ namespace ExeJson
 		virtual operator string () const = 0;
 		virtual const NodeBase& operator[]( const size_t ndx ) const = 0;
 		virtual operator const Object* () const { return nullptr; }
-		virtual operator const Value& () const { return value; }
 		operator const JsonToken () const { return jc; }
 		protected:
 		const string& jtxt;
@@ -361,19 +361,6 @@ namespace ExeJson
 	{
 		List( const string& _jtxt, const int _level, const JsonToken _jc ) : Node( _jtxt, _level, _jc ) {}
 		private:
-		operator const Value& () const
-		{ 
-			stringstream ss;
-			bool trigger( true );
-			for ( const_iterator it=begin();it!=end();it++)
-			{
-				const NodeBase& n( **it );
-				const TokenType t( n );
-				ss << n;
-			}
-			value.String=ss.str();
-			return value; 
-		}
 		virtual CBug& operator<<(CBug& o) const 
 		{
 			o << ulin << jc << normal;
@@ -432,19 +419,6 @@ namespace ExeJson
 	{
 		QuotationMark( const string& _jtxt, const int _level, const JsonToken _jc ) : Node( _jtxt, _level, _jc ) {}
 		private:
-		operator const Value& () const
-		{ 
-			stringstream ss;
-			bool trigger( true );
-			for ( const_iterator it=begin();it!=end();it++)
-			{
-				const NodeBase& n( **it );
-				const TokenType t( n );
-				if ( t != Quots ) ss << n;
-			}
-			value.String=ss.str();
-			return value; 
-		}
 		virtual operator string () const 
 		{
 			stringstream ss;

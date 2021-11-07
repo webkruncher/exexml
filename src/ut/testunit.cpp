@@ -133,15 +133,12 @@ int main(int argc,char** argv)
 			ExeJson::Json json( ss );
 			if ( ! json ) throw string("Cannot load json");
 			const ExeJson::Object& root( json );
-			{ const string name( "txt" ); cout << name << "->" << json[ name ] << endl; }
-			{ const string name( "lst" ); cout << name << "->" << json[ name ] << endl; }
-#if 0
-			{ const string name( "txt" ); cout << name << "->" << json( name ) << endl; }
-			{ const string name( "other" ); cout << name << "->" << json( name ) << endl; }
-			{ const string name( "ender" ); cout << name << "->" << json( name ) << endl; }
-			{ const string name( "name" ); cout << name << "->" << json( name ) << endl; }
-			{ const string name( "results" ); cout << name << "->" << json( name ) << endl; }
-#endif
+
+			vector<string> v
+				{ "txt", "lst", "other", "ender", "name", "results" }; 
+
+			for ( vector<string>::iterator sit=v.begin();sit!=v.end();sit++)
+				{ const string name( *sit ); cout << name << "->" << json[ name ] << endl; }
 		}
 	}
 	catch(std::exception& e) {except=e.what();}
