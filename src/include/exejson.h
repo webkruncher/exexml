@@ -215,15 +215,15 @@ namespace ExeJson
 
 	struct Item
 	{
-		Item( const size_t _name ) : name( _name ), value( 0 ) {}
-		Item( const Item& that ) : name( that.name ), value( that.value ) {}
+		Item( const size_t _name ) : name( _name ), value( 0, 0 )  {}
+		Item( const Item& that ) : name( that.name ), value( that.value )  {}
 		size_t operator < ( const Item& that ) const { return name < that.name; }
 		//operator const size_t () const { return value; }
-		void SetValueIndex( const int ndx ) const { value=ndx; }
-		const size_t ValueIndex() const { return value; }
+		void SetValueIndex( const Markers& pos ) const { value=pos; }
+		const Markers& ValueIndex() const { return value; }
 		private:
 		const size_t name;
-		mutable size_t value;
+		mutable Markers value;
 	};
 
 	struct Items : set< Item > {};
@@ -739,8 +739,7 @@ namespace ExeJson
 				const TokenType nt( nb );
 				const JsonToken& jj( nb );
 				const Markers& pos( jj );
-				cout << "TT:" << nt << " " << jj << " " << pos << endl;
-				tit.SetValueIndex( ndx + 1 );
+				tit.SetValueIndex( pos );
 				return;
 			}
 			if ( t == Coln ) ctrigger=true;
@@ -757,10 +756,8 @@ namespace ExeJson
 		for ( Items::const_iterator lit=lst.begin();lit!=lst.end();lit++)
 		{
 			const Item ndx( *lit );
-			const size_t n( ndx.ValueIndex() );
-			const NodeBase& node( me[ n ] );
-			const Value& v( node );
-			return v;
+			const Markers& n( ndx.ValueIndex() );
+			cout << name << "->" << n << endl;
 		}
 
 		return value;
