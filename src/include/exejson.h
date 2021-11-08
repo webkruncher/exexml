@@ -333,6 +333,7 @@ namespace ExeJson
 		operator const Index& () { return index; }
 		operator const Object* () const { return this; }
 		const Value& GetValue( const string& name ) const;
+		const NodeBase& GetNode( const string& name ) const;
 		private:
 		virtual operator const bool () ;
 		const NodeBase& getmarkers( int ndx ) const;
@@ -653,6 +654,13 @@ namespace ExeJson
 			return result;
 		}
 
+		const NodeBase& GetNode( const string name ) const
+		{
+			const Json& me( *this );
+			const Object& root( me );
+			const NodeBase& result( root.GetNode( name ) );
+			return result;
+		}
 		private:
 		RootNode root;
 		const string& jtxt;
@@ -751,6 +759,13 @@ namespace ExeJson
 	}
 
 
+	const NodeBase& Object::GetNode( const string& name ) const
+	{
+		value.clear();
+		const Object& me( *this );
+		Index::const_iterator found( index.find( name ) );
+		return me[ index ];
+	}
 
 } // ExeJson
 

@@ -137,12 +137,22 @@ int main(int argc,char** argv)
 			vector<string> v
 				{ "txt", "lst", "other", "ender", "name", "results" }; 
 
-			for ( vector<string>::iterator sit=v.begin();sit!=v.end();sit++)
 			{
-				const string name( *sit ); 
-				const ExeJson::Value& value( json.GetValue( name ) );
-				if ( ! value.empty() ) 
-					cout << name << "->" << value << endl;
+				for ( vector<string>::iterator sit=v.begin();sit!=v.end();sit++)
+				{
+					const string name( *sit ); 
+					const ExeJson::Value& value( json.GetValue( name ) );
+					if ( ! value.empty() ) 
+						cout << name << "->" << value << endl;
+				}
+			}
+			{
+				for ( vector<string>::iterator sit=v.begin();sit!=v.end();sit++)
+				{
+					const string name( *sit ); 
+					const ExeJson::NodeBase& nb( json.GetNode( name ) );
+					cout << name << "->" << nb << endl;
+				}
 			}
 		}
 	}
