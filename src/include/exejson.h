@@ -761,7 +761,7 @@ namespace ExeJson
 	}
 
 
-	// TBD: Return vector of hits
+	// TBD: Return associated object
 	const NodeBase& Object::GetNode( const string& name ) const
 	{
 		const Object& me( *this );
