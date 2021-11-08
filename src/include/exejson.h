@@ -222,6 +222,7 @@ namespace ExeJson
 		Item( const Item& that ) : name( that.name ), value( that.value )  {}
 		size_t operator < ( const Item& that ) const { return name < that.name; }
 		void SetValueIndex( const Markers& pos ) const { value=pos; }
+		const size_t NameIndex() const { return name; }
 		const Markers& ValueIndex() const { return value; }
 		private:
 		const size_t name;
@@ -753,6 +754,7 @@ namespace ExeJson
 			const Markers& n( ndx.ValueIndex() );
 			const string t( jtxt.substr( n.first, n.second-n.first ) );
 			value=t;
+			return value;
 		}
 
 		return value;
@@ -761,10 +763,17 @@ namespace ExeJson
 
 	const NodeBase& Object::GetNode( const string& name ) const
 	{
-		value.clear();
 		const Object& me( *this );
 		Index::const_iterator found( index.find( name ) );
-		return me[ index ];
+		if ( found == index.end() ) throw name;
+		const Items& lst( found->second );
+		for ( Items::const_iterator lit=lst.begin();lit!=lst.end();lit++)
+		{
+			const Item ndx( *lit );
+			const size_t nindx( ndx.NameIndex() );
+			return me[ nindx ];
+		}
+		throw name;
 	}
 
 } // ExeJson
