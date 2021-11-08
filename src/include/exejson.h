@@ -332,7 +332,7 @@ namespace ExeJson
 		Object( const string& _jtxt, const int _level, const JsonToken _jc ) : Node( _jtxt, _level, _jc ) {}
 		operator const Index& () { return index; }
 		operator const Object* () const { return this; }
-		const Value& operator()( const string& name ) const;
+		const Value& GetValue( const string& name ) const;
 		private:
 		virtual operator const bool () ;
 		const NodeBase& getmarkers( int ndx ) const;
@@ -645,11 +645,11 @@ namespace ExeJson
 			return *o;
 		}
 
-		const Value& operator[]( const string name ) const
+		const Value& GetValue( const string name ) const
 		{
 			const Json& me( *this );
 			const Object& root( me );
-			const Value& result( root( name ) );
+			const Value& result( root.GetValue( name ) );
 			return result;
 		}
 
@@ -731,7 +731,7 @@ namespace ExeJson
 		}
 	}
 
-	const Value& Object::operator()( const string& name ) const
+	const Value& Object::GetValue( const string& name ) const
 	{
 		value.clear();
 		const Object& me( *this );
