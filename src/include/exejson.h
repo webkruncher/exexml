@@ -722,7 +722,7 @@ cout << "-"; cout.flush();
 	const NodeBase& Object::getmarkers( int ndx ) const
 	{
 		const Object& me( *this );
-		while( ndx < jtxt.size() )
+		while( ndx < size() )
 		{
 			const NodeBase& nb( me[ ndx ] );
 			const TokenType nt( nb );

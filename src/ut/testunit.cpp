@@ -53,11 +53,50 @@ namespace XmlPayload
 } // XmlPayload
 
 
+void bugjson()
+{
+	string except;
+	try
+        {
+                stringstream ss;
+                ifstream in("ut/oc.json" );
+                while ( ! in.eof() )
+                {
+                        string line; 
+                        getline( in, line );
+                        ss << line;
+                }
+                cout << "Read:" << ss.str() << endl;
+		const string j( ss.str() );
+                ExeJson::Json json( j );
+		if ( ! json ) throw string("Cannot load json");
+		cout << "Got json" << endl;
+		const ExeJson::Object& root( json );
+		cout << "Got root" << endl;
+			vector<string> v
+				{ "int", "real", "txt", "lst", "other", "ender", "name", "results" }; 
+
+			{
+				for ( vector<string>::iterator sit=v.begin();sit!=v.end();sit++)
+				{
+					const string name( *sit ); 
+					const ExeJson::Value& value( json.GetValue( name ) );
+					if ( ! value.empty() ) 
+						cout << name << "->" << value << endl;
+				}
+			}
+        }
+	catch(std::exception& e) {except=e.what();}
+	catch(string& s) {except=s;}
+	catch(...) {except="Unknown exception";}
+	if (except.size()) cerr<<red<<"Exception:" << except<<normal<<endl;
+}
 
 bool Diagnose(false);
 int main(int argc,char** argv)
 {
 	string mode,bigs;
+        if ( argc < 2 )  { bugjson(); return 0; }
 
 
 	if (argc>1) mode=argv[1];
