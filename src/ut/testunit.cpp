@@ -133,9 +133,9 @@ int main(int argc,char** argv)
 			ExeJson::Json json( ss );
 			if ( ! json ) throw string("Cannot load json");
 			const ExeJson::Object& root( json );
-
+#if 1
 			vector<string> v
-				{ "txt", "lst", "other", "ender", "name", "results" }; 
+				{ "int", "real", "txt", "lst", "other", "ender", "name", "results" }; 
 
 			{
 				for ( vector<string>::iterator sit=v.begin();sit!=v.end();sit++)
@@ -154,6 +154,7 @@ int main(int argc,char** argv)
 					cout << name << "->" << nb << endl;
 				}
 			}
+#endif
 		}
 	}
 	catch(std::exception& e) {except=e.what();}

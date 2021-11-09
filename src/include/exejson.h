@@ -269,11 +269,15 @@ namespace ExeJson
 		Node( const string& _jtxt, const int _level, const JsonToken _jc ) : NodeBase( _jtxt, _level, _jc ) {}
 		virtual operator const bool () 
 		{
+cout << ">"; cout.flush();
 			for ( iterator it=begin();it!=end();it++)
 			{
 				NodeBase& n( **it );
+cout << "#"; cout.flush();
 				if ( ! n ) return false;
+cout << "!"; cout.flush();
 			}
+cout << "<"; cout.flush();
 			return true;
 		}
 		virtual operator string () const { return ""; }
@@ -486,6 +490,7 @@ namespace ExeJson
 	{
 		RegularCharacter( const string& _jtxt, const int _level, const JsonToken _jc ) : Node( _jtxt, _level, _jc ) {}
 		private:
+		operator const bool () ;
 		virtual CBug& operator<<(CBug& o) const 
 		{
 			o << yellow << bold << jc << normal;
@@ -567,6 +572,7 @@ namespace ExeJson
 			break;
 			case Coln: 
 			{
+cout << jc << " ";
 				if ( qtext.enquoted( false ) ) 
 				{
 					jc.morph( Special, ':' );
@@ -585,6 +591,7 @@ namespace ExeJson
 			break;
 			case Character: 
 			{
+cout << jc << " ";
 				push_back( new RegularCharacter( txt, level, jc ) );
 				return true;
 			}
@@ -630,11 +637,13 @@ namespace ExeJson
 			QueString qtext( 0, glyphs );
 			for ( string::const_iterator it=jtxt.begin();it!=jtxt.end();it++) 
 				qtext( *it );
+cout << "Loaded" << endl;
 			Excavator excavator( jtxt, root, qtext );
 			Markers m( excavator ); 
-
+cout << "Excavated" << endl;
 			if ( false ) { CBug cbug; cbug << root; cerr << endl << setw( 80 ) << setfill( '-' ) << "-" << endl; }
 			if ( ! root ) throw string( "Cannot index json" );
+cout << "Indexed" << endl; cout.flush();
 			CBug cbug;
 			cbug << green << rvid << root << normal;
 			JsonGlyphTypeLegend( cbug );
@@ -667,10 +676,15 @@ namespace ExeJson
 		const string& jtxt;
 	};
 
-
+	RegularCharacter::operator const bool () 
+	{
+cout << endl << jc << "%"; cout.flush();
+		return true;
+	}
 
 	Object::operator const bool () 
 	{
+cout << "*"; cout.flush();
 		bool tillcoma( false );
 	
 		int ndx( 0 );	
@@ -695,7 +709,9 @@ namespace ExeJson
 					index[ name ].insert( i );
 					Items::const_iterator tat( index[name].find( i ) );
 					const Item& tit( *tat );
+cout << "."; cout.flush();
 					addvalue( it, ndx, tit );
+cout << "-"; cout.flush();
 				}
 			}
 		}
