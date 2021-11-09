@@ -157,8 +157,8 @@ int main(int argc,char** argv)
 #endif
 		}
 	}
-	catch(std::exception& e) {except=e.what();}
-	catch(string& s) {except=s;}
+	catch(const exception& e) {except=e.what();}
+	catch(const string& s) {except=s;}
 	catch(...) {except="Unknown exception";}
 	if (except.size()) cerr<<red<<"Exception:" << except<<normal<<endl;
 	cerr << endl;

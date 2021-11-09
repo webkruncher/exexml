@@ -652,6 +652,7 @@ cout << "Indexed" << endl; cout.flush();
 		operator const Object& () const
 		{
 			const Object* o( root );
+cerr << "O:" << hex << o << endl;
 			if ( ! o ) throw string( "Json is not loaded" );
 			return *o;
 		}
