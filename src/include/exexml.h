@@ -39,6 +39,7 @@
 #ifndef __EXECUTABLE_XML__
 #define __EXECUTABLE_XML__
 #include <list>
+#include <string.h>
 
 namespace XmlFamilyUtils {class XmlMapNode; class XmlNodeGuts;}
 
@@ -719,7 +720,8 @@ namespace XmlFamily
 		const Xml& operator=(const Xml& a)
 		{
 			if (&a==this) return *this; 
-			if (Root) delete Root; Root=NULL;
+			if (Root) delete Root; 
+			Root=NULL;
 			const Xml& ret=Copy(a);
 			return ret;
 		}
