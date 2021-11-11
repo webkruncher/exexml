@@ -746,7 +746,7 @@ cerr << green << "B4" << b4 << normal;
 				return true;
 			}
 			break;
-#if 1
+#if 0
 			case ValueChar: 
 			{
 cerr << "VC" << fence << jc << endl;
