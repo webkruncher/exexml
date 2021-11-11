@@ -612,7 +612,6 @@ namespace ExeJson
 				Excavator excavate( txt, item, qtext, true );
 				const Markers& closed( excavate );
 				closure( closed );
-				return false;
 			}
 		}
 
