@@ -570,7 +570,7 @@ namespace ExeJson
 				if ( ! node( txt, qtext, jc, b4 ) )
 				{
 					const Markers m( node );
-					return m;
+					if ( ! b4 ) return m;
 				}
 			}
 			Markers none( node );
@@ -612,6 +612,7 @@ namespace ExeJson
 				Excavator excavate( txt, item, qtext, true );
 				const Markers& closed( excavate );
 				closure( closed );
+				return false;
 			}
 		}
 
