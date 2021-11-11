@@ -38,8 +38,8 @@ using namespace KruncherTools;
 
 struct CBug : ofstream
 {
-	CBug() : ofstream( "/dev/null" ) {}
-} ;
+	CBug() : ofstream( "/dev/stderr" ) {}
+};
 
 namespace ExeJson
 {
@@ -65,9 +65,10 @@ namespace ExeJson
 
 
 	enum TokenType { 
-		Root, 
+		Root=100, 
 		ObjectOpen, ObjectClose, ListOpen, ListClose,
-		Coma, Coln, Quots, Special, Character
+		Coma, Coln, Quots, Special, Character,
+		ValueChar
 	};
 
 	inline void JsonGlyphTypeLegend( ostream& o)
@@ -82,6 +83,7 @@ namespace ExeJson
 		o<< "Quots      :" << Quots      << endl;
 		o<< "Special    :" << Special    << endl;
 		o<< "Character  :" << Character  << endl;
+		o<< "ValueChar  :" << ValueChar  << endl;
 	}
 
 
@@ -127,8 +129,7 @@ namespace ExeJson
 		JsonToken( ) : pos( 0, 0 ), tokentype( Root ), c( 0 ) {}
 		JsonToken( const size_t _pos, TokenType _t, char _c ) : pos( _pos, 0 ), tokentype( _t ), c( _c ) {}
 		JsonToken( const size_t zero, const size_t _pos, TokenType _t, char _c ) : pos( zero, _pos ), tokentype( _t ), c( _c ) {}
-		JsonToken( const JsonToken& that )
-			: pos( that.pos ), tokentype( that.tokentype ), c( that.c ) { }
+		JsonToken( const JsonToken& that ) : pos( that.pos ), tokentype( that.tokentype ), c( that.c ) { }
 		const JsonToken& operator=( const JsonToken& that ) const
 		{
 			if ( this != &that )
@@ -139,7 +140,13 @@ namespace ExeJson
 			}
 			return *this;
 		}
-		operator const char () { return c; }
+
+		operator const char& ()  const
+		{
+			cerr << red << "char:" << c << endl;
+			return c;
+		}
+
 		void morph( const TokenType _t, const char _c ) const
 		{
 			c=_c;
@@ -164,6 +171,7 @@ namespace ExeJson
 				case Special: ss << red << c << normal; break;
 				case Character: ss << teal << c << normal; break;
 				case Root: ss << bluebk << green << bold << c << normal; break;
+				case ValueChar: ss << redbk << yellow << bold << c << normal; break;
 				default: ss << tealbk << blue << c;
 			}
 			return ss.str();
@@ -198,19 +206,45 @@ namespace ExeJson
 			} else {
 				switch ( c )
 				{
-					case '"': { JsonToken jc( much, Quots, c ); push( jc ); break; }
+					case '"': 
+					{
+						glyphs.enquoted();
+						JsonToken jc( much, Quots, c ); 
+						push( jc ); 
+						break;
+					}
 					case ',': { JsonToken jc( much, Coma, c ); push( jc ); break; }
 					case ':': { JsonToken jc( much, Coln, c ); push( jc ); break; }
 					case '{': { JsonToken jc( much, ObjectOpen, c ); push( jc ); break; }
 					case '}': { JsonToken jc( 0, much, ObjectClose, c ); push( jc ); break; }
 					case '[': { JsonToken jc( much, ListOpen, c ); push( jc ); break; }
 					case ']': { JsonToken jc( 0, much, ListClose, c ); push( jc ); break; }
-					default: { JsonToken jc( much, Character, c ); push( jc ); }
+					default: 
+					{
+						if ( ! glyphs.enquoted( false ) && ( ! WhiteSpace( c )  ) )
+						{
+cerr << redbk << c << normal;
+							JsonToken jc( much, ValueChar, c ); 
+							push( jc ); 
+						} else {
+							JsonToken jc( much, Character, c ); 
+							push( jc ); 
+						}
+						break;
+					}
 				}
 			}	
 		}
 		bool enquoted( const bool toggle=true ) { return glyphs.enquoted( toggle ); }
 		private:
+		bool WhiteSpace( const char cc )
+		{
+			if ( cc == ' ' ) return true;
+			if ( cc == '\t' ) return true;
+			if ( cc == '\r' ) return true;
+			if ( cc == '\n' ) return true;
+			return false;
+		}
 		int much;
 		GlyphDisposition& glyphs;
 	};
@@ -237,8 +271,8 @@ namespace ExeJson
 	struct NodeBase : vector< NodeBase* >
 	{
 		friend struct Excavator;
-		NodeBase( const string& _jtxt, const int _level ) : jtxt( _jtxt ), level( _level ) {}
-		NodeBase( const string& _jtxt, const int _level, const JsonToken _jc ) : jtxt( _jtxt ), level( _level ), jc( _jc ) {}
+		NodeBase( const string& _jtxt, const int _level ) : jtxt( _jtxt ), level( _level ), b4( 0 ) {}
+		NodeBase( const string& _jtxt, const int _level, const JsonToken _jc ) : jtxt( _jtxt ), level( _level ), jc( _jc ), b4( 0 ) {}
 		void operator = ( const size_t _endmarker ) { jc.pos.second=_endmarker; }
 		virtual ~NodeBase() { for ( iterator it=begin();it!=end();it++) delete *it; }
 		virtual bool operator()( const string&, QueString&, const JsonToken& );
@@ -249,12 +283,13 @@ namespace ExeJson
 		virtual operator string () const = 0;
 		virtual const NodeBase& operator[]( const size_t ndx ) const = 0;
 		virtual operator const Object* () const { return nullptr; }
-		operator const JsonToken () const { return jc; }
+		operator JsonToken& () const { return jc; }
 		protected:
 		const string& jtxt;
 		const int level;
-		const JsonToken jc;
+		mutable JsonToken jc;
 		mutable Value value;
+		size_t b4;
 		friend ostream& operator<<(ostream&, const NodeBase&);
 		virtual ostream& operator<<(ostream& o) const = 0;
 		friend CBug& operator<<(CBug&, const NodeBase&);
@@ -269,15 +304,11 @@ namespace ExeJson
 		Node( const string& _jtxt, const int _level, const JsonToken _jc ) : NodeBase( _jtxt, _level, _jc ) {}
 		virtual operator const bool () 
 		{
-cout << ">"; cout.flush();
 			for ( iterator it=begin();it!=end();it++)
 			{
 				NodeBase& n( **it );
-cout << "#"; cout.flush();
 				if ( ! n ) return false;
-cout << "!"; cout.flush();
 			}
-cout << "<"; cout.flush();
 			return true;
 		}
 		virtual operator string () const { return ""; }
@@ -391,6 +422,7 @@ cout << "<"; cout.flush();
 		}
 	};
 
+
 	struct Comma : Node
 	{
 		Comma( const string& _jtxt, const int _level, const JsonToken _jc ) : Node( _jtxt, _level, _jc ) {}
@@ -503,9 +535,35 @@ cout << "<"; cout.flush();
 		}
 	};
 
+	struct ValueText : RegularCharacter
+	{
+		ValueText( const string& _jtxt, const int _level, const JsonToken _jc ) : RegularCharacter( _jtxt, _level, _jc ) {}
+		private:
+		virtual CBug& operator<<(CBug& o) const 
+		{
+			o << ulin << blink << bold << jc << normal;
+			for ( const_iterator it=begin();it!=end();it++)
+			{
+				const NodeBase& n( **it );
+				o << n;
+			}
+			return o;
+		}
+		virtual ostream& operator<<(ostream& o) const 
+		{
+			o << jc ;
+			for ( const_iterator it=begin();it!=end();it++)
+			{
+				const NodeBase& n( **it );
+				o << n;
+			}
+			return o;
+		}
+	};
+
 	struct Excavator 
 	{
-		Excavator( const string& _txt, NodeBase& _node, QueString& _qtext ) 
+		Excavator( const string& _txt, NodeBase& _node, QueString& _qtext )
 			: txt(_txt), node( _node ), qtext( _qtext ) {}
 		void operator()( char c ) { qtext( c ); }
 		operator Markers ()
@@ -514,6 +572,30 @@ cout << "<"; cout.flush();
 			{
 				const JsonToken& jc( qtext.front() );
 				qtext.pop();
+				const TokenType& tokentype( jc );
+#if 0
+const char ccc( jc );
+const Markers& pos( jc );
+cerr << rvid << fence << (int) tokentype << "?" << (int) ValueChar <<  fence << ccc << fence << pos << normal << semi << " ";
+				if ( ValueChar == tokentype )
+				{
+cerr << red << "ValueMode:" << ccc << normal;
+					valumode=true;
+					valuestring+=ccc;
+					break;
+				}
+				if ( valumode )
+				{
+					jc.swap();
+					b4.closure( jc );
+cerr << green << "B4" << b4 << normal;
+					cerr << valuestring << fence << b4 << endl;
+					valumode=false;
+					node.push_back( new ValueText( txt, node.level, b4 ) );
+					break;
+				}
+#endif
+				b4=jc;
 				if ( ! node( txt, qtext, jc ) )
 				{
 					const Markers m( node );
@@ -527,11 +609,55 @@ cout << "<"; cout.flush();
 		const string& txt;
 		NodeBase& node;
 		QueString& qtext;
+		bool valumode;
+		JsonToken b4;
+		string valuestring;
 	};
 
 	inline bool NodeBase::operator()( const string& txt, QueString& qtext, const JsonToken& jc )
 	{
 		const TokenType tokentype( jc );
+#if 1
+		if ( b4 )
+		{
+			if ( tokentype != ValueChar ) 
+			{
+				cerr << "Got to the end of a value" << endl;
+				//NodeBase& me( *this );
+				//NodeBase* pb4( me.at( b4 ) );
+				//NodeBase& b( *pb4 );
+				//JsonToken& t( b );
+				//jc.swap();
+				//Markers m( jc );
+				//b.closure( m );
+
+				const char& cc2( jc );
+				cerr << "Next in value is " << cc2 << endl;
+				push_back( new ValueText( txt, level, jc ) );
+				b4=0;
+
+
+				return false;
+			}
+		} else {
+			if ( tokentype == ValueChar ) 
+			{
+				cerr << "Getting char..." << endl;
+				const char& cc2( jc );
+				const Markers pos( jc );
+				cerr << "Starting a value at " << pos << " with " << cc2 << ">" << jc << endl;
+				b4=size();
+				const JsonToken& jcsub( qtext.front() );
+				qtext.pop();
+				push_back( new ValueText( txt, level, jcsub ) );
+				NodeBase& item( *back() );
+				if ( ! (*this)( txt, qtext, jcsub ) ) ;
+				//Markers m( excavate );
+				//closure( m );
+				return true;
+			}
+		}
+#endif
 		switch ( tokentype )
 		{
 			case ObjectOpen:
@@ -572,7 +698,6 @@ cout << "<"; cout.flush();
 			break;
 			case Coln: 
 			{
-cout << jc << " ";
 				if ( qtext.enquoted( false ) ) 
 				{
 					jc.morph( Special, ':' );
@@ -591,7 +716,6 @@ cout << jc << " ";
 			break;
 			case Character: 
 			{
-cout << jc << " ";
 				push_back( new RegularCharacter( txt, level, jc ) );
 				return true;
 			}
@@ -608,7 +732,7 @@ cout << jc << " ";
 					return true;
 				} else {
 					push_back( new QuotationMark( txt, level-1, jc ) );
-					const Markers& m( jc);
+					const Markers& m( jc );
 					jc.swap();
 					closure( m );
 					return false;
@@ -621,6 +745,19 @@ cout << jc << " ";
 				push_back( new SpecialChar( txt, level, jc ) );
 				return true;
 			}
+			break;
+#if 1
+			case ValueChar: 
+			{
+cerr << "VC" << fence << jc << endl;
+				push_back( new ValueText( txt, level, jc ) );
+				return true;
+			}
+			break;
+#else
+			case ValueChar: throw string("Impossible value char");
+#endif
+			break;
 			case Root: 
 			break;
 		}
@@ -637,13 +774,10 @@ cout << jc << " ";
 			QueString qtext( 0, glyphs );
 			for ( string::const_iterator it=jtxt.begin();it!=jtxt.end();it++) 
 				qtext( *it );
-cout << "Loaded" << endl;
 			Excavator excavator( jtxt, root, qtext );
 			Markers m( excavator ); 
-cout << "Excavated" << endl;
-			if ( false ) { CBug cbug; cbug << root; cerr << endl << setw( 80 ) << setfill( '-' ) << "-" << endl; }
+			if ( true ) { CBug cbug; cbug << root; cerr << endl << setw( 80 ) << setfill( '-' ) << "-" << endl; }
 			if ( ! root ) throw string( "Cannot index json" );
-cout << "Indexed" << endl; cout.flush();
 			CBug cbug;
 			cbug << green << rvid << root << normal;
 			JsonGlyphTypeLegend( cbug );
@@ -652,7 +786,6 @@ cout << "Indexed" << endl; cout.flush();
 		operator const Object& () const
 		{
 			const Object* o( root );
-cerr << "O:" << hex << o << endl;
 			if ( ! o ) throw string( "Json is not loaded" );
 			return *o;
 		}
@@ -679,13 +812,11 @@ cerr << "O:" << hex << o << endl;
 
 	RegularCharacter::operator const bool () 
 	{
-cout << endl << jc << "%"; cout.flush();
 		return true;
 	}
 
 	Object::operator const bool () 
 	{
-cout << "*"; cout.flush();
 		bool tillcoma( false );
 	
 		int ndx( 0 );	
@@ -694,6 +825,11 @@ cout << "*"; cout.flush();
 			NodeBase& n( **it );
 			if ( ! n ) return false;
 			const TokenType t( n );
+			if ( t == ValueChar )
+			{
+				cerr << "vc" << fence << n << fence ;
+				continue;
+			} 
 			if ( t == Coln ) tillcoma=true;
 			if ( t == Coma ) tillcoma=false;
 			if ( ! tillcoma ) 
@@ -710,14 +846,13 @@ cout << "*"; cout.flush();
 					index[ name ].insert( i );
 					Items::const_iterator tat( index[name].find( i ) );
 					const Item& tit( *tat );
-cout << "."; cout.flush();
 					addvalue( it, ndx, tit );
-cout << "-"; cout.flush();
 				}
 			}
 		}
 		return true;
 	}
+
 
 	const NodeBase& Object::getmarkers( int ndx ) const
 	{
@@ -728,9 +863,15 @@ cout << "-"; cout.flush();
 			const TokenType nt( nb );
 			if ( nt == Quots ) return nb;
 			if ( nt == ListOpen ) return nb;
+			if ( nt == ValueChar )
+			{
+				const NodeBase& nb( me[ ndx - 1 ] );
+				return nb;
+			} 
 			ndx++;
 		}
-		throw string("cannot get markers");
+		const NodeBase& nb( me[ ndx - 1 ] );
+		return nb;
 	}
 	void Object::addvalue( iterator it, int ndx, const Item& tit )
 	{
@@ -747,7 +888,6 @@ cout << "-"; cout.flush();
 			if ( ctrigger ) 
 			{
 				const NodeBase& nb( getmarkers( ndx ) );
-				const TokenType nt( nb );
 				const JsonToken& jj( nb );
 				const Markers& pos( jj );
 				tit.SetValueIndex( pos );
@@ -764,7 +904,9 @@ cout << "-"; cout.flush();
 		Index::const_iterator found( index.find( name ) );
 		if ( found == index.end() ) return value;
 		const Items& lst( found->second );
-		
+
+		cerr << "Found value for " << name << endl;	
+		// TBD: Only one item here, just return begin() - devectorize it	
 		for ( Items::const_iterator lit=lst.begin();lit!=lst.end();lit++)
 		{
 			const Item ndx( *lit );

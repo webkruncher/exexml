@@ -172,9 +172,8 @@ int main(int argc,char** argv)
 			ExeJson::Json json( ss );
 			if ( ! json ) throw string("Cannot load json");
 			const ExeJson::Object& root( json );
-#if 1
-			vector<string> v
-				{ "int", "real", "txt", "lst", "other", "ender", "name", "results" }; 
+			//vector<string> v { "int", "real", "txt", "lst", "other", "ender", "name", "results" }; 
+			vector<string> v { "txt", "lst", "int" };
 
 			{
 				for ( vector<string>::iterator sit=v.begin();sit!=v.end();sit++)
@@ -182,9 +181,10 @@ int main(int argc,char** argv)
 					const string name( *sit ); 
 					const ExeJson::Value& value( json.GetValue( name ) );
 					if ( ! value.empty() ) 
-						cout << name << "->" << value << endl;
+						cout << name << "->" << value << semi << endl;
 				}
 			}
+#if 0
 			{
 				for ( vector<string>::iterator sit=v.begin();sit!=v.end();sit++)
 				{
