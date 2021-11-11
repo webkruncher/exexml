@@ -141,11 +141,7 @@ namespace ExeJson
 			return *this;
 		}
 
-		operator const char& ()  const
-		{
-			cerr << red << "char:" << c << endl;
-			return c;
-		}
+		operator const char& ()  const { return c; }
 
 		void morph( const TokenType _t, const char _c ) const
 		{
@@ -223,7 +219,6 @@ namespace ExeJson
 					{
 						if ( ! glyphs.enquoted( false ) && ( ! WhiteSpace( c )  ) )
 						{
-cerr << redbk << c << normal;
 							JsonToken jc( much, ValueChar, c ); 
 							push( jc ); 
 						} else {
@@ -271,11 +266,11 @@ cerr << redbk << c << normal;
 	struct NodeBase : vector< NodeBase* >
 	{
 		friend struct Excavator;
-		NodeBase( const string& _jtxt, const int _level ) : jtxt( _jtxt ), level( _level ), b4( 0 ) {}
-		NodeBase( const string& _jtxt, const int _level, const JsonToken _jc ) : jtxt( _jtxt ), level( _level ), jc( _jc ), b4( 0 ) {}
+		NodeBase( const string& _jtxt, const int _level ) : jtxt( _jtxt ), level( _level ) {}
+		NodeBase( const string& _jtxt, const int _level, const JsonToken _jc ) : jtxt( _jtxt ), level( _level ), jc( _jc ) {}
 		void operator = ( const size_t _endmarker ) { jc.pos.second=_endmarker; }
 		virtual ~NodeBase() { for ( iterator it=begin();it!=end();it++) delete *it; }
-		virtual bool operator()( const string&, QueString&, const JsonToken& );
+		virtual bool operator()( const string&, QueString&, const JsonToken&, const bool b4 );
 		void closure( const Markers& pos ) const { jc.closure( pos ); }
 		operator Markers () const { return jc; }
 		operator const TokenType () const { return jc; }
@@ -289,7 +284,6 @@ cerr << redbk << c << normal;
 		const int level;
 		mutable JsonToken jc;
 		mutable Value value;
-		size_t b4;
 		friend ostream& operator<<(ostream&, const NodeBase&);
 		virtual ostream& operator<<(ostream& o) const = 0;
 		friend CBug& operator<<(CBug&, const NodeBase&);
@@ -563,8 +557,8 @@ cerr << redbk << c << normal;
 
 	struct Excavator 
 	{
-		Excavator( const string& _txt, NodeBase& _node, QueString& _qtext )
-			: txt(_txt), node( _node ), qtext( _qtext ) {}
+		Excavator( const string& _txt, NodeBase& _node, QueString& _qtext, const bool _b4=false )
+			: txt(_txt), node( _node ), qtext( _qtext ), b4( _b4 ) {}
 		void operator()( char c ) { qtext( c ); }
 		operator Markers ()
 		{
@@ -573,30 +567,7 @@ cerr << redbk << c << normal;
 				const JsonToken& jc( qtext.front() );
 				qtext.pop();
 				const TokenType& tokentype( jc );
-#if 0
-const char ccc( jc );
-const Markers& pos( jc );
-cerr << rvid << fence << (int) tokentype << "?" << (int) ValueChar <<  fence << ccc << fence << pos << normal << semi << " ";
-				if ( ValueChar == tokentype )
-				{
-cerr << red << "ValueMode:" << ccc << normal;
-					valumode=true;
-					valuestring+=ccc;
-					break;
-				}
-				if ( valumode )
-				{
-					jc.swap();
-					b4.closure( jc );
-cerr << green << "B4" << b4 << normal;
-					cerr << valuestring << fence << b4 << endl;
-					valumode=false;
-					node.push_back( new ValueText( txt, node.level, b4 ) );
-					break;
-				}
-#endif
-				b4=jc;
-				if ( ! node( txt, qtext, jc ) )
+				if ( ! node( txt, qtext, jc, b4 ) )
 				{
 					const Markers m( node );
 					return m;
@@ -609,55 +580,42 @@ cerr << green << "B4" << b4 << normal;
 		const string& txt;
 		NodeBase& node;
 		QueString& qtext;
-		bool valumode;
-		JsonToken b4;
 		string valuestring;
+		const bool b4;
 	};
 
-	inline bool NodeBase::operator()( const string& txt, QueString& qtext, const JsonToken& jc )
+	inline bool NodeBase::operator()( const string& txt, QueString& qtext, const JsonToken& jc, const bool b4 )
 	{
 		const TokenType tokentype( jc );
-#if 1
+		cerr << teal << level << fence << b4 << fence << tokentype << fence << "->" << normal;
+
 		if ( b4 )
 		{
-			if ( tokentype != ValueChar ) 
+			if ( tokentype == ValueChar ) 
 			{
-				cerr << "Got to the end of a value" << endl;
-				//NodeBase& me( *this );
-				//NodeBase* pb4( me.at( b4 ) );
-				//NodeBase& b( *pb4 );
-				//JsonToken& t( b );
-				//jc.swap();
-				//Markers m( jc );
-				//b.closure( m );
-
 				const char& cc2( jc );
-				cerr << "Next in value is " << cc2 << endl;
+				cerr << "In value string " << cc2 << endl;
 				push_back( new ValueText( txt, level, jc ) );
-				b4=0;
-
-
+				return true;
+			} else  {
 				return false;
 			}
 		} else {
 			if ( tokentype == ValueChar ) 
 			{
-				cerr << "Getting char..." << endl;
 				const char& cc2( jc );
-				const Markers pos( jc );
-				cerr << "Starting a value at " << pos << " with " << cc2 << ">" << jc << endl;
-				b4=size();
-				const JsonToken& jcsub( qtext.front() );
-				qtext.pop();
-				push_back( new ValueText( txt, level, jcsub ) );
+				Markers& pos( jc );
+				push_back( new ValueText( txt, level+1, jc ) );
+				cerr << "Starting a value at " << pos << " with " << cc2 << ">" << jc << fence << size() << endl;
+
 				NodeBase& item( *back() );
-				if ( ! (*this)( txt, qtext, jcsub ) ) ;
-				//Markers m( excavate );
-				//closure( m );
-				return true;
+				Excavator excavate( txt, item, qtext, true );
+				const Markers& closed( excavate );
+				closure( closed );
+				return false;
 			}
 		}
-#endif
+
 		switch ( tokentype )
 		{
 			case ObjectOpen:
@@ -746,17 +704,13 @@ cerr << green << "B4" << b4 << normal;
 				return true;
 			}
 			break;
-#if 0
 			case ValueChar: 
 			{
-cerr << "VC" << fence << jc << endl;
-				push_back( new ValueText( txt, level, jc ) );
-				return true;
+				const Markers& pos( jc );
+				const char& cc( jc );
+				cerr << red << "This is impossible " << fence << tokentype << fence << cc << fence << pos << normal << endl;
+				throw string("Impossible value char");
 			}
-			break;
-#else
-			case ValueChar: throw string("Impossible value char");
-#endif
 			break;
 			case Root: 
 			break;
