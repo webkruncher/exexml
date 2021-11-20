@@ -124,6 +124,11 @@ namespace ExeJson
 
 	inline ostream& operator<<(ostream& o,const Markers& m) { return m.operator<<(o); }
 
+	string Slice( const string& txt, Markers& pos )
+	{
+		return txt.substr( pos.first, pos.second-pos.first );
+	}
+
 	struct QueString;
 	struct NodeBase;
 	struct JsonToken
@@ -570,15 +575,16 @@ namespace ExeJson
 				qtext.pop();
 				const TokenType& tokentype( jc );
 				const Markers& jcp( jc );
-				cerr << "jcp:" << jcp << endl;
+				//cerr << "jcp:" << jcp << endl;
 				if ( ! node( txt, qtext, jc, b4 ) )
 				{
 					const Markers m( node );
-					cerr << "!";
+					//cerr << "!";
 					return jcp;
 				}
+				//if ( b4 ) return jcp;
 			}
-			cerr << "$";
+			//cerr << "$";
 			Markers none( node );
 			return none;
 		}
@@ -593,18 +599,18 @@ namespace ExeJson
 	inline bool NodeBase::operator()( const string& txt, QueString& qtext, const JsonToken& jc, const bool b4 )
 	{
 		const TokenType tokentype( jc );
-		cerr << teal << level << fence << b4 << fence << tokentype << fence << "->" << normal;
+		//cerr << teal << level << fence << b4 << fence << tokentype << fence << "->" << normal;
 
 		if ( b4 )
 		{
 			if ( tokentype == ValueChar ) 
 			{
 				const char& cc2( jc );
-				cerr << endl << "In value string " << cc2 << endl;
+				//cerr << endl << "In value string " << cc2 << endl;
 				push_back( new ValueText( txt, level, jc ) );
 				return true;
 			} else  {
-				cerr << endl << "Returning from a value string " << endl;
+				//cerr << endl << "Returning from a value string " << endl;
 				return false;
 			}
 		} else {
@@ -614,17 +620,18 @@ namespace ExeJson
 				Markers& pos( jc );
 				pos.first--;
 				push_back( new ValueText( txt, level+1, jc ) );
-				cerr << endl << "Starting a value at " << pos << " with " << cc2 << ">" << jc << fence << size() << endl;
+				//cerr << endl << "Starting a value at " << pos << " with " << cc2 << ">" << jc << fence << size() << endl;
 
 				NodeBase& item( *back() );
 				Excavator excavate( txt, item, qtext, true );
 				const Markers& closed( excavate );
 				Markers& cclosed( const_cast<Markers&>( closed ) );
-				cclosed.swap();
-				cerr << "Closing a value at " << pos << ", started with " << cc2 << ">" << jc << fence << size() << endl;
+				if ( closed.first ) cclosed.swap();
+				cerr << "Closing a value at " << pos << ", with " << cclosed << endl;
 				jc.closure( cclosed );
 				const Markers& pp( *this );
 				cerr << "Closed a value at " << pos << ", started with " << cc2 << ">" << jc << fence << size() << endl;
+				cerr << Slice( txt, pos ) << endl;
 				return true;
 			}
 		}
