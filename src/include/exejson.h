@@ -605,7 +605,7 @@ namespace ExeJson
 				return true;
 			} else  {
 				cerr << endl << "Returning from a value string " << endl;
-				return true;
+				return false;
 			}
 		} else {
 			if ( tokentype == ValueChar ) 
