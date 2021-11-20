@@ -109,6 +109,8 @@ namespace ExeJson
 	{
 		typedef pair<size_t,size_t> mtype;
 		Markers( const size_t _first, const size_t _second ) : mtype( _first, _second ) {}
+		void swap() { const size_t s( second ); second=first; first=s;}
+		void operator--(){first--;second--;}
 		private:
 		friend ostream& operator<<(ostream&,const Markers&);
 		ostream& operator<<(ostream& o) const
@@ -567,12 +569,16 @@ namespace ExeJson
 				const JsonToken& jc( qtext.front() );
 				qtext.pop();
 				const TokenType& tokentype( jc );
+				const Markers& jcp( jc );
+				cerr << "jcp:" << jcp << endl;
 				if ( ! node( txt, qtext, jc, b4 ) )
 				{
 					const Markers m( node );
-					if ( ! b4 ) return m;
+					cerr << "!";
+					return jcp;
 				}
 			}
+			cerr << "$";
 			Markers none( node );
 			return none;
 		}
@@ -594,10 +600,11 @@ namespace ExeJson
 			if ( tokentype == ValueChar ) 
 			{
 				const char& cc2( jc );
-				cerr << "In value string " << cc2 << endl;
+				cerr << endl << "In value string " << cc2 << endl;
 				push_back( new ValueText( txt, level, jc ) );
 				return true;
 			} else  {
+				cerr << endl << "Returning from a value string " << endl;
 				return false;
 			}
 		} else {
@@ -605,14 +612,20 @@ namespace ExeJson
 			{
 				const char& cc2( jc );
 				Markers& pos( jc );
+				pos.first--;
 				push_back( new ValueText( txt, level+1, jc ) );
-				cerr << "Starting a value at " << pos << " with " << cc2 << ">" << jc << fence << size() << endl;
+				cerr << endl << "Starting a value at " << pos << " with " << cc2 << ">" << jc << fence << size() << endl;
 
 				NodeBase& item( *back() );
 				Excavator excavate( txt, item, qtext, true );
 				const Markers& closed( excavate );
-				closure( closed );
-				return false;
+				Markers& cclosed( const_cast<Markers&>( closed ) );
+				cclosed.swap();
+				cerr << "Closing a value at " << pos << ", started with " << cc2 << ">" << jc << fence << size() << endl;
+				jc.closure( cclosed );
+				const Markers& pp( *this );
+				cerr << "Closed a value at " << pos << ", started with " << cc2 << ">" << jc << fence << size() << endl;
+				return true;
 			}
 		}
 
