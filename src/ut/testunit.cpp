@@ -66,25 +66,23 @@ void bugjson()
                         getline( in, line );
                         ss << line;
                 }
-                cout << "Read:" << ss.str() << endl;
 		const string j( ss.str() );
                 ExeJson::Json json( j );
 		if ( ! json ) throw string("Cannot load json");
-		cout << "Got json" << endl;
 		const ExeJson::Object& root( json );
-		cout << "Got root" << endl;
-			vector<string> v
-				{ "int", "real", "txt", "lst", "other", "ender", "name", "results" }; 
+		vector<string> v
+			{ "int", "real", "txt", "lst", "other", "ender", "name", "results" }; 
 
+		{
+			for ( vector<string>::iterator sit=v.begin();sit!=v.end();sit++)
 			{
-				for ( vector<string>::iterator sit=v.begin();sit!=v.end();sit++)
-				{
-					const string name( *sit ); 
-					const ExeJson::Value& value( json.GetValue( name ) );
-					if ( ! value.empty() ) 
-						cout << name << "->" << value << endl;
-				}
+				const string name( *sit ); 
+				//const ExeJson::Value& value( json.GetValue( name ) );
+				//if ( ! value.empty() ) 
+				//	cout << name << "->" << value << endl;
+				const ExeJson::NodeBase& node( json.GetNode( name ) );
 			}
+		}
         }
 	catch(std::exception& e) {except=e.what();}
 	catch(string& s) {except=s;}

@@ -124,10 +124,6 @@ namespace ExeJson
 
 	inline ostream& operator<<(ostream& o,const Markers& m) { return m.operator<<(o); }
 
-	string Slice( const string& txt, Markers& pos )
-	{
-		return txt.substr( pos.first, pos.second-pos.first );
-	}
 
 	struct QueString;
 	struct NodeBase;
@@ -627,11 +623,11 @@ namespace ExeJson
 				const Markers& closed( excavate );
 				Markers& cclosed( const_cast<Markers&>( closed ) );
 				if ( closed.first ) cclosed.swap();
-				cerr << "Closing a value at " << pos << ", with " << cclosed << endl;
+				//cerr << "Closing a value at " << pos << ", with " << cclosed << endl;
 				jc.closure( cclosed );
 				const Markers& pp( *this );
-				cerr << "Closed a value at " << pos << ", started with " << cc2 << ">" << jc << fence << size() << endl;
-				cerr << Slice( txt, pos ) << endl;
+				//cerr << "Closed a value at " << pos << ", started with " << cc2 << ">" << jc << fence << size() << endl;
+				cerr << "Value:" << Slice( txt, pos ) << endl;
 				return true;
 			}
 		}
