@@ -481,7 +481,7 @@ namespace ExeJson
 			//o << blink << "," << normal;
 			return o;
 		}
-#if 0
+#if 1
 		virtual ostream& operator<<(ostream& o) const 
 		{
 			o << "," ;
@@ -499,7 +499,7 @@ namespace ExeJson
 			o << rvid << ":" << normal ;
 			return o;
 		}
-#if 0
+#if 1
 		virtual ostream& operator<<(ostream& o) const 
 		{
 			o << ":"; 
