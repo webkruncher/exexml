@@ -67,7 +67,7 @@ namespace ExeJson
 	enum TokenType { 
 		Root=100, 
 		ObjectOpen, ObjectClose, ListOpen, ListClose,
-		Coma, Coln, Quots, Special, Character,
+		Coma, Coln, NameQuots, ValueQuots, Special, Character,
 		ValueChar
 	};
 
@@ -80,7 +80,8 @@ namespace ExeJson
 		o<< "ListClose  :" << ListClose  << endl;
 		o<< "Coma       :" << Coma       << endl;
 		o<< "Coln       :" << Coln       << endl;
-		o<< "Quots      :" << Quots      << endl;
+		o<< "NameQuots  :" << NameQuots  << endl;
+		o<< "ValueQuots :" << ValueQuots << endl;
 		o<< "Special    :" << Special    << endl;
 		o<< "Character  :" << Character  << endl;
 		o<< "ValueChar  :" << ValueChar  << endl;
@@ -97,7 +98,8 @@ namespace ExeJson
 			case ListClose  :	return "ListClose"; break;
 			case Coma       :	return "Coma"; break;
 			case Coln       :	return "Coln"; break;
-			case Quots      :	return "Quots"; break;
+			case NameQuots      :	return "NameQuots"; break;
+			case ValueQuots      :	return "ValueQuots"; break;
 			case Special    :	return "Special"; break;
 			case Character  :	return "Character"; break;
 			case ValueChar  :	return "ValueChar"; break;
@@ -181,7 +183,8 @@ namespace ExeJson
 			{
 				case Coma: ss << green << c << normal; break;
 				case Coln: ss << bluebk << white << bold << c << normal; break;
-				case Quots: ss << rvid << yellow << c << normal; break;
+				case NameQuots: ss << rvid << yellow << c << normal; break;
+				case ValueQuots: ss << rvid << blink << yellow << c << normal; break;
 				case ListOpen: ss << black << whitebk << c << normal; break;
 				case ListClose: ss << black << whitebk << c << normal; break;
 				case ObjectOpen: ss << rvid << bold << c << normal; break;
@@ -222,7 +225,7 @@ namespace ExeJson
 	{
 		QueString() = delete;
 		QueString( const int _much, GlyphDisposition& _glyphs ) 
-			: much( _much ), glyphs( _glyphs ) {}
+			: much( _much ), glyphs( _glyphs ), quotestate( true ) {}
 		void operator()( const char c )
 		{
 			much++;
@@ -235,13 +238,14 @@ namespace ExeJson
 				{
 					case '"': 
 					{
+						const TokenType tt ( ( quotestate ) ? NameQuots : ValueQuots );
 						glyphs.enquoted();
-						JsonToken jc( much, Quots, c ); 
+						JsonToken jc( much, tt, c ); 
 						push( jc ); 
 						break;
 					}
-					case ',': { JsonToken jc( much, Coma, c ); push( jc ); break; }
-					case ':': { JsonToken jc( much, Coln, c ); push( jc ); break; }
+					case ',': { quotestate=true; JsonToken jc( much, Coma, c ); push( jc ); break; }
+					case ':': { quotestate=false; JsonToken jc( much, Coln, c ); push( jc ); break; }
 					case '{': { JsonToken jc( much, ObjectOpen, c ); push( jc ); break; }
 					case '}': { JsonToken jc( 0, much, ObjectClose, c ); push( jc ); break; }
 					case '[': { JsonToken jc( much, ListOpen, c ); push( jc ); break; }
@@ -272,6 +276,7 @@ namespace ExeJson
 			return false;
 		}
 		int much;
+		bool quotestate;
 		GlyphDisposition& glyphs;
 	};
 
@@ -336,13 +341,15 @@ namespace ExeJson
 			{
 				NodeBase& n( **it );
 				const JsonToken& subjc( n );
-				const TokenType subtokentype( subjc );
+				const TokenType& subtokentype( subjc );
+				const Markers& submarkers( subjc );
 
-				const string s( Print( jtxt, subjc ) );
-				if ( subtokentype == Quots ) 
-				{
-					cout << ">>" << tracetabs( level ) << s << endl;
-				}
+				if ( subtokentype == NameQuots ) 
+					if ( submarkers.second )
+					{
+						const string s( Print( jtxt, subjc ) );
+						cout << tracetabs( level ) << s << endl;
+					}
 				if ( ! n ) return false;
 			}
 			return true;
@@ -420,7 +427,7 @@ namespace ExeJson
 		private:
 		//virtual operator const bool () ;
 		//const NodeBase& getmarkers( int ndx ) const;
-		void addvalue( iterator it, int ndx, const Item& tit );
+		//void addvalue( iterator it, int ndx, const Item& tit );
 		virtual CBug& operator<<(CBug& o) const 
 		{
 			o << tracetabs( level-1 ) << blue << jc << normal;
@@ -688,6 +695,7 @@ namespace ExeJson
 				push_back( new Object( txt, level, jc ) );
 				Markers m( jc );
 				closure( m );
+				cout << tracetabs( level ) << "OC:" << m << endl;
 				return false;
 			}
 			break;
@@ -741,7 +749,25 @@ namespace ExeJson
 				return true;
 			}
 			break;
-			case Quots:
+			case NameQuots:
+			{
+				if (  ! qtext.enquoted() )
+				{
+					push_back( new QuotationMark( txt, level, jc ) );
+					NodeBase& item( *back() );
+					Excavator excavate( txt, item, qtext );
+					Markers m( excavate );
+					closure( m );
+					return true;
+				} else {
+					push_back( new QuotationMark( txt, level-1, jc ) );
+					const Markers& m( jc );
+					jc.swap();
+					closure( m );
+					return false;
+				}
+			}
+			case ValueQuots:
 			{
 				if (  ! qtext.enquoted() )
 				{
@@ -752,7 +778,7 @@ namespace ExeJson
 					closure( m );
 					return true;
 				} else {
-					push_back( new QuotationMark( txt, level-1, jc ) );
+					push_back( new QuotationMark( txt, level+1, jc ) );
 					const Markers& m( jc );
 					jc.swap();
 					closure( m );

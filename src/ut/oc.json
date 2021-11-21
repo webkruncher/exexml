@@ -3,6 +3,12 @@
 	"abc" : "a:b:c",
 	"int" : 2000,
 	"real" : 99.22,
+	"subs" :
+	{
+		"subtxt" : "avalue",
+		"int" : 3000,
+		"real" : 999.88
+	},
 	"txt" : "a:b:c",
 	"lst" : [1,2],
 	"ender" : "itsover"
