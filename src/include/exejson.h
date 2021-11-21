@@ -589,7 +589,7 @@ namespace ExeJson
 #if 1
 		virtual ostream& operator<<(ostream& o) const 
 		{
-			o << "RC:" << jc;
+			//o << "RC:" << jc;
 			return o;
 		}
 #endif
