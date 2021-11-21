@@ -331,6 +331,10 @@ namespace ExeJson
 	inline ostream& operator<<(ostream& o, const NodeBase& n ) { return n.operator<<(o); }
 	inline CBug& operator<<(CBug& o, const NodeBase& n ) { return n.operator<<(o); }
 
+	struct Index : map< string, NodeBase* >
+	{
+	};
+
 	struct Node : NodeBase
 	{
 		Node( const string& _jtxt, const int _level ) : NodeBase( _jtxt, _level ) {}
@@ -347,8 +351,10 @@ namespace ExeJson
 				if ( subtokentype == NameQuots ) 
 					if ( submarkers.second )
 					{
-						const string s( Print( jtxt, subjc ) );
-						cout << tracetabs( level ) << s << endl;
+						const Markers& pos( subjc );
+						const string& v( Slice( jtxt, pos ) );
+						//const string s( Print( jtxt, subjc ) );
+						cout << tracetabs( level ) << v << endl;
 					}
 				if ( ! n ) return false;
 			}
