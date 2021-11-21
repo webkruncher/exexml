@@ -319,7 +319,6 @@ namespace ExeJson
 		}
 
 		protected:
-		Index index;
 		private:
 		virtual ostream& operator<<(ostream& o) const = 0;
 		virtual CBug& operator<<(CBug& o) const = 0;
@@ -365,7 +364,6 @@ namespace ExeJson
 	struct Object : Node
 	{
 		Object( const string& _jtxt, const int _level, const JsonToken _jc ) : Node( _jtxt, _level, _jc ) {}
-		operator const Index& () { return index; }
 		operator const Object* () const { return this; }
 		//const Value& GetValue( const string& name ) const;
 		const NodeBase& GetNode( const string& name ) const;
@@ -708,21 +706,6 @@ cout << endl << green << "LC" << normal << endl;
 	struct Json
 	{
 		Json( const string& _jtxt ) : root( _jtxt ), jtxt( _jtxt ) {}
-		operator bool ()
-		{
-			GlyphDisposition glyphs;
-			QueString qtext( 0, glyphs );
-			for ( string::const_iterator it=jtxt.begin();it!=jtxt.end();it++) 
-				qtext( *it );
-			Excavator excavator( jtxt, root, qtext );
-			Markers m( excavator ); 
-			if ( true ) { CBug cbug; cbug << root; cerr << endl << setw( 80 ) << setfill( '-' ) << "-" << endl; }
-			if ( ! root ) throw string( "Cannot index json" );
-			CBug cbug;
-			cbug << green << rvid << root << normal;
-			JsonGlyphTypeLegend( cbug );
-			return true;
-		}
 		operator const Object& () const
 		{
 			const Object* o( root );
@@ -917,5 +900,23 @@ cout << endl << green << "LC" << normal << endl;
 			const Object& root( me );
 			const Value& result( root.GetValue( name ) );
 			return result;
+		}
+
+
+
+		operator bool ()
+		{
+			GlyphDisposition glyphs;
+			QueString qtext( 0, glyphs );
+			for ( string::const_iterator it=jtxt.begin();it!=jtxt.end();it++) 
+				qtext( *it );
+			Excavator excavator( jtxt, root, qtext );
+			Markers m( excavator ); 
+			if ( true ) { CBug cbug; cbug << root; cerr << endl << setw( 80 ) << setfill( '-' ) << "-" << endl; }
+			if ( ! root ) throw string( "Cannot index json" );
+			CBug cbug;
+			cbug << green << rvid << root << normal;
+			JsonGlyphTypeLegend( cbug );
+			return true;
 		}
 #endif
