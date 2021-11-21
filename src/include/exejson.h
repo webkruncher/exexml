@@ -364,11 +364,11 @@ namespace ExeJson
 	struct Object : Node
 	{
 		Object( const string& _jtxt, const int _level, const JsonToken _jc ) : Node( _jtxt, _level, _jc ) {}
-		operator const Object* () const { return this; }
+		//operator const Object* () const { return this; }
 		//const Value& GetValue( const string& name ) const;
-		const NodeBase& GetNode( const string& name ) const;
+		//const NodeBase& GetNode( const string& name ) const;
 		private:
-		virtual operator const bool () ;
+		//virtual operator const bool () ;
 		const NodeBase& getmarkers( int ndx ) const;
 		void addvalue( iterator it, int ndx, const Item& tit );
 		virtual CBug& operator<<(CBug& o) const 
@@ -596,7 +596,7 @@ namespace ExeJson
 	inline bool NodeBase::operator()( const string& txt, QueString& qtext, const JsonToken& jc )
 	{
 		const TokenType tokentype( jc );
-		//cerr << teal << level << fence << b4 << fence << tokentype << fence << "->" << normal;
+		cerr << teal << level << fence << tokentype << fence << "->" << normal;
 
 
 		switch ( tokentype )
@@ -712,14 +712,22 @@ cout << endl << green << "LC" << normal << endl;
 			if ( ! o ) throw string( "Json is not loaded" );
 			return *o;
 		}
-
-		const NodeBase& GetNode( const string name ) const
+		operator bool ()
 		{
-			const Json& me( *this );
-			const Object& root( me );
-			const NodeBase& result( root.GetNode( name ) );
-			return result;
+			GlyphDisposition glyphs;
+			QueString qtext( 0, glyphs );
+			for ( string::const_iterator it=jtxt.begin();it!=jtxt.end();it++) 
+				qtext( *it );
+			Excavator excavator( jtxt, root, qtext );
+			Markers m( excavator ); 
+			if ( true ) { CBug cbug; cbug << root; cerr << endl << setw( 80 ) << setfill( '-' ) << "-" << endl; }
+			if ( ! root ) throw string( "Cannot index json" );
+			CBug cbug;
+			cbug << green << rvid << root << normal;
+			JsonGlyphTypeLegend( cbug );
+			return true;
 		}
+
 		private:
 		RootNode root;
 		const string& jtxt;
@@ -730,44 +738,6 @@ cout << endl << green << "LC" << normal << endl;
 		return true;
 	}
 
-	Object::operator const bool () 
-	{
-		bool tillcoma( false );
-	
-		int ndx( 0 );	
-		for ( iterator it=begin();it!=end();it++,ndx++)
-		{
-			NodeBase& n( **it );
-			if ( ! n ) return false;
-			const TokenType t( n );
-			//if ( t == ValueChar )
-			{
-				cerr << tracetabs( level ) << "vc" << fence << n << fence  << endl;
-				//continue;
-			} 
-			if ( t == Coln ) tillcoma=true;
-			if ( t == Coma ) tillcoma=false;
-			if ( ! tillcoma ) 
-			{
-				const string name( n );
-				if ( ! name.empty() ) 
-				{
-					Item i( ndx );
-					if ( index.find( name ) == index.end() )
-					{
-						Items items;
-						cout << endl << tracetabs( level ) << bluebk << name << normal << endl;
-						index.insert( pair<string,Items>( name, items ) );
-					}
-					index[ name ].insert( i );
-					Items::const_iterator tat( index[name].find( i ) );
-					const Item& tit( *tat );
-					addvalue( it, ndx, tit );
-				}
-			}
-		}
-		return true;
-	}
 
 
 	const NodeBase& Object::getmarkers( int ndx ) const
@@ -788,45 +758,6 @@ cout << endl << green << "LC" << normal << endl;
 		}
 		const NodeBase& nb( me[ ndx - 1 ] );
 		return nb;
-	}
-	void Object::addvalue( iterator it, int ndx, const Item& tit )
-	{
-		const Object& me( *this );
-		bool ctrigger( false );
-		while ( true )
-		{
-			it++;
-			ndx++;
-			NodeBase& n( **it );
-			if ( ! n ) return;
-			const TokenType t( n );
-			if ( it == end () ) return;
-			if ( ctrigger ) 
-			{
-				const NodeBase& nb( getmarkers( ndx ) );
-				const JsonToken& jj( nb );
-				const Markers& pos( jj );
-				tit.SetValueIndex( pos );
-				return;
-			}
-			if ( t == Coln ) ctrigger=true;
-		}
-	}
-
-	// TBD: Return associated object
-	const NodeBase& Object::GetNode( const string& name ) const
-	{
-		const Object& me( *this );
-		Index::const_iterator found( index.find( name ) );
-		if ( found == index.end() ) throw name;
-		const Items& lst( found->second );
-		for ( Items::const_iterator lit=lst.begin();lit!=lst.end();lit++)
-		{
-			const Item ndx( *lit );
-			const size_t nindx( ndx.NameIndex() );
-			return me[ nindx ];
-		}
-		throw name;
 	}
 
 } // ExeJson
@@ -904,19 +835,88 @@ cout << endl << green << "LC" << normal << endl;
 
 
 
-		operator bool ()
+	Object::operator const bool () 
+	{
+		bool tillcoma( false );
+	
+		int ndx( 0 );	
+		for ( iterator it=begin();it!=end();it++,ndx++)
 		{
-			GlyphDisposition glyphs;
-			QueString qtext( 0, glyphs );
-			for ( string::const_iterator it=jtxt.begin();it!=jtxt.end();it++) 
-				qtext( *it );
-			Excavator excavator( jtxt, root, qtext );
-			Markers m( excavator ); 
-			if ( true ) { CBug cbug; cbug << root; cerr << endl << setw( 80 ) << setfill( '-' ) << "-" << endl; }
-			if ( ! root ) throw string( "Cannot index json" );
-			CBug cbug;
-			cbug << green << rvid << root << normal;
-			JsonGlyphTypeLegend( cbug );
-			return true;
+			NodeBase& n( **it );
+			if ( ! n ) return false;
+			const TokenType t( n );
+			//if ( t == ValueChar )
+			{
+				cerr << tracetabs( level ) << "vc" << fence << n << fence  << endl;
+				//continue;
+			} 
+			if ( t == Coln ) tillcoma=true;
+			if ( t == Coma ) tillcoma=false;
+			if ( ! tillcoma ) 
+			{
+				const string name( n );
+				if ( ! name.empty() ) 
+				{
+					Item i( ndx );
+					if ( index.find( name ) == index.end() )
+					{
+						Items items;
+						cout << endl << tracetabs( level ) << bluebk << name << normal << endl;
+						index.insert( pair<string,Items>( name, items ) );
+					}
+					index[ name ].insert( i );
+					Items::const_iterator tat( index[name].find( i ) );
+					const Item& tit( *tat );
+					addvalue( it, ndx, tit );
+				}
+			}
 		}
+		return true;
+	}
+	// TBD: Return associated object
+	const NodeBase& Object::GetNode( const string& name ) const
+	{
+		const Object& me( *this );
+		Index::const_iterator found( index.find( name ) );
+		if ( found == index.end() ) throw name;
+		const Items& lst( found->second );
+		for ( Items::const_iterator lit=lst.begin();lit!=lst.end();lit++)
+		{
+			const Item ndx( *lit );
+			const size_t nindx( ndx.NameIndex() );
+			return me[ nindx ];
+		}
+		throw name;
+	}
+		const NodeBase& GetNode( const string name ) const
+		{
+			const Json& me( *this );
+			const Object& root( me );
+			const NodeBase& result( root.GetNode( name ) );
+			return result;
+		}
+	void Object::addvalue( iterator it, int ndx, const Item& tit )
+	{
+		const Object& me( *this );
+		bool ctrigger( false );
+		while ( true )
+		{
+			it++;
+			ndx++;
+			NodeBase& n( **it );
+			if ( ! n ) return;
+			const TokenType t( n );
+			if ( it == end () ) return;
+			if ( ctrigger ) 
+			{
+				const NodeBase& nb( getmarkers( ndx ) );
+				const JsonToken& jj( nb );
+				const Markers& pos( jj );
+				tit.SetValueIndex( pos );
+				return;
+			}
+			if ( t == Coln ) ctrigger=true;
+		}
+	}
+
 #endif

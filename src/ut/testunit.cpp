@@ -68,7 +68,9 @@ void bugjson()
                 }
 		const string j( ss.str() );
                 ExeJson::Json json( j );
+
 		if ( ! json ) throw string("Cannot load json");
+#if 0
 		const ExeJson::Object& root( json );
 		vector<string> v
 			{ "int", "real", "txt", "lst", "other", "ender", "name", "results" }; 
@@ -83,6 +85,7 @@ void bugjson()
 				const ExeJson::NodeBase& node( json.GetNode( name ) );
 			}
 		}
+#endif
         }
 	catch(std::exception& e) {except=e.what();}
 	catch(string& s) {except=s;}
@@ -168,6 +171,7 @@ int main(int argc,char** argv)
 				ss+=s; ss+="\n";
 			}
 			ExeJson::Json json( ss );
+#if 0
 			if ( ! json ) throw string("Cannot load json");
 			const ExeJson::Object& root( json );
 			//vector<string> v { "int", "real", "txt", "lst", "other", "ender", "name", "results" }; 
@@ -182,6 +186,7 @@ int main(int argc,char** argv)
 					//	cout << name << "->" << value << semi << endl;
 				}
 			}
+#endif
 #if 0
 			{
 				for ( vector<string>::iterator sit=v.begin();sit!=v.end();sit++)
