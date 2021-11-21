@@ -86,6 +86,25 @@ namespace ExeJson
 		o<< "ValueChar  :" << ValueChar  << endl;
 	}
 
+	inline string GlyphType( const TokenType& tokentype )
+	{
+		switch ( tokentype )
+		{
+			case Root       :	return "Root"; break;
+			case ObjectOpen :	return "ObjectOpen"; break;
+			case ObjectClose:	return "ObjectClose"; break;
+			case ListOpen   :	return "ListOpen"; break;
+			case ListClose  :	return "ListClose"; break;
+			case Coma       :	return "Coma"; break;
+			case Coln       :	return "Coln"; break;
+			case Quots      :	return "Quots"; break;
+			case Special    :	return "Special"; break;
+			case Character  :	return "Character"; break;
+			case ValueChar  :	return "ValueChar"; break;
+			default: return "NotAType";
+		}
+		
+	}
 
 	struct GlyphDisposition
 	{
@@ -190,6 +209,15 @@ namespace ExeJson
 
 	inline ostream& operator<<( ostream& o, const JsonToken& j ) { return j.operator<<(o); }
 
+	inline string Print( const string& jtxt, const JsonToken& jc )
+	{
+		stringstream ss;
+		const Markers& pos( jc );
+		const string& v( Slice( jtxt, pos ) );
+		ss << normal << mgenta << GlyphType( jc ) << fence << rvid << jc << pos << fence << v << normal;
+		return ss.str();
+	}
+
 	struct QueString : queue< JsonToken >
 	{
 		QueString() = delete;
@@ -282,6 +310,8 @@ namespace ExeJson
 		virtual const NodeBase& operator[]( const size_t ndx ) const = 0;
 		virtual operator const Object* () const { return nullptr; }
 		operator JsonToken& () const { return jc; }
+
+		const NodeBase& GetNode( const string& name ) const { throw name; }
 		protected:
 		const string& jtxt;
 		const int level;
@@ -304,8 +334,15 @@ namespace ExeJson
 			for ( iterator it=begin();it!=end();it++)
 			{
 				NodeBase& n( **it );
+				const TokenType tokentype( n );
+#if 0
 				CBug b;
-				b << tracetabs( level ) << "N:" << red << n << normal << "; " << endl ;
+				if (  ( tokentype == ObjectOpen ) 
+						||
+					( tokentype == ListOpen ) 
+				) 
+					b << endl << tracetabs( level ) << "N:" << green << n << normal << "; " << endl ;
+#endif
 				if ( ! n ) return false;
 			}
 			return true;
@@ -320,7 +357,25 @@ namespace ExeJson
 
 		protected:
 		private:
-		virtual ostream& operator<<(ostream& o) const = 0;
+		virtual ostream& operator<<(ostream& o) const 
+		{
+			const TokenType tokentype( jc );
+			if ( 
+				( tokentype == ObjectOpen )
+					||
+				( tokentype == ListOpen )
+					||
+				( tokentype == ValueChar )
+			)
+				o << endl << Print( jtxt, jc ) << endl;
+
+			for ( const_iterator it=begin();it!=end();it++)
+			{
+				const NodeBase& n( **it );
+				o << n;
+			}
+			return o;
+		}
 		virtual CBug& operator<<(CBug& o) const = 0;
 	};
 
@@ -330,13 +385,13 @@ namespace ExeJson
 		RootNode( const string& _jtxt ) : Node( _jtxt, 0 ) {}
 		operator const Object* () const 
 		{
-			for ( const_iterator it=begin();it!=end();it++)
-			{
-				const NodeBase& n( **it );
-				const Object* oo( n );
-				if ( oo ) return oo;
-			}
-			return nullptr;	
+			if ( size() != 1 ) return nullptr;
+			const NodeBase* np( *begin() );
+			if ( ! np ) throw string("No node");
+			const NodeBase& n( *np );
+			
+			const Object* oo( n );
+			return oo;
 		}
 		private:
 		virtual CBug& operator<<(CBug& o) const 
@@ -348,6 +403,7 @@ namespace ExeJson
 			}
 			return o;
 		}
+#if 0
 		virtual ostream& operator<<(ostream& o) const 
 		{
 			for ( const_iterator it=begin();it!=end();it++)
@@ -357,6 +413,7 @@ namespace ExeJson
 			}
 			return o;
 		}
+#endif
 	};
 
 
@@ -364,7 +421,7 @@ namespace ExeJson
 	struct Object : Node
 	{
 		Object( const string& _jtxt, const int _level, const JsonToken _jc ) : Node( _jtxt, _level, _jc ) {}
-		//operator const Object* () const { return this; }
+		operator const Object* () const { return this; }
 		//const Value& GetValue( const string& name ) const;
 		//const NodeBase& GetNode( const string& name ) const;
 		private:
@@ -381,6 +438,7 @@ namespace ExeJson
 			}
 			return o;
 		}
+#if 0
 		virtual ostream& operator<<(ostream& o) const 
 		{
 			o << jc;
@@ -391,6 +449,7 @@ namespace ExeJson
 			}
 			return o;
 		}
+#endif
 	};
 
 	struct List : Node
@@ -407,6 +466,7 @@ namespace ExeJson
 			}
 			return o;
 		}
+#if 0
 		virtual ostream& operator<<(ostream& o) const 
 		{
 			o << jc ;
@@ -417,6 +477,7 @@ namespace ExeJson
 			}
 			return o;
 		}
+#endif
 	};
 
 
@@ -426,14 +487,16 @@ namespace ExeJson
 		private:
 		virtual CBug& operator<<(CBug& o) const 
 		{
-			o << blink << "," << normal;
+			//o << blink << "," << normal;
 			return o;
 		}
+#if 0
 		virtual ostream& operator<<(ostream& o) const 
 		{
 			o << "," ;
 			return o;
 		}
+#endif
 	};
 
 	struct Colon : Node
@@ -445,11 +508,13 @@ namespace ExeJson
 			o << rvid << ":" << normal ;
 			return o;
 		}
+#if 0
 		virtual ostream& operator<<(ostream& o) const 
 		{
 			o << ":"; 
 			return o;
 		}
+#endif
 	};
 
 	struct QuotationMark : Node
@@ -467,9 +532,9 @@ namespace ExeJson
 			}
 			return ss.str();
 		}
+
 		virtual CBug& operator<<(CBug& o) const 
 		{
-			o << rvid << mgenta << blink << "\"" << normal;
 			for ( const_iterator it=begin();it!=end();it++)
 			{
 				const NodeBase& n( **it );
@@ -477,6 +542,7 @@ namespace ExeJson
 			}
 			return o;
 		}
+#if 0
 		virtual ostream& operator<<(ostream& o) const 
 		{
 			o << "\"" ;
@@ -487,6 +553,7 @@ namespace ExeJson
 			}
 			return o;
 		}
+#endif
 	};
 
 	struct SpecialChar : Node
@@ -503,6 +570,7 @@ namespace ExeJson
 			}
 			return o;
 		}
+#if 0
 		virtual ostream& operator<<(ostream& o) const 
 		{
 			o << jc; 
@@ -513,6 +581,7 @@ namespace ExeJson
 			}
 			return o;
 		}
+#endif
 	};
 
 	struct RegularCharacter : Node
@@ -525,20 +594,22 @@ namespace ExeJson
 			o << yellow << bold << jc << normal;
 			return o;
 		}
+#if 0
 		virtual ostream& operator<<(ostream& o) const 
 		{
-			o << jc;
+			o << "RC:" << jc;
 			return o;
 		}
+#endif
 	};
 
-	struct ValueText : RegularCharacter
+	struct ValueText : Node
 	{
-		ValueText( const string& _jtxt, const int _level, const JsonToken _jc ) : RegularCharacter( _jtxt, _level, _jc ) {}
+		ValueText( const string& _jtxt, const int _level, const JsonToken _jc, const string _valuetext ) : Node( _jtxt, _level ), valuetext( _valuetext ) {}
 		private:
 		virtual CBug& operator<<(CBug& o) const 
 		{
-			o << ulin << blink << bold << jc << normal;
+			//o << ulin << blink << bold << jc << normal;
 			for ( const_iterator it=begin();it!=end();it++)
 			{
 				const NodeBase& n( **it );
@@ -546,9 +617,10 @@ namespace ExeJson
 			}
 			return o;
 		}
+
 		virtual ostream& operator<<(ostream& o) const 
 		{
-			o << jc ;
+			o << "ValueText:" << valuetext << endl;
 			for ( const_iterator it=begin();it!=end();it++)
 			{
 				const NodeBase& n( **it );
@@ -556,6 +628,9 @@ namespace ExeJson
 			}
 			return o;
 		}
+		private:
+		const string valuetext;
+
 	};
 
 	struct Excavator 
@@ -613,6 +688,7 @@ namespace ExeJson
 			break;
 			case ObjectClose: 
 			{
+cout << endl << green << "OC" << normal << endl;
 				push_back( new Object( txt, level, jc ) );
 				Markers m( jc );
 				closure( m );
@@ -688,14 +764,25 @@ cout << endl << green << "LC" << normal << endl;
 				return true;
 			}
 			break;
+#if 1
 			case ValueChar: 
 			{
-				const Markers& pos( jc );
-				const char& cc( jc );
-				//cerr << red << "This is impossible " << fence << tokentype << fence << cc << fence << pos << normal << endl;
-				//throw string("Impossible value char");
+				stringstream ss;
+				JsonToken jc2( jc );
+				while ( ! qtext.empty() )
+				{
+					const char& cc( jc2 );
+					ss << cc;
+					jc2=( qtext.front() );
+					qtext.pop();
+					const TokenType& tokentype( jc2 );
+					if ( tokentype != ValueChar) break;
+				}
+				push_back( new ValueText( txt, level, jc, ss.str() ) );
+				return true;
 			}
 			break;
+#endif
 			case Root: 
 			break;
 		}
@@ -724,7 +811,7 @@ cout << endl << green << "LC" << normal << endl;
 			if ( ! root ) throw string( "Cannot index json" );
 			CBug cbug;
 			cbug << green << rvid << root << normal;
-			JsonGlyphTypeLegend( cbug );
+			//JsonGlyphTypeLegend( cbug );
 			return true;
 		}
 
@@ -737,8 +824,6 @@ cout << endl << green << "LC" << normal << endl;
 	{
 		return true;
 	}
-
-
 
 	const NodeBase& Object::getmarkers( int ndx ) const
 	{
@@ -798,9 +883,8 @@ cout << endl << green << "LC" << normal << endl;
 				return true;
 			}
 		}
-
-
 	#endif
+
 #if 0
 	const Value& Object::GetValue( const string& name ) const
 	{
@@ -874,20 +958,6 @@ cout << endl << green << "LC" << normal << endl;
 		return true;
 	}
 	// TBD: Return associated object
-	const NodeBase& Object::GetNode( const string& name ) const
-	{
-		const Object& me( *this );
-		Index::const_iterator found( index.find( name ) );
-		if ( found == index.end() ) throw name;
-		const Items& lst( found->second );
-		for ( Items::const_iterator lit=lst.begin();lit!=lst.end();lit++)
-		{
-			const Item ndx( *lit );
-			const size_t nindx( ndx.NameIndex() );
-			return me[ nindx ];
-		}
-		throw name;
-	}
 		const NodeBase& GetNode( const string name ) const
 		{
 			const Json& me( *this );
