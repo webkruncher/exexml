@@ -359,15 +359,6 @@ namespace ExeJson
 		private:
 		virtual ostream& operator<<(ostream& o) const 
 		{
-			const TokenType tokentype( jc );
-			if ( 
-				( tokentype == ObjectOpen )
-					||
-				( tokentype == ListOpen )
-					||
-				( tokentype == ValueChar )
-			)
-				o << endl << Print( jtxt, jc ) << endl;
 
 			for ( const_iterator it=begin();it!=end();it++)
 			{
@@ -438,10 +429,10 @@ namespace ExeJson
 			}
 			return o;
 		}
-#if 0
+#if 1
 		virtual ostream& operator<<(ostream& o) const 
 		{
-			o << jc;
+			o << endl << tracetabs( level ) << "Object:" << jc ;
 			for ( const_iterator it=begin();it!=end();it++)
 			{
 				const NodeBase& n( **it );
@@ -466,10 +457,10 @@ namespace ExeJson
 			}
 			return o;
 		}
-#if 0
+
 		virtual ostream& operator<<(ostream& o) const 
 		{
-			o << jc ;
+			o << endl << tracetabs( level ) << "List:" << jc ;
 			for ( const_iterator it=begin();it!=end();it++)
 			{
 				const NodeBase& n( **it );
@@ -477,7 +468,7 @@ namespace ExeJson
 			}
 			return o;
 		}
-#endif
+
 	};
 
 
@@ -542,10 +533,11 @@ namespace ExeJson
 			}
 			return o;
 		}
-#if 0
+#if 1
 		virtual ostream& operator<<(ostream& o) const 
 		{
-			o << "\"" ;
+			const string& s( Slice( jtxt, jc ) );
+			o << endl << tracetabs( level ) << "Quotes:" << s  << endl;
 			for ( const_iterator it=begin();it!=end();it++)
 			{
 				const NodeBase& n( **it );
@@ -620,7 +612,8 @@ namespace ExeJson
 
 		virtual ostream& operator<<(ostream& o) const 
 		{
-			o << "ValueText:" << valuetext << endl;
+			const Markers& pos( jc );
+			o << endl << tracetabs( level ) << normal << mgenta << GlyphType( ValueChar ) << fence << rvid << fence << valuetext << normal << endl;
 			for ( const_iterator it=begin();it!=end();it++)
 			{
 				const NodeBase& n( **it );
@@ -671,7 +664,7 @@ namespace ExeJson
 	inline bool NodeBase::operator()( const string& txt, QueString& qtext, const JsonToken& jc )
 	{
 		const TokenType tokentype( jc );
-		cerr << teal << level << fence << tokentype << fence << "->" << normal;
+		//cerr << teal << level << fence << tokentype << fence << "->" << normal;
 
 
 		switch ( tokentype )
@@ -764,7 +757,7 @@ cout << endl << green << "LC" << normal << endl;
 				return true;
 			}
 			break;
-#if 1
+
 			case ValueChar: 
 			{
 				stringstream ss;
@@ -774,15 +767,21 @@ cout << endl << green << "LC" << normal << endl;
 					const char& cc( jc2 );
 					ss << cc;
 					jc2=( qtext.front() );
-					qtext.pop();
 					const TokenType& tokentype( jc2 );
-					if ( tokentype != ValueChar) break;
+					if ( tokentype != ValueChar) 
+					{
+						const Markers& pos( jc2 );
+						jc2.swap();
+						closure( pos );
+						break;
+					}
+					qtext.pop();
 				}
 				push_back( new ValueText( txt, level, jc, ss.str() ) );
 				return true;
 			}
 			break;
-#endif
+
 			case Root: 
 			break;
 		}
