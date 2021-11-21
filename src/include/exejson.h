@@ -294,9 +294,6 @@ namespace ExeJson
 		mutable Markers value;
 	};
 
-	struct Items : set< Item > {};
-	struct Index : map< string, Items > {};
-
 	struct Excavator;
 	struct Object;
 	struct NodeBase : vector< NodeBase* >
@@ -353,7 +350,6 @@ namespace ExeJson
 					{
 						const Markers& pos( subjc );
 						const string& v( Slice( jtxt, pos ) );
-						//const string s( Print( jtxt, subjc ) );
 						cout << tracetabs( level ) << v << endl;
 					}
 				if ( ! n ) return false;
