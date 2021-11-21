@@ -562,7 +562,7 @@ namespace ExeJson
 			}
 			return o;
 		}
-#if 0
+#if 1
 		virtual ostream& operator<<(ostream& o) const 
 		{
 			o << jc; 
@@ -586,7 +586,7 @@ namespace ExeJson
 			o << yellow << bold << jc << normal;
 			return o;
 		}
-#if 0
+#if 1
 		virtual ostream& operator<<(ostream& o) const 
 		{
 			o << "RC:" << jc;
