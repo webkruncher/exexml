@@ -716,6 +716,10 @@ namespace ExeJson
 					push_back( new SpecialChar( txt, level, jc ) );
 				} else {
 					push_back( new Colon( txt, level, jc ) );
+					NodeBase& item( *back() );
+					Excavator excavate( txt, item, qtext );
+					Markers m( excavate );
+					closure( m );
 				}
 				return true;
 			}
@@ -723,6 +727,9 @@ namespace ExeJson
 			case Coma: 
 			{
 				push_back( new Comma( txt, level, jc ) );
+				Markers m( jc );
+				closure( m );
+				return false;
 				return true;
 			}
 			break;
