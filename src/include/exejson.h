@@ -244,12 +244,12 @@ namespace ExeJson
 						push( jc ); 
 						break;
 					}
-					case ',': { quotestate=true; JsonToken jc( much, Coma, c ); push( jc ); break; }
+					case ',': { quotestate=true;  JsonToken jc( much, Coma, c ); push( jc ); break; }
 					case ':': { quotestate=false; JsonToken jc( much, Coln, c ); push( jc ); break; }
-					case '{': { quotestate=true;JsonToken jc( much, ObjectOpen, c ); push( jc ); break; }
-					case '}': { JsonToken jc( 0, much, ObjectClose, c ); push( jc ); break; }
-					case '[': { JsonToken jc( much, ListOpen, c ); push( jc ); break; }
-					case ']': { JsonToken jc( 0, much, ListClose, c ); push( jc ); break; }
+					case '{': { quotestate=true;  JsonToken jc( much, ObjectOpen, c ); push( jc ); break; }
+					case '}': { quotestate=false; JsonToken jc( 0, much, ObjectClose, c ); push( jc ); break; }
+					case '[': { quotestate=true;  JsonToken jc( much, ListOpen, c ); push( jc ); break; }
+					case ']': { quotestate=false; JsonToken jc( 0, much, ListClose, c ); push( jc ); break; }
 					default: 
 					{
 						if ( ! glyphs.enquoted( false ) && ( ! WhiteSpace( c )  ) )
