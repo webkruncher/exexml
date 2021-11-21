@@ -273,7 +273,7 @@ namespace ExeJson
 		NodeBase( const string& _jtxt, const int _level, const JsonToken _jc ) : jtxt( _jtxt ), level( _level ), jc( _jc ) {}
 		void operator = ( const size_t _endmarker ) { jc.pos.second=_endmarker; }
 		virtual ~NodeBase() { for ( iterator it=begin();it!=end();it++) delete *it; }
-		virtual bool operator()( const string&, QueString&, const JsonToken&, const bool b4 );
+		virtual bool operator()( const string&, QueString&, const JsonToken& );
 		void closure( const Markers& pos ) const { jc.closure( pos ); }
 		operator Markers () const { return jc; }
 		operator const TokenType () const { return jc; }
@@ -304,6 +304,8 @@ namespace ExeJson
 			for ( iterator it=begin();it!=end();it++)
 			{
 				NodeBase& n( **it );
+				CBug b;
+				b << tracetabs( level ) << "N:" << red << n << normal << "; " << endl ;
 				if ( ! n ) return false;
 			}
 			return true;
@@ -365,7 +367,7 @@ namespace ExeJson
 		Object( const string& _jtxt, const int _level, const JsonToken _jc ) : Node( _jtxt, _level, _jc ) {}
 		operator const Index& () { return index; }
 		operator const Object* () const { return this; }
-		const Value& GetValue( const string& name ) const;
+		//const Value& GetValue( const string& name ) const;
 		const NodeBase& GetNode( const string& name ) const;
 		private:
 		virtual operator const bool () ;
@@ -560,8 +562,8 @@ namespace ExeJson
 
 	struct Excavator 
 	{
-		Excavator( const string& _txt, NodeBase& _node, QueString& _qtext, const bool _b4=false )
-			: txt(_txt), node( _node ), qtext( _qtext ), b4( _b4 ) {}
+		Excavator( const string& _txt, NodeBase& _node, QueString& _qtext )
+			: txt(_txt), node( _node ), qtext( _qtext ) {}
 		void operator()( char c ) { qtext( c ); }
 		operator Markers ()
 		{
@@ -571,16 +573,15 @@ namespace ExeJson
 				qtext.pop();
 				const TokenType& tokentype( jc );
 				const Markers& jcp( jc );
-				//cerr << "jcp:" << jcp << endl;
-				if ( ! node( txt, qtext, jc, b4 ) )
+
+				if ( ! node( txt, qtext, jc ) )
 				{
 					const Markers m( node );
 					//cerr << "!";
-					return jcp;
+					Markers none( node );
+					return none;
 				}
-				//if ( b4 ) return jcp;
 			}
-			//cerr << "$";
 			Markers none( node );
 			return none;
 		}
@@ -589,48 +590,16 @@ namespace ExeJson
 		NodeBase& node;
 		QueString& qtext;
 		string valuestring;
-		const bool b4;
+		stack< JsonToken > Stack;
 	};
 
-	inline bool NodeBase::operator()( const string& txt, QueString& qtext, const JsonToken& jc, const bool b4 )
+
+
+	inline bool NodeBase::operator()( const string& txt, QueString& qtext, const JsonToken& jc )
 	{
 		const TokenType tokentype( jc );
 		//cerr << teal << level << fence << b4 << fence << tokentype << fence << "->" << normal;
 
-		if ( b4 )
-		{
-			if ( tokentype == ValueChar ) 
-			{
-				const char& cc2( jc );
-				//cerr << endl << "In value string " << cc2 << endl;
-				push_back( new ValueText( txt, level, jc ) );
-				return true;
-			} else  {
-				//cerr << endl << "Returning from a value string " << endl;
-				return false;
-			}
-		} else {
-			if ( tokentype == ValueChar ) 
-			{
-				const char& cc2( jc );
-				Markers& pos( jc );
-				pos.first--;
-				push_back( new ValueText( txt, level+1, jc ) );
-				//cerr << endl << "Starting a value at " << pos << " with " << cc2 << ">" << jc << fence << size() << endl;
-
-				NodeBase& item( *back() );
-				Excavator excavate( txt, item, qtext, true );
-				const Markers& closed( excavate );
-				Markers& cclosed( const_cast<Markers&>( closed ) );
-				if ( closed.first ) cclosed.swap();
-				//cerr << "Closing a value at " << pos << ", with " << cclosed << endl;
-				jc.closure( cclosed );
-				const Markers& pp( *this );
-				//cerr << "Closed a value at " << pos << ", started with " << cc2 << ">" << jc << fence << size() << endl;
-				cerr << "Value:" << Slice( txt, pos ) << endl;
-				return true;
-			}
-		}
 
 		switch ( tokentype )
 		{
@@ -664,6 +633,7 @@ namespace ExeJson
 			break;
 			case ListClose: 
 			{
+cout << endl << green << "LC" << normal << endl;
 				push_back( new List( txt, level, jc ) );
 				Markers m( jc );
 				closure( m );
@@ -724,8 +694,8 @@ namespace ExeJson
 			{
 				const Markers& pos( jc );
 				const char& cc( jc );
-				cerr << red << "This is impossible " << fence << tokentype << fence << cc << fence << pos << normal << endl;
-				throw string("Impossible value char");
+				//cerr << red << "This is impossible " << fence << tokentype << fence << cc << fence << pos << normal << endl;
+				//throw string("Impossible value char");
 			}
 			break;
 			case Root: 
@@ -760,14 +730,6 @@ namespace ExeJson
 			return *o;
 		}
 
-		const Value& GetValue( const string name ) const
-		{
-			const Json& me( *this );
-			const Object& root( me );
-			const Value& result( root.GetValue( name ) );
-			return result;
-		}
-
 		const NodeBase& GetNode( const string name ) const
 		{
 			const Json& me( *this );
@@ -795,10 +757,10 @@ namespace ExeJson
 			NodeBase& n( **it );
 			if ( ! n ) return false;
 			const TokenType t( n );
-			if ( t == ValueChar )
+			//if ( t == ValueChar )
 			{
-				cerr << "vc" << fence << n << fence ;
-				continue;
+				cerr << tracetabs( level ) << "vc" << fence << n << fence  << endl;
+				//continue;
 			} 
 			if ( t == Coln ) tillcoma=true;
 			if ( t == Coma ) tillcoma=false;
@@ -811,6 +773,7 @@ namespace ExeJson
 					if ( index.find( name ) == index.end() )
 					{
 						Items items;
+						cout << endl << tracetabs( level ) << bluebk << name << normal << endl;
 						index.insert( pair<string,Items>( name, items ) );
 					}
 					index[ name ].insert( i );
@@ -867,6 +830,64 @@ namespace ExeJson
 		}
 	}
 
+	// TBD: Return associated object
+	const NodeBase& Object::GetNode( const string& name ) const
+	{
+		const Object& me( *this );
+		Index::const_iterator found( index.find( name ) );
+		if ( found == index.end() ) throw name;
+		const Items& lst( found->second );
+		for ( Items::const_iterator lit=lst.begin();lit!=lst.end();lit++)
+		{
+			const Item ndx( *lit );
+			const size_t nindx( ndx.NameIndex() );
+			return me[ nindx ];
+		}
+		throw name;
+	}
+
+} // ExeJson
+
+#endif //BUILDER_JSON_H
+
+	#if 0	
+		if ( b4 )
+		{
+			if ( tokentype == ValueChar ) 
+			{
+				const char& cc2( jc );
+				//cerr << endl << "In value string " << cc2 << endl;
+				push_back( new ValueText( txt, level, jc ) );
+				return true;
+			} else  {
+				//cerr << endl << "Returning from a value string " << endl;
+				return false;
+			}
+		} else {
+			if ( tokentype == ValueChar ) 
+			{
+				const char& cc2( jc );
+				Markers& pos( jc );
+				pos.first--;
+				push_back( new ValueText( txt, level+1, jc ) );
+				//cerr << endl << "Starting a value at " << pos << " with " << cc2 << ">" << jc << fence << size() << endl;
+
+				NodeBase& item( *back() );
+				Excavator excavate( txt, item, qtext );
+				const Markers& closed( excavate );
+				Markers& cclosed( const_cast<Markers&>( closed ) );
+				if ( closed.first ) cclosed.swap();
+				//cerr << "Closing a value at " << pos << ", with " << cclosed << endl;
+				jc.closure( cclosed );
+				const Markers& pp( *this );
+				cerr << "Closed a value at " << pos << ", started with " << cc2 << ">" << jc << fence << size() << ", Value:" << Slice( txt, pos ) << endl;
+				return true;
+			}
+		}
+
+
+	#endif
+#if 0
 	const Value& Object::GetValue( const string& name ) const
 	{
 		value.clear();
@@ -890,23 +911,11 @@ namespace ExeJson
 	}
 
 
-	// TBD: Return associated object
-	const NodeBase& Object::GetNode( const string& name ) const
-	{
-		const Object& me( *this );
-		Index::const_iterator found( index.find( name ) );
-		if ( found == index.end() ) throw name;
-		const Items& lst( found->second );
-		for ( Items::const_iterator lit=lst.begin();lit!=lst.end();lit++)
+		const Value& GetValue( const string name ) const
 		{
-			const Item ndx( *lit );
-			const size_t nindx( ndx.NameIndex() );
-			return me[ nindx ];
+			const Json& me( *this );
+			const Object& root( me );
+			const Value& result( root.GetValue( name ) );
+			return result;
 		}
-		throw name;
-	}
-
-} // ExeJson
-
-#endif //BUILDER_JSON_H
-
+#endif

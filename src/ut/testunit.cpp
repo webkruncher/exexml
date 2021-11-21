@@ -177,9 +177,9 @@ int main(int argc,char** argv)
 				for ( vector<string>::iterator sit=v.begin();sit!=v.end();sit++)
 				{
 					const string name( *sit ); 
-					const ExeJson::Value& value( json.GetValue( name ) );
-					if ( ! value.empty() ) 
-						cout << name << "->" << value << semi << endl;
+					//const ExeJson::Value& value( json.GetValue( name ) );
+					//if ( ! value.empty() ) 
+					//	cout << name << "->" << value << semi << endl;
 				}
 			}
 #if 0
