@@ -310,6 +310,7 @@ namespace ExeJson
 		virtual const NodeBase& operator[]( const size_t ndx ) const = 0;
 		virtual operator const Object* () const { return nullptr; }
 		operator JsonToken& () const { return jc; }
+		virtual const string vtext () const { return ""; }
 
 		const NodeBase& GetNode( const string& name ) const { throw name; }
 		protected:
@@ -334,15 +335,14 @@ namespace ExeJson
 			for ( iterator it=begin();it!=end();it++)
 			{
 				NodeBase& n( **it );
-				const TokenType tokentype( n );
-#if 0
-				CBug b;
-				if (  ( tokentype == ObjectOpen ) 
-						||
-					( tokentype == ListOpen ) 
-				) 
-					b << endl << tracetabs( level ) << "N:" << green << n << normal << "; " << endl ;
-#endif
+				const JsonToken& subjc( n );
+				const TokenType subtokentype( subjc );
+
+				const string s( Print( jtxt, subjc ) );
+				if ( subtokentype == Quots ) 
+				{
+					cout << ">>" << tracetabs( level ) << s << endl;
+				}
 				if ( ! n ) return false;
 			}
 			return true;
@@ -417,7 +417,7 @@ namespace ExeJson
 		//const NodeBase& GetNode( const string& name ) const;
 		private:
 		//virtual operator const bool () ;
-		const NodeBase& getmarkers( int ndx ) const;
+		//const NodeBase& getmarkers( int ndx ) const;
 		void addvalue( iterator it, int ndx, const Item& tit );
 		virtual CBug& operator<<(CBug& o) const 
 		{
@@ -484,7 +484,7 @@ namespace ExeJson
 #if 1
 		virtual ostream& operator<<(ostream& o) const 
 		{
-			o << "," ;
+			//o << "," ;
 			return o;
 		}
 #endif
@@ -502,7 +502,7 @@ namespace ExeJson
 #if 1
 		virtual ostream& operator<<(ostream& o) const 
 		{
-			o << ":"; 
+			//o << ":"; 
 			return o;
 		}
 #endif
@@ -536,8 +536,8 @@ namespace ExeJson
 #if 1
 		virtual ostream& operator<<(ostream& o) const 
 		{
-			const string& s( Slice( jtxt, jc ) );
-			o << endl << tracetabs( level ) << "Quotes:" << s  << endl;
+			//const string& s( Slice( jtxt, jc ) );
+			//o << endl << tracetabs( level ) << "Quotes:" << s  << endl;
 			for ( const_iterator it=begin();it!=end();it++)
 			{
 				const NodeBase& n( **it );
@@ -621,6 +621,7 @@ namespace ExeJson
 			}
 			return o;
 		}
+		const string vtext () const { return valuetext; }
 		private:
 		const string valuetext;
 
@@ -681,7 +682,7 @@ namespace ExeJson
 			break;
 			case ObjectClose: 
 			{
-cout << endl << green << "OC" << normal << endl;
+				//cout << endl << green << "OC" << normal << endl;
 				push_back( new Object( txt, level, jc ) );
 				Markers m( jc );
 				closure( m );
@@ -700,7 +701,7 @@ cout << endl << green << "OC" << normal << endl;
 			break;
 			case ListClose: 
 			{
-cout << endl << green << "LC" << normal << endl;
+				//cout << endl << green << "LC" << normal << endl;
 				push_back( new List( txt, level, jc ) );
 				Markers m( jc );
 				closure( m );
@@ -777,7 +778,7 @@ cout << endl << green << "LC" << normal << endl;
 					}
 					qtext.pop();
 				}
-				push_back( new ValueText( txt, level, jc, ss.str() ) );
+				push_back( new ValueText( txt, level+1, jc, ss.str() ) );
 				return true;
 			}
 			break;
@@ -806,10 +807,10 @@ cout << endl << green << "LC" << normal << endl;
 				qtext( *it );
 			Excavator excavator( jtxt, root, qtext );
 			Markers m( excavator ); 
-			if ( true ) { CBug cbug; cbug << root; cerr << endl << setw( 80 ) << setfill( '-' ) << "-" << endl; }
+			//if ( true ) { CBug cbug; cbug << root; cerr << endl << setw( 80 ) << setfill( '-' ) << "-" << endl; }
 			if ( ! root ) throw string( "Cannot index json" );
-			CBug cbug;
-			cbug << green << rvid << root << normal;
+			//CBug cbug;
+			//cbug << green << rvid << root << normal;
 			//JsonGlyphTypeLegend( cbug );
 			return true;
 		}
@@ -822,26 +823,6 @@ cout << endl << green << "LC" << normal << endl;
 	RegularCharacter::operator const bool () 
 	{
 		return true;
-	}
-
-	const NodeBase& Object::getmarkers( int ndx ) const
-	{
-		const Object& me( *this );
-		while( ndx < size() )
-		{
-			const NodeBase& nb( me[ ndx ] );
-			const TokenType nt( nb );
-			if ( nt == Quots ) return nb;
-			if ( nt == ListOpen ) return nb;
-			if ( nt == ValueChar )
-			{
-				const NodeBase& nb( me[ ndx - 1 ] );
-				return nb;
-			} 
-			ndx++;
-		}
-		const NodeBase& nb( me[ ndx - 1 ] );
-		return nb;
 	}
 
 } // ExeJson
@@ -988,4 +969,25 @@ cout << endl << green << "LC" << normal << endl;
 		}
 	}
 
+#endif
+#if 0
+	const NodeBase& Object::getmarkers( int ndx ) const
+	{
+		const Object& me( *this );
+		while( ndx < size() )
+		{
+			const NodeBase& nb( me[ ndx ] );
+			const TokenType nt( nb );
+			if ( nt == Quots ) return nb;
+			if ( nt == ListOpen ) return nb;
+			if ( nt == ValueChar )
+			{
+				const NodeBase& nb( me[ ndx - 1 ] );
+				return nb;
+			} 
+			ndx++;
+		}
+		const NodeBase& nb( me[ ndx - 1 ] );
+		return nb;
+	}
 #endif

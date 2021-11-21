@@ -71,6 +71,7 @@ void bugjson()
 
 		if ( ! json ) throw string("Cannot load json");
 		const ExeJson::Object& root( json );
+		cout << root << endl;
 		vector<string> v
 			{ "txt", "lst", "int", "real" }; 
 
