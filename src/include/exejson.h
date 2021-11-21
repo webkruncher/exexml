@@ -307,7 +307,7 @@ namespace ExeJson
 		operator const TokenType () const { return jc; }
 		virtual operator const bool () = 0;
 		virtual operator string () const = 0;
-		virtual const NodeBase& operator[]( const size_t ndx ) const = 0;
+		//virtual const NodeBase& operator[]( const size_t ndx ) const = 0;
 		virtual operator const Object* () const { return nullptr; }
 		operator JsonToken& () const { return jc; }
 		virtual const string vtext () const { return ""; }
@@ -349,11 +349,13 @@ namespace ExeJson
 		}
 		virtual operator string () const { return ""; }
 
+#if 0
 		virtual const NodeBase& operator[]( const size_t ndx ) const
 		{
 			const vector< NodeBase* >& me( *this );
 			return *me[ ndx ];
 		}
+#endif
 
 		protected:
 		private:
@@ -716,10 +718,10 @@ namespace ExeJson
 					push_back( new SpecialChar( txt, level, jc ) );
 				} else {
 					push_back( new Colon( txt, level, jc ) );
-					NodeBase& item( *back() );
-					Excavator excavate( txt, item, qtext );
-					Markers m( excavate );
-					closure( m );
+					//NodeBase& item( *back() );
+					//Excavator excavate( txt, item, qtext );
+					//Markers m( excavate );
+					//closure( m );
 				}
 				return true;
 			}
@@ -727,9 +729,9 @@ namespace ExeJson
 			case Coma: 
 			{
 				push_back( new Comma( txt, level, jc ) );
-				Markers m( jc );
-				closure( m );
-				return false;
+				//Markers m( jc );
+				//closure( m );
+				//return false;
 				return true;
 			}
 			break;
