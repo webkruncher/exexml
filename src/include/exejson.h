@@ -349,26 +349,25 @@ namespace ExeJson
 				const TokenType& subtokentype( subjc );
 				const Markers& submarkers( subjc );
 
-				if ( 
-					( subtokentype == ValueQuots ) 
-						||
-					( subtokentype == ValueChar ) 
-				)
-					if ( submarkers.second )
-					{
-						//const Markers& pos( subjc );
-						//const string& name( Slice( jtxt, pos ) );
-						const string& value( n.vtext() );
-						cout << tracetabs( level + 1 ) << greenbk << value << normal << endl;
-					}
 				if ( subtokentype == NameQuots ) 
+				{
 					if ( submarkers.second )
 					{
 						const Markers& pos( subjc );
 						const string& name( Slice( jtxt, pos ) );
-						index[ name ] = *it;
-						cout << tracetabs( level ) << green << name << normal << endl;
+						if ( !name.empty() )
+						{
+							cout << tracetabs( level ) << green << "(" << index.size() << ") " << name << normal << endl;
+							index[ name ] = *it;
+						}
 					}
+				} else {
+					const string& value( n.vtext() );
+					if ( ! value.empty() )
+					{
+						cout << tracetabs( level + 1 ) << greenbk << "(" << index.size() << ") " << value << normal << endl;
+					}
+				}
 				if ( ! n ) return false;
 			}
 			return true;
@@ -587,7 +586,7 @@ cout << index << endl;
 				const JsonToken subjc( n );
 				const TokenType tt( subjc );
 				const char cc( subjc );
-o<< GlyphType( subjc ) << fence << cc << fence;
+//o<< GlyphType( subjc ) << fence << cc << fence;
 				if ( tt == ValueQuots )
 					o << n.vtext(); 
 				o << n;
@@ -760,12 +759,10 @@ o<< GlyphType( subjc ) << fence << cc << fence;
 				if ( qtext.enquoted( false ) ) 
 				{
 					const Markers& m( jc );
-					cout << "Enquoted : at " << m << endl;
 					jc.morph( Special, ':' );
 					push_back( new SpecialChar( txt, level, jc ) );
 					return true;
 				} else {
-					cout << "Excavating:" << endl;
 					push_back( new Object( txt, level, jc ) );
 					NodeBase& item( *back() );
 					Excavator excavate( txt, item, qtext );
@@ -802,7 +799,7 @@ o<< GlyphType( subjc ) << fence << cc << fence;
 					closure( m );
 					return true;
 				} else {
-					push_back( new QuotationMark( txt, level-1, jc ) );
+					push_back( new QuotationMark( txt, level, jc ) );
 					const Markers& m( jc );
 					jc.swap();
 					closure( m );
@@ -813,14 +810,14 @@ o<< GlyphType( subjc ) << fence << cc << fence;
 			{
 				if (  ! qtext.enquoted() )
 				{
-					push_back( new QuotationMark( txt, level+1, jc ) );
+					push_back( new QuotationMark( txt, level, jc ) );
 					NodeBase& item( *back() );
 					Excavator excavate( txt, item, qtext );
 					Markers m( excavate );
 					closure( m );
 					return true;
 				} else {
-					push_back( new QuotationMark( txt, level+1, jc ) );
+					push_back( new QuotationMark( txt, level, jc ) );
 					const Markers& m( jc );
 					jc.swap();
 					closure( m );
