@@ -7,9 +7,10 @@
 	{
 		"subtxt" : "avalue",
 		"int" : 3000,
-		"real" : 999.88
+		"real" : 999.88,
+		"sublst" : [1,2,4000.77]
 	},
-	"txt" : "a:b:c",
+	"txt" : "the string",
 	"lst" : [1,2],
 	"ender" : "itsover"
 }

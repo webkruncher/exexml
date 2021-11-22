@@ -330,7 +330,11 @@ namespace ExeJson
 
 	struct Index : map< string, NodeBase* >
 	{
+		private:
+		friend ostream& operator<<(ostream&, const Index&);
+		virtual ostream& operator<<(ostream& o) const ;
 	};
+	inline ostream& operator<<(ostream& o, const Index& n ) { return n.operator<<(o); }
 
 	struct Node : NodeBase
 	{
@@ -345,12 +349,25 @@ namespace ExeJson
 				const TokenType& subtokentype( subjc );
 				const Markers& submarkers( subjc );
 
+				if ( 
+					( subtokentype == ValueQuots ) 
+						||
+					( subtokentype == ValueChar ) 
+				)
+					if ( submarkers.second )
+					{
+						//const Markers& pos( subjc );
+						//const string& name( Slice( jtxt, pos ) );
+						const string& value( n.vtext() );
+						cout << tracetabs( level + 1 ) << greenbk << value << normal << endl;
+					}
 				if ( subtokentype == NameQuots ) 
 					if ( submarkers.second )
 					{
 						const Markers& pos( subjc );
-						const string& v( Slice( jtxt, pos ) );
-						cout << tracetabs( level ) << v << endl;
+						const string& name( Slice( jtxt, pos ) );
+						index[ name ] = *it;
+						cout << tracetabs( level ) << green << name << normal << endl;
 					}
 				if ( ! n ) return false;
 			}
@@ -367,6 +384,7 @@ namespace ExeJson
 #endif
 
 		protected:
+		Index index;
 		private:
 		virtual ostream& operator<<(ostream& o) const 
 		{
@@ -425,11 +443,15 @@ namespace ExeJson
 		Object( const string& _jtxt, const int _level, const JsonToken _jc ) : Node( _jtxt, _level, _jc ) {}
 		operator const Object* () const { return this; }
 		//const Value& GetValue( const string& name ) const;
-		//const NodeBase& GetNode( const string& name ) const;
+		const NodeBase& GetNode( const string& name ) const
+		{
+cout << "looking for " << name << " in: " << endl;
+cout << index << endl;
+			Index::const_iterator it( index.find( name ) );
+			if ( it == index.end() ) throw name;
+			return *it->second;
+		}
 		private:
-		//virtual operator const bool () ;
-		//const NodeBase& getmarkers( int ndx ) const;
-		//void addvalue( iterator it, int ndx, const Item& tit );
 		virtual CBug& operator<<(CBug& o) const 
 		{
 			o << tracetabs( level-1 ) << blue << jc << normal;
@@ -443,7 +465,7 @@ namespace ExeJson
 #if 1
 		virtual ostream& operator<<(ostream& o) const 
 		{
-			o << endl << tracetabs( level ) << "Object:" << jc ;
+			o << endl << tracetabs( level ) << jc ;
 			for ( const_iterator it=begin();it!=end();it++)
 			{
 				const NodeBase& n( **it );
@@ -471,7 +493,7 @@ namespace ExeJson
 
 		virtual ostream& operator<<(ostream& o) const 
 		{
-			o << endl << tracetabs( level ) << "List:" << jc ;
+			o << endl << tracetabs( level ) << jc ;
 			for ( const_iterator it=begin();it!=end();it++)
 			{
 				const NodeBase& n( **it );
@@ -523,6 +545,12 @@ namespace ExeJson
 	{
 		QuotationMark( const string& _jtxt, const int _level, const JsonToken _jc ) : Node( _jtxt, _level, _jc ) {}
 		private:
+		const string vtext () const 
+		{
+			const Markers& m( jc );
+			const string s( Slice( jtxt, m ) );
+			return s;
+		}
 		virtual operator string () const 
 		{
 			stringstream ss;
@@ -547,11 +575,21 @@ namespace ExeJson
 #if 1
 		virtual ostream& operator<<(ostream& o) const 
 		{
+			const Markers& m( jc );
+			const string& s( Slice( jtxt, m ) );
+			//o << m << fence << s << fence ;
+			//return o;
 			//const string& s( Slice( jtxt, jc ) );
 			//o << endl << tracetabs( level ) << "Quotes:" << s  << endl;
 			for ( const_iterator it=begin();it!=end();it++)
 			{
 				const NodeBase& n( **it );
+				const JsonToken subjc( n );
+				const TokenType tt( subjc );
+				const char cc( subjc );
+o<< GlyphType( subjc ) << fence << cc << fence;
+				if ( tt == ValueQuots )
+					o << n.vtext(); 
 				o << n;
 			}
 			return o;
@@ -657,7 +695,7 @@ namespace ExeJson
 					const Markers m( node );
 					//cerr << "!";
 					Markers none( node );
-					return none;
+					return m;
 				}
 			}
 			Markers none( node );
@@ -693,11 +731,9 @@ namespace ExeJson
 			break;
 			case ObjectClose: 
 			{
-				//cout << endl << green << "OC" << normal << endl;
 				push_back( new Object( txt, level, jc ) );
 				Markers m( jc );
 				closure( m );
-				cout << tracetabs( level ) << "OC:" << m << endl;
 				return false;
 			}
 			break;
@@ -713,7 +749,6 @@ namespace ExeJson
 			break;
 			case ListClose: 
 			{
-				//cout << endl << green << "LC" << normal << endl;
 				push_back( new List( txt, level, jc ) );
 				Markers m( jc );
 				closure( m );
@@ -724,25 +759,30 @@ namespace ExeJson
 			{
 				if ( qtext.enquoted( false ) ) 
 				{
+					const Markers& m( jc );
+					cout << "Enquoted : at " << m << endl;
 					jc.morph( Special, ':' );
 					push_back( new SpecialChar( txt, level, jc ) );
+					return true;
 				} else {
-					push_back( new Colon( txt, level, jc ) );
-					//NodeBase& item( *back() );
-					//Excavator excavate( txt, item, qtext );
-					//Markers m( excavate );
-					//closure( m );
+					cout << "Excavating:" << endl;
+					push_back( new Object( txt, level, jc ) );
+					NodeBase& item( *back() );
+					Excavator excavate( txt, item, qtext );
+					Markers m( excavate );
+					closure( m );
+					return false;
 				}
-				return true;
 			}
 			break;
 			case Coma: 
 			{
 				push_back( new Comma( txt, level, jc ) );
-				//Markers m( jc );
-				//closure( m );
-				//return false;
-				return true;
+					NodeBase& item( *back() );
+					Excavator excavate( txt, item, qtext );
+					Markers m( excavate );
+					closure( m );
+				return false;
 			}
 			break;
 			case Character: 
@@ -816,6 +856,9 @@ namespace ExeJson
 					qtext.pop();
 				}
 				push_back( new ValueText( txt, level+1, jc, ss.str() ) );
+					const Markers& m( jc );
+					jc.swap();
+					closure( m );
 				return true;
 			}
 			break;
@@ -860,6 +903,14 @@ namespace ExeJson
 	RegularCharacter::operator const bool () 
 	{
 		return true;
+	}
+
+
+	ostream& Index::operator<<(ostream& o) const 
+	{
+		for ( const_iterator it=begin();it!=end();it++)
+			o << it->first << endl;
+		return o;
 	}
 
 } // ExeJson

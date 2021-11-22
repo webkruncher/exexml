@@ -71,15 +71,16 @@ void bugjson()
 
 		if ( ! json ) throw string("Cannot load json");
 		const ExeJson::Object& root( json );
-		cout << root << endl;
+		//cout << root << endl;
 		vector<string> v
-			{ "txt", "lst", "int", "real" }; 
+			{ "txt", "lst", "int", "real", "subs" }; 
 
 		{
 			for ( vector<string>::iterator sit=v.begin();sit!=v.end();sit++)
 			{
 				const string name( *sit ); 
 				const ExeJson::NodeBase& node( root.GetNode( name ) );
+				cout << name << "->" << node << endl;
 			}
 		}
         }
