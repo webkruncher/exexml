@@ -778,10 +778,10 @@ o<< GlyphType( subjc ) << fence << cc << fence;
 			case Coma: 
 			{
 				push_back( new Comma( txt, level, jc ) );
-					NodeBase& item( *back() );
-					Excavator excavate( txt, item, qtext );
-					Markers m( excavate );
-					closure( m );
+				NodeBase& item( *back() );
+				Excavator excavate( txt, item, qtext );
+				Markers m( excavate );
+				closure( m );
 				return false;
 			}
 			break;
