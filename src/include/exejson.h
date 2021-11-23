@@ -58,8 +58,7 @@ namespace ExeJson
 			{
 				case ObjectOpen: me << endl << tracetabs( level++ ); break; 
 				case ObjectClose: 
-					level--;
-					me << endl << tracetabs( level ); 
+					me << endl << tracetabs( --level ); 
 				break; 
 				case ListOpen: 
 					me << endl << tracetabs( level++ ); 
@@ -67,16 +66,18 @@ namespace ExeJson
 				case ListClose: 
 					me << endl << tracetabs( --level ); 
 				break; 
-				case ValueQuots: break; 
-				case ValueChar: break; 
+				case ValueQuots: 
+				case ValueChar: 
+				break; 
 				default: 
 					me << tracetabs( level );
 				break;
 			}
 			return *this;
 		}
+		operator const size_t () { return level; }
 		private:
-		int level;
+		size_t level;
 	};
 
 	struct GlyphDisposition
@@ -795,7 +796,7 @@ namespace ExeJson
 
 		if ( tokentype == ListOpen ) 
 		{
-			o( tokentype ) << "[ ";
+			o( tokentype ) << "[ " << endl;
 			for ( const_iterator it=begin();it!=end();it++)
 			{
 				const NodeBase& n( **it );
@@ -812,8 +813,14 @@ namespace ExeJson
 				if ( ss.str().empty() ) continue;
 
 				if ( ss.str().find_first_not_of(" \t\r\n") == string::npos) continue;
-				if ( it != begin() ) o << ", ";
-				o << teal << ss.str() << normal; 
+				if ( it != begin() ) 
+					o << ", ";
+				else {
+					const size_t L( o );
+					ofstream& oo( o );
+					oo << tracetabs( L );
+				}
+				o << (char*) ss.str().c_str() << normal; 
 			}
 		}
 		return o;
@@ -842,7 +849,7 @@ namespace ExeJson
 		const Markers& m( jc );
 		const string& s( Slice( jtxt, m ) );
 		const TokenType& tt( jc );
-		if ( tt == ValueQuots ) o( tokentype ) << yellowbk << s << normal << endl;
+		if ( tt == ValueQuots ) o( tokentype ) << "\"" << s << "\"" << endl;
 		return o;
 	}
 } // ExeJson
