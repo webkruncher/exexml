@@ -195,40 +195,20 @@ int main(int argc,char** argv)
 
 		if ( mode=="-jsonin" )
 		{
-			string ss;
+			stringstream ss;
 			while ( ! cin.eof() )
 			{
-				string s;
-				getline( cin, s );
-				ss+=s; ss+="\n";
+				string line; 
+				getline( cin, line );
+				ss << line;
 			}
-			ExeJson::Json json( ss );
-#if 0
+			const string j( ss.str() );
+			ExeJson::Json json( j );
+
 			if ( ! json ) throw string("Cannot load json");
 			const ExeJson::Object& root( json );
-			//vector<string> v { "int", "real", "txt", "lst", "other", "ender", "name", "results" }; 
-			vector<string> v { "txt", "lst", "int" };
-
-			{
-				for ( vector<string>::iterator sit=v.begin();sit!=v.end();sit++)
-				{
-					const string name( *sit ); 
-					//const ExeJson::Value& value( json.GetValue( name ) );
-					//if ( ! value.empty() ) 
-					//	cout << name << "->" << value << semi << endl;
-				}
-			}
-#endif
-#if 0
-			{
-				for ( vector<string>::iterator sit=v.begin();sit!=v.end();sit++)
-				{
-					const string name( *sit ); 
-					const ExeJson::NodeBase& nb( json.GetNode( name ) );
-					cout << name << "->" << nb << endl;
-				}
-			}
-#endif
+			CBug bugs;
+			bugs << root << endl;
 		}
 	}
 	catch(const exception& e) {except=e.what();}

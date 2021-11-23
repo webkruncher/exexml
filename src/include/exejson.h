@@ -38,7 +38,7 @@ using namespace KruncherTools;
 
 struct CBug : ofstream
 {
-	CBug() : ofstream( "/dev/null" ) {}
+	CBug() : ofstream( "/dev/stderr" ) {}
 };
 
 CBug trace;
@@ -853,6 +853,35 @@ namespace ExeJson
 			o << it->first << "," << " ";
 		return o;
 	}
+#if 0
+	CBug& Object::operator()( CBug& o, const int level ) const
+	{
+		for ( Index::const_iterator ndx=index.begin();ndx!=index.end();ndx++)
+		{
+			const TokenType& tokentype( jc );	
+			const string gt( GlyphType( jc ) );
+			if ( tokentype == ObjectOpen )
+			{
+				continue;
+			}
+			if ( tokentype == ListOpen )
+			{
+				continue;
+			}
+			const string v( vtext() );
+			//o.write( v.c_str(), v.size() );
+			//o << gt << endl;
+		}
+		return o;
+	}
+
+	CBug& Object::operator<<(CBug& o) const 
+	{ 	
+		const Object& me( *this );
+		o << me;
+		return o;
+	}
+#endif
 
 } // ExeJson
 
