@@ -38,8 +38,11 @@ using namespace KruncherTools;
 
 struct CBug : ofstream
 {
-	CBug() : ofstream( "/dev/stderr" ) {}
+	CBug() : ofstream( "/dev/null" ) {}
 };
+
+CBug trace;
+
 
 namespace ExeJson
 {
@@ -244,7 +247,20 @@ namespace ExeJson
 						push( jc ); 
 						break;
 					}
-					case ',': { quotestate=true;  JsonToken jc( much, Coma, c ); push( jc ); break; }
+					case ',': 
+					{
+						if ( glyphs.enquoted( false ) )
+						{
+							JsonToken jc( much, Character, c ); 
+							push( jc ); 
+						} else {
+							quotestate=true;  
+							JsonToken jc( much, Coma, c ); 
+							push( jc ); 
+						}
+						break; 
+					}
+				
 					case ':': { quotestate=false; JsonToken jc( much, Coln, c ); push( jc ); break; }
 					case '{': { quotestate=true;  JsonToken jc( much, ObjectOpen, c ); push( jc ); break; }
 					case '}': { quotestate=false; JsonToken jc( 0, much, ObjectClose, c ); push( jc ); break; }
@@ -317,7 +333,10 @@ namespace ExeJson
 		const NodeBase& GetNode( const string& name ) const { throw name; }
 		protected:
 		const string& jtxt;
+
+		public:
 		const int level;
+		protected:
 		mutable JsonToken jc;
 		mutable Value value;
 		friend ostream& operator<<(ostream&, const NodeBase&);
@@ -342,6 +361,7 @@ namespace ExeJson
 		Node( const string& _jtxt, const int _level, const JsonToken _jc ) : NodeBase( _jtxt, _level, _jc ) {}
 		virtual operator const bool () 
 		{
+			string current;
 			for ( iterator it=begin();it!=end();it++)
 			{
 				NodeBase& n( **it );
@@ -357,17 +377,52 @@ namespace ExeJson
 						const string& name( Slice( jtxt, pos ) );
 						if ( !name.empty() )
 						{
-							cout << tracetabs( level ) << green << "(" << index.size() << ") " << name << normal << endl;
-							index[ name ] = *it;
+							//cout << tracetabs( level ) << green << "(" << index.size() << ") " << name << normal << endl;
+							//cout << tracetabs( level ) << bluebk << name << normal << endl;
+							//index[ name ] = this;
+							current=name;
 						}
 					}
-				} else {
-					const string& value( n.vtext() );
-					if ( ! value.empty() )
+				} 
+#if 0
+				if ( ! current.empty() ) 
+				{
+					if ( 
+						(subtokentype == ValueChar ) 
+							||
+						(subtokentype == ValueQuots ) 
+//							||
+//						(subtokentype == ListOpen ) 
+//							||
+//						(subtokentype == ObjectOpen ) 
+					)
 					{
-						cout << tracetabs( level + 1 ) << greenbk << "(" << index.size() << ") " << value << normal << endl;
+						const string& value( n.vtext() );
+						if ( ! value.empty() )
+						{
+							//cout << tracetabs( level ) << green << n.size() << fence << GlyphType( n ) << fence << current << " = " << value << normal << endl;
+							index[ current ] = &n;
+							current.clear();
+						}
+					} else {
+						const JsonToken& subjc( n );
+						const Markers& pos( n );
+						//const char cc( subjc );
+						//cout << tracetabs( level ) << blue << n.size() << fence << current << " ? " << GlyphType( subjc ) << fence << pos << fence << n.vtext() << normal << endl;
 					}
 				}
+#else
+				if ( ! current.empty() ) 
+				{
+						const string& value( n.vtext() );
+						if ( ! value.empty() )
+						{
+							//cout << tracetabs( level ) << green << n.size() << fence << GlyphType( n ) << fence << current << " = " << value << normal << endl;
+							index[ current ] = &n;
+						}
+				}
+#endif
+
 				if ( ! n ) return false;
 			}
 			return true;
@@ -444,12 +499,13 @@ namespace ExeJson
 		//const Value& GetValue( const string& name ) const;
 		const NodeBase& GetNode( const string& name ) const
 		{
-cout << "looking for " << name << " in: " << endl;
-cout << index << endl;
+//cout << "looking for " << name << " in: " << endl;
+//cout << index << endl;
 			Index::const_iterator it( index.find( name ) );
 			if ( it == index.end() ) throw name;
 			return *it->second;
 		}
+		virtual const string vtext () const { return "OBJECT"; }
 		private:
 		virtual CBug& operator<<(CBug& o) const 
 		{
@@ -478,6 +534,7 @@ cout << index << endl;
 	struct List : Node
 	{
 		List( const string& _jtxt, const int _level, const JsonToken _jc ) : Node( _jtxt, _level, _jc ) {}
+		virtual const string vtext () const { return "LIST"; }
 		private:
 		virtual CBug& operator<<(CBug& o) const 
 		{
@@ -548,6 +605,7 @@ cout << index << endl;
 		{
 			const Markers& m( jc );
 			const string s( Slice( jtxt, m ) );
+//cout << "QM:" << s << endl;
 			return s;
 		}
 		virtual operator string () const 
@@ -564,10 +622,14 @@ cout << index << endl;
 
 		virtual CBug& operator<<(CBug& o) const 
 		{
+			o << tracetabs( level+1 ) << ulin << fence << size() << fence << normal;
 			for ( const_iterator it=begin();it!=end();it++)
 			{
 				const NodeBase& n( **it );
-				o << n;
+				const JsonToken& subjc( n );
+				const char cc( subjc );
+				//o << GlyphType( subjc ) << fence << n;
+				o << fence << cc;
 			}
 			return o;
 		}
@@ -689,11 +751,11 @@ cout << index << endl;
 				const TokenType& tokentype( jc );
 				const Markers& jcp( jc );
 
-				cerr << endl << tracetabs( node.level ) << GlyphType( jc ) << "-" << endl;
+				trace << endl << tracetabs( node.level ) << GlyphType( jc ) << "-" << endl;
 				if ( ! node( txt, qtext, jc ) )
 				{
 					const Markers m( node );
-					cerr << endl << tracetabs( node.level ) << GlyphType( jc ) << "!" << endl;
+					trace << endl << tracetabs( node.level ) << GlyphType( jc ) << "!" << endl;
 					Markers none( node );
 					return m;
 				}
@@ -721,7 +783,7 @@ cout << index << endl;
 		{
 			case ObjectOpen:
 			{
-				cout << tracetabs( level ) << level << "<OO>";
+				trace << tracetabs( level ) << level << "<OO>";
 				push_back( new Object( txt, level+1, jc ) );
 				NodeBase& item( *back() );
 				Excavator excavate( txt, item, qtext );
@@ -732,7 +794,7 @@ cout << index << endl;
 			break;
 			case ObjectClose: 
 			{
-				cout << tracetabs( level ) << level << "<OC>";
+				trace << tracetabs( level ) << level << "<OC>";
 				push_back( new Object( txt, level, jc ) );
 				Markers m( jc );
 				closure( m );
@@ -741,7 +803,7 @@ cout << index << endl;
 			break;
 			case ListOpen:
 			{
-				cout << tracetabs( level ) << level << "<LO>";
+				trace << tracetabs( level ) << level << "<LO>";
 				push_back( new List( txt, level+1, jc ) );
 				NodeBase& item( *back() );
 				Excavator excavate( txt, item, qtext );
@@ -752,7 +814,7 @@ cout << index << endl;
 			break;
 			case ListClose: 
 			{
-				cout << tracetabs( level ) << level << "<LC>";
+				trace << tracetabs( level ) << level << "<LC>";
 				push_back( new List( txt, level, jc ) );
 				Markers m( jc );
 				closure( m );
@@ -761,7 +823,7 @@ cout << index << endl;
 			break;
 			case Coln: 
 			{
-				cout << tracetabs( level ) << "CN";
+				trace << tracetabs( level ) << "CN";
 				if ( qtext.enquoted( false ) ) 
 				{
 					const Markers& m( jc );
@@ -782,7 +844,7 @@ cout << index << endl;
 			break;
 			case Coma: 
 			{
-				cout << tracetabs( level ) << "CM";
+				trace << tracetabs( level ) << "CM";
 				push_back( new Comma( txt, level, jc ) );
 #if 0
 				NodeBase& item( *back() );
@@ -796,16 +858,16 @@ cout << index << endl;
 			case Character: 
 			{
 				const char cc( jc );
-				cout << tracetabs( level ) << level << "<CH>" << cc << semi;
+				trace << tracetabs( level ) << level << "<CH>" << cc << semi;
 				push_back( new RegularCharacter( txt, level, jc ) );
 				return true;
 			}
 			break;
 			case NameQuots:
 			{
-				cout << tracetabs( level ) << "NQ";
 				if (  ! qtext.enquoted() )
 				{
+					trace << tracetabs( level ) << "Q";
 					push_back( new QuotationMark( txt, level, jc ) );
 					NodeBase& item( *back() );
 					Excavator excavate( txt, item, qtext );
@@ -813,6 +875,7 @@ cout << index << endl;
 					closure( m );
 					return true;
 				} else {
+					trace << tracetabs( level ) << "NQ";
 					push_back( new QuotationMark( txt, level, jc ) );
 					const Markers& m( jc );
 					jc.swap();
@@ -822,16 +885,17 @@ cout << index << endl;
 			}
 			case ValueQuots:
 			{
-				cout << tracetabs( level ) << "VQ";
 				if (  ! qtext.enquoted() )
 				{
-					push_back( new QuotationMark( txt, level, jc ) );
+					trace << tracetabs( level ) << "QV";
+					push_back( new QuotationMark( txt, level+1, jc ) );
 					NodeBase& item( *back() );
 					Excavator excavate( txt, item, qtext );
 					Markers m( excavate );
 					closure( m );
 					return true;
 				} else {
+					trace << tracetabs( level ) << "VQ";
 					push_back( new QuotationMark( txt, level, jc ) );
 					const Markers& m( jc );
 					jc.swap();
@@ -843,7 +907,7 @@ cout << index << endl;
 
 			case Special: 
 			{
-				cout << tracetabs( level ) << "SP";
+				trace << tracetabs( level ) << "SP";
 				push_back( new SpecialChar( txt, level, jc ) );
 				return true;
 			}
@@ -851,9 +915,10 @@ cout << index << endl;
 
 			case ValueChar: 
 			{
-				cout << tracetabs( level ) << "VC";
+				trace << tracetabs( level ) << "VC";
 				stringstream ss;
 				JsonToken jc2( jc );
+				const char ccc( jc );
 				while ( ! qtext.empty() )
 				{
 					const char& cc( jc2 );
@@ -869,16 +934,19 @@ cout << index << endl;
 					}
 					qtext.pop();
 				}
+
+				
+				jc.morph( ValueChar, ccc );
+				const Markers& m( jc );
+				jc.swap();
+				jc.closure( m );
 				push_back( new ValueText( txt, level+1, jc, ss.str() ) );
-					const Markers& m( jc );
-					jc.swap();
-					closure( m );
 				return true;
 			}
 			break;
 
 			case Root: 
-				cout << tracetabs( level ) << "ROOT";
+				trace << tracetabs( level ) << "ROOT";
 			break;
 		}
 		return true;

@@ -80,7 +80,13 @@ void bugjson()
 			{
 				const string name( *sit ); 
 				const ExeJson::NodeBase& node( root.GetNode( name ) );
-				cout << name << "->" << node << endl;
+				CBug bug;
+			
+				const ExeJson::JsonToken& jc( node );	
+				const string gt( ExeJson::GlyphType( jc ) );
+				//cout << tracetabs( node.level ) << name << "->" << gt << fence << endl;
+				const string v( node.vtext() );
+				cout << name << ":" << v << endl;
 			}
 		}
         }
