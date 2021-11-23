@@ -86,7 +86,7 @@ void bugjson()
 				const string gt( ExeJson::GlyphType( jc ) );
 				//cout << tracetabs( node.level ) << name << "->" << gt << fence << endl;
 				const string v( node.vtext() );
-				cout << name << ":" << v << endl;
+				cout << gt << "->" << name << ":" << v << endl;
 			}
 		}
         }
