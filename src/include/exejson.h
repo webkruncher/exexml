@@ -445,7 +445,6 @@ namespace ExeJson
 		operator const Object* () const { return this; }
 		const NodeBase& GetNode( const string& name ) const
 		{
-cerr << name << "??" << index << endl;
 			Index::const_iterator it( index.find( name ) );
 			if ( it == index.end() ) throw string("Cannot find " ) + name;
 			return *it->second;
