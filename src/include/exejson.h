@@ -815,39 +815,12 @@ namespace ExeJson
 		return o;
 	}
 
-	JsonOut& List::operator<<(JsonOut& o) const 
+	JsonOut& List::operator<<(JsonOut& o) const
 	{
 		const TokenType tokentype( jc );
-
-		if ( tokentype == ListOpen ) 
-		{
-			o( tokentype ) << "[ " ;
-			for ( const_iterator it=begin();it!=end();it++)
-			{
-				const NodeBase& n( **it );
-				const TokenType subtokentype( n );
-				stringstream ss;
-
-				if ( subtokentype == ListClose )
-				{
-					o( subtokentype )  << "] " << jendl;
-					continue;
-				}
-
-				ss << n;
-				if ( ss.str().empty() ) continue;
-
-				if ( ss.str().find_first_not_of(" \t\r\n") == string::npos) continue;
-				if ( it != begin() ) 
-					o << ", ";
-				else {
-					const size_t L( o );
-					ofstream& oo( o );
-					oo << tracetabs( L );
-				}
-				o << (char*) ss.str().c_str() ;
-			}
-		}
+		if ( tokentype == ListOpen ) o( tokentype )  << "[" << endl;
+		Node::operator<<( o );
+		if ( tokentype == ListClose ) o( tokentype ) << "]" << jendl;
 		return o;
 	}
 
