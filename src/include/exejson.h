@@ -89,15 +89,21 @@ namespace ExeJson
 			me << c;
 			return *this;
 		}
-		JsonOut& operator<<(JsonOut& (*pf)(JsonOut&))
+		JsonOut& operator<<(ostream& (*pf)(ostream& ))
 		{
+			pf( *this );
+			return *this;
+		}
+		JsonOut& operator<<(JsonOut& (*pf)(JsonOut& ))
+		{
+			pf( *this );
 			return *this;
 		}
 		void ender() { ended=true; }
 		size_t level,lastlevel;
 		bool ended;
 	};
-	inline JsonOut& jendl( JsonOut& o ) { o << green << "," << normal; return o; } 
+	inline JsonOut& jendl( JsonOut& o ) { o.ender(); return o; } 
 
 	struct GlyphDisposition
 	{
@@ -803,7 +809,7 @@ namespace ExeJson
 	JsonOut& Object::operator<<(JsonOut& o) const
 	{
 		const TokenType tokentype( jc );
-		if ( tokentype == ObjectOpen ) o( tokentype )  << "{" << jendl;
+		if ( tokentype == ObjectOpen ) o( tokentype )  << "{" << endl;
 		Node::operator<<( o );
 		if ( tokentype == ObjectClose ) o( tokentype ) << "}" << jendl;
 		return o;
@@ -815,7 +821,7 @@ namespace ExeJson
 
 		if ( tokentype == ListOpen ) 
 		{
-			o( tokentype ) << "[ " << jendl;
+			o( tokentype ) << "[ " ;
 			for ( const_iterator it=begin();it!=end();it++)
 			{
 				const NodeBase& n( **it );
