@@ -319,6 +319,7 @@ namespace ExeJson
 		}
 		virtual const string vtext () const { return "OBJECT"; }
 		private:
+		virtual ostream& operator<<(ostream& o) const ;
 		NullObject nullobject;
 	};
 
@@ -657,6 +658,15 @@ namespace ExeJson
 			if ( ! n ) return false;
 		}
 		return true;
+	}
+
+	ostream& Object::operator<<(ostream& o) const 
+	{
+		const TokenType tokentype( jc );
+		if ( tokentype == ObjectOpen ) o << "{";
+		Node::operator<<( o );
+		if ( tokentype == ObjectClose ) o << "}";
+		return o;
 	}
 
 	ostream& List::operator<<(ostream& o) const 
