@@ -598,7 +598,7 @@ namespace ExeJson
 
 	struct ValueText : Node
 	{
-		ValueText( const string& _jtxt, const int _level, const JsonToken _jc, const string _valuetext ) : Node( _jtxt, _level ), valuetext( _valuetext ) {}
+		ValueText( const string& _jtxt, const int _level, const JsonToken _jc, const string _valuetext ) : Node( _jtxt, _level, _jc ), valuetext( _valuetext ) {}
 		private:
 		virtual CBug& operator<<(CBug& o) const 
 		{
