@@ -36,13 +36,6 @@
 #include <infotools.h>
 using namespace KruncherTools;
 
-struct CBug : ofstream
-{
-	CBug() : ofstream( "/dev/stderr" ) {}
-};
-
-CBug trace;
-
 
 namespace ExeJson
 {
@@ -290,11 +283,8 @@ namespace ExeJson
 		mutable JsonToken jc;
 		friend ostream& operator<<(ostream&, const NodeBase&);
 		virtual ostream& operator<<(ostream& o) const = 0;
-		friend CBug& operator<<(CBug&, const NodeBase&);
-		virtual CBug& operator<<(CBug& o) const = 0;
 	};
 	inline ostream& operator<<(ostream& o, const NodeBase& n ) { return n.operator<<(o); }
-	inline CBug& operator<<(CBug& o, const NodeBase& n ) { return n.operator<<(o); }
 
 	struct Index : map< string, NodeBase* >
 	{
@@ -351,7 +341,6 @@ namespace ExeJson
 		private:
 		virtual ostream& operator<<(ostream& o) const 
 		{
-
 			for ( const_iterator it=begin();it!=end();it++)
 			{
 				const NodeBase& n( **it );
@@ -359,7 +348,6 @@ namespace ExeJson
 			}
 			return o;
 		}
-		virtual CBug& operator<<(CBug& o) const = 0;
 	};
 
 	
@@ -376,16 +364,6 @@ namespace ExeJson
 			const Object* oo( n );
 			return oo;
 		}
-		private:
-		virtual CBug& operator<<(CBug& o) const 
-		{
-			for ( const_iterator it=begin();it!=end();it++)
-			{
-				const NodeBase& n( **it );
-				o << n;
-			}
-			return o;
-		}
 	};
 
 
@@ -394,7 +372,6 @@ namespace ExeJson
 		NullObject() = delete;
 		NullObject( const string& _jtxt ) : Node( _jtxt, Nothing ) {}
 		virtual ostream& operator<<(ostream& o) const { return o; }
-		virtual CBug& operator<<(CBug& o) const  { return o; }
 	};
 
 	struct Object : Node
@@ -411,28 +388,6 @@ namespace ExeJson
 		virtual const string vtext () const { return "OBJECT"; }
 		private:
 		NullObject nullobject;
-		virtual CBug& operator<<(CBug& o) const 
-		{
-			for ( const_iterator it=begin();it!=end();it++)
-			{
-				const NodeBase& n( **it );
-				o << n;
-			}
-			return o;
-		}
-
-		virtual ostream& operator<<(ostream& o) const 
-		{
-			o << index;
-			return o;
-			for ( const_iterator it=begin();it!=end();it++)
-			{
-				const NodeBase& n( **it );
-				o << n;
-			}
-			return o;
-		}
-
 	};
 
 	struct List : Node
@@ -440,67 +395,18 @@ namespace ExeJson
 		List( const string& _jtxt, const JsonToken _jc ) : Node( _jtxt, _jc ) {}
 		virtual const string vtext () const { return "LIST"; }
 		private:
-		virtual CBug& operator<<(CBug& o) const 
-		{
-			o << ulin << jc << normal;
-			for ( const_iterator it=begin();it!=end();it++)
-			{
-				const NodeBase& n( **it );
-				o << n;
-			}
-			return o;
-		}
-
-		virtual ostream& operator<<(ostream& o) const 
-		{
-			for ( const_iterator it=begin();it!=end();it++)
-			{
-				const NodeBase& n( **it );
-				stringstream ss;
-				ss << n;
-				if ( ss.str().empty() ) continue;
-				if ( ss.str().find_first_not_of(" \t\r\n") == string::npos) continue;
-				if ( it != begin() ) o << ", ";
-				o << ss.str();
-			}
-			return o;
-		}
-
+		virtual ostream& operator<<(ostream& o) const;
 	};
 
 
 	struct Comma : Node
 	{
 		Comma( const string& _jtxt, const JsonToken _jc ) : Node( _jtxt, _jc ) {}
-		private:
-		virtual CBug& operator<<(CBug& o) const 
-		{
-			//o << blink << "," << normal;
-			return o;
-		}
-
-		virtual ostream& operator<<(ostream& o) const 
-		{
-			return o;
-		}
 	};
 
 	struct Colon : Node
 	{
 		Colon( const string& _jtxt, const JsonToken _jc ) : Node( _jtxt, _jc ) {}
-		private:
-		virtual CBug& operator<<(CBug& o) const 
-		{
-			//o << rvid << ":" << normal ;
-			return o;
-		}
-
-		virtual ostream& operator<<(ostream& o) const 
-		{
-			//o << ":"; 
-			return o;
-		}
-
 	};
 
 	struct QuotationMark : Node
@@ -525,63 +431,12 @@ namespace ExeJson
 			return ss.str();
 		}
 
-		virtual CBug& operator<<(CBug& o) const 
-		{
-			for ( const_iterator it=begin();it!=end();it++)
-			{
-				const NodeBase& n( **it );
-				const JsonToken& subjc( n );
-				const char cc( subjc );
-				o << fence << cc;
-			}
-			return o;
-		}
-
-		virtual ostream& operator<<(ostream& o) const 
-		{
-			const Markers& m( jc );
-			const string& s( Slice( jtxt, m ) );
-			for ( const_iterator it=begin();it!=end();it++)
-			{
-				const NodeBase& n( **it );
-				const JsonToken& subjc( n );
-				const TokenType& tt( subjc );
-				const char cc( subjc );
-				if ( tt == ValueQuots )
-					o << n.vtext(); 
-				o << n;
-			}
-			return o;
-		}
-
+		virtual ostream& operator<<(ostream& o) const ;
 	};
 
 	struct SpecialChar : Node
 	{
 		SpecialChar( const string& _jtxt, const JsonToken _jc ) : Node( _jtxt, _jc ) {}
-		private:
-		virtual CBug& operator<<(CBug& o) const 
-		{
-			o << red << jc << normal;
-			for ( const_iterator it=begin();it!=end();it++)
-			{
-				const NodeBase& n( **it );
-				o << n;
-			}
-			return o;
-		}
-
-		virtual ostream& operator<<(ostream& o) const 
-		{
-			//o << jc; 
-			for ( const_iterator it=begin();it!=end();it++)
-			{
-				const NodeBase& n( **it );
-				o << n;
-			}
-			return o;
-		}
-
 	};
 
 	struct RegularCharacter : Node
@@ -589,38 +444,13 @@ namespace ExeJson
 		RegularCharacter( const string& _jtxt, const JsonToken _jc ) : Node( _jtxt, _jc ) {}
 		private:
 		operator const bool () ;
-		virtual CBug& operator<<(CBug& o) const 
-		{
-			o << yellow << bold << jc << normal;
-			return o;
-		}
-		virtual ostream& operator<<(ostream& o) const 
-		{
-			const char cc( jc );
-			o << cc;
-			return o;
-		}
 	};
 
 	struct ValueText : Node
 	{
 		ValueText( const string& _jtxt, const JsonToken _jc, const string _valuetext ) : Node( _jtxt, _jc ), valuetext( _valuetext ) {}
 		private:
-		virtual CBug& operator<<(CBug& o) const 
-		{
-			for ( const_iterator it=begin();it!=end();it++)
-			{
-				const NodeBase& n( **it );
-				o << n;
-			}
-			return o;
-		}
-
-		virtual ostream& operator<<(ostream& o) const 
-		{
-			o << vtext();
-			return o;
-		}
+		virtual ostream& operator<<(ostream& o) const ;
 		const string vtext () const { return valuetext; }
 		private:
 		const string valuetext;
@@ -853,35 +683,40 @@ namespace ExeJson
 			o << it->first << "," << " ";
 		return o;
 	}
-#if 0
-	CBug& Object::operator()( CBug& o, const int level ) const
+
+	ostream& List::operator<<(ostream& o) const 
 	{
-		for ( Index::const_iterator ndx=index.begin();ndx!=index.end();ndx++)
+		for ( const_iterator it=begin();it!=end();it++)
 		{
-			const TokenType& tokentype( jc );	
-			const string gt( GlyphType( jc ) );
-			if ( tokentype == ObjectOpen )
-			{
-				continue;
-			}
-			if ( tokentype == ListOpen )
-			{
-				continue;
-			}
-			const string v( vtext() );
-			//o.write( v.c_str(), v.size() );
-			//o << gt << endl;
+			const NodeBase& n( **it );
+			stringstream ss;
+			ss << n;
+			if ( ss.str().empty() ) continue;
+			if ( ss.str().find_first_not_of(" \t\r\n") == string::npos) continue;
+			if ( it != begin() ) o << ", ";
+			o << ss.str(); 
 		}
 		return o;
 	}
 
-	CBug& Object::operator<<(CBug& o) const 
-	{ 	
-		const Object& me( *this );
-		o << me;
+
+	ostream& ValueText::operator<<(ostream& o) const 
+	{
+		o << vtext() << " ";
 		return o;
 	}
-#endif
+
+
+	ostream& QuotationMark::operator<<(ostream& o) const 
+	{
+		const Markers& m( jc );
+		const string& s( Slice( jtxt, m ) );
+		const TokenType& tt( jc );
+		if ( tt == NameQuots ) o << s << " ";
+		if ( tt == ValueQuots ) o << s << " ";
+		return o;
+	}
+
 
 } // ExeJson
 
