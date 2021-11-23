@@ -65,8 +65,7 @@ namespace ExeJson
 					me << endl << tracetabs( level++ ); 
 					break; 
 				case ListClose: 
-					level--;
-					me << endl << tracetabs( level ); 
+					me << endl << tracetabs( --level ); 
 				break; 
 				case ValueQuots: break; 
 				case ValueChar: break; 
