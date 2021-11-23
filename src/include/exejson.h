@@ -40,16 +40,44 @@ using namespace KruncherTools;
 
 namespace ExeJson
 {
-	struct JsonOut : ofstream
-	{
-		JsonOut() : ofstream( "/dev/stderr" ) {}
-	};
 
 	enum TokenType { 
 		Root=100, 
 		ObjectOpen, ObjectClose, ListOpen, ListClose,
 		Coma, Coln, NameQuots, ValueQuots, Special, Character,
 		ValueChar, Nothing
+	};
+
+	struct JsonOut : ofstream
+	{
+		JsonOut() : ofstream( "/dev/stderr" ), level( 0 ) {}
+		JsonOut& operator()( const TokenType& t ) 
+		{
+			ofstream& me( *this );
+			switch ( t )
+			{
+				case ObjectOpen: me << endl << tracetabs( level++ ); break; 
+				case ObjectClose: 
+					level--;
+					me << endl << tracetabs( level ); 
+				break; 
+				case ListOpen: 
+					me << endl << tracetabs( level++ ); 
+					break; 
+				case ListClose: 
+					level--;
+					me << endl << tracetabs( level ); 
+				break; 
+				case ValueQuots: break; 
+				case ValueChar: break; 
+				default: 
+					me << tracetabs( level );
+				break;
+			}
+			return *this;
+		}
+		private:
+		int level;
 	};
 
 	struct GlyphDisposition
@@ -756,32 +784,33 @@ namespace ExeJson
 	JsonOut& Object::operator<<(JsonOut& o) const
 	{
 		const TokenType tokentype( jc );
-		if ( tokentype == ObjectOpen ) o << "{ ";
+		if ( tokentype == ObjectOpen ) o( tokentype )  << "{" << endl;
 		Node::operator<<( o );
-		if ( tokentype == ObjectClose ) o << "} ";
+		if ( tokentype == ObjectClose ) o( tokentype ) << "}" << endl;
 		return o;
 	}
 
 	JsonOut& List::operator<<(JsonOut& o) const 
 	{
 		const TokenType tokentype( jc );
-		if ( tokentype == ListClose )  {o << "] "; return o;}
+
 		if ( tokentype == ListOpen ) 
 		{
-			o << "[ ";
+			o( tokentype ) << "[ ";
 			for ( const_iterator it=begin();it!=end();it++)
 			{
 				const NodeBase& n( **it );
 				const TokenType subtokentype( n );
 				stringstream ss;
+
 				if ( subtokentype == ListClose )
 				{
-					o << "] ";
+					o( subtokentype )  << "] " << endl;
 					continue;
 				}
+
 				ss << n;
 				if ( ss.str().empty() ) continue;
-
 
 				if ( ss.str().find_first_not_of(" \t\r\n") == string::npos) continue;
 				if ( it != begin() ) o << ", ";
@@ -793,27 +822,28 @@ namespace ExeJson
 
 	JsonOut& ValueText::operator<<(JsonOut& o) const 
 	{
-		o << mgenta << vtext() << normal << " ";
+		const TokenType tokentype( jc );
+		o( tokentype ) << mgenta << vtext() << normal << endl;
 		return o;
 	}
 
 	JsonOut& NameText::operator<<(JsonOut& o) const 
 	{
+		const TokenType tokentype( jc );
 		const Markers& m( jc );
 		const string& s( Slice( jtxt, m ) );
 		const TokenType& tt( jc );
-		if ( tt == NameQuots ) o << greenbk << s << normal << " ";
-		if ( tt == ValueQuots ) o << red << s << normal << " ";
+		if ( tt == NameQuots ) o( tokentype ) << greenbk << s << normal << ": ";
 		return o;
 	}
 
 	JsonOut& StringValue::operator<<(JsonOut& o) const 
 	{
+		const TokenType tokentype( jc );
 		const Markers& m( jc );
 		const string& s( Slice( jtxt, m ) );
 		const TokenType& tt( jc );
-		if ( tt == NameQuots ) o << red << s << normal << " ";
-		if ( tt == ValueQuots ) o << yellowbk << s << normal << " ";
+		if ( tt == ValueQuots ) o( tokentype ) << yellowbk << s << normal << endl;
 		return o;
 	}
 } // ExeJson
