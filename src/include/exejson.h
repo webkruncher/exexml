@@ -65,11 +65,12 @@ namespace ExeJson
 			case ListClose  :	return "ListClose"; break;
 			case Coma       :	return "Coma"; break;
 			case Coln       :	return "Coln"; break;
-			case NameQuots      :	return "NameQuots"; break;
-			case ValueQuots      :	return "ValueQuots"; break;
+			case NameQuots  :	return "NameQuots"; break;
+			case ValueQuots :	return "ValueQuots"; break;
 			case Special    :	return "Special"; break;
 			case Character  :	return "Character"; break;
 			case ValueChar  :	return "ValueChar"; break;
+			case Nothing   :	return "Nothing"; break;
 			default: return "NotAType";
 		}
 		
@@ -161,6 +162,7 @@ namespace ExeJson
 				case Character: ss << teal << c << normal; break;
 				case Root: ss << bluebk << green << bold << c << normal; break;
 				case ValueChar: ss << redbk << yellow << bold << c << normal; break;
+				case Nothing: ss << redbk << green << bold << c << normal; break;
 				default: ss << tealbk << blue << c;
 			}
 			return ss.str();
@@ -804,6 +806,8 @@ namespace ExeJson
 			}
 			break;
 
+			case Nothing: 
+				throw string( "Encountered Nothing" );
 			case Root: 
 			break;
 		}

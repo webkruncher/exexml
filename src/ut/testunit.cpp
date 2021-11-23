@@ -73,7 +73,7 @@ void bugjson()
 		const ExeJson::Object& root( json );
 		//cout << root << endl;
 		vector<string> v
-			{ "abc", "int", "txt", "subs", "lst", "real" }; 
+			{ "abc", "int", "txt", "subs", "lst", "real", "yyz" }; 
 
 		{
 			for ( vector<string>::iterator sit=v.begin();sit!=v.end();sit++)
