@@ -83,11 +83,8 @@ void bugjson()
 			
 				const ExeJson::JsonToken& jc( node );	
 				const ExeJson::TokenType& tokentype( jc );	
-				const string gt( ExeJson::GlyphType( jc ) );
-				//cout << tracetabs( node.level ) << name << "->" << gt << fence << endl;
 				if ( tokentype == ExeJson::ObjectOpen )
 				{
-					cout << "Object:" << node << endl;
 					for ( vector<string>::iterator sit=v.begin();sit!=v.end();sit++)
 					{
 						const string subname( *sit ); 
@@ -95,14 +92,13 @@ void bugjson()
 					
 						const ExeJson::JsonToken& subjc( subnode );	
 						const ExeJson::TokenType& subtokentype( subjc );	
-						const string subgt( ExeJson::GlyphType( subjc ) );
 						if ( subtokentype == ExeJson::ListOpen )
 						{
 							cout << tab << "List:" << subnode << endl;
 							continue;
 						}
 						const string subv( subnode.vtext() );
-						cout << tab << subgt << "->" << subname << ":" << subv << endl;
+						cout << tab << subname << ":" << subv << endl;
 					}
 					continue;
 				}
@@ -112,7 +108,7 @@ void bugjson()
 					continue;
 				}
 				const string v( node.vtext() );
-				cout << gt << "->" << name << ":" << v << endl;
+				cout << name << ":" << v << endl;
 			}
 			const ExeJson::NodeBase& nulchk( root.GetNode( "notfound" ) );
 			const ExeJson::TokenType& isnul( nulchk );

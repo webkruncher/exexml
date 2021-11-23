@@ -47,27 +47,6 @@ namespace ExeJson
 	};
 
 
-	inline string GlyphType( const TokenType& tokentype )
-	{
-		switch ( tokentype )
-		{
-			case Root       :	return "Root"; break;
-			case ObjectOpen :	return "ObjectOpen"; break;
-			case ObjectClose:	return "ObjectClose"; break;
-			case ListOpen   :	return "ListOpen"; break;
-			case ListClose  :	return "ListClose"; break;
-			case Coma       :	return "Coma"; break;
-			case Coln       :	return "Coln"; break;
-			case NameQuots  :	return "NameQuots"; break;
-			case ValueQuots :	return "ValueQuots"; break;
-			case Special    :	return "Special"; break;
-			case Character  :	return "Character"; break;
-			case ValueChar  :	return "ValueChar"; break;
-			case Nothing   :	return "Nothing"; break;
-			default: return "NotAType";
-		}
-		
-	}
 
 	struct GlyphDisposition
 	{
@@ -174,15 +153,6 @@ namespace ExeJson
 	};
 
 	inline ostream& operator<<( ostream& o, const JsonToken& j ) { return j.operator<<(o); }
-
-	inline string Print( const string& jtxt, const JsonToken& jc )
-	{
-		stringstream ss;
-		const Markers& pos( jc );
-		const string& v( Slice( jtxt, pos ) );
-		ss << normal << mgenta << GlyphType( jc ) << fence << rvid << jc << pos << fence << v << normal;
-		return ss.str();
-	}
 
 	struct QueString : queue< JsonToken >
 	{
@@ -335,7 +305,6 @@ namespace ExeJson
 		}
 		virtual operator string () const { return ""; }
 
-
 		protected:
 		Index index;
 		private:
@@ -397,7 +366,6 @@ namespace ExeJson
 		private:
 		virtual ostream& operator<<(ostream& o) const;
 	};
-
 
 	struct Comma : Node
 	{
@@ -671,11 +639,7 @@ namespace ExeJson
 		const string& jtxt;
 	};
 
-	RegularCharacter::operator const bool () 
-	{
-		return true;
-	}
-
+	RegularCharacter::operator const bool () { return true; }
 
 	ostream& Index::operator<<(ostream& o) const 
 	{
