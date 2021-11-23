@@ -753,32 +753,11 @@ namespace ExeJson
 	ostream& List::operator<<(ostream& o) const 
 	{
 		const TokenType tokentype( jc );
-		if ( tokentype == ListClose )  {o << "] "; return o;}
-		if ( tokentype == ListOpen ) 
-		{
-			o << "[ ";
-			for ( const_iterator it=begin();it!=end();it++)
-			{
-				const NodeBase& n( **it );
-				const TokenType subtokentype( n );
-				stringstream ss;
-				if ( subtokentype == ListClose )
-				{
-					o << "] ";
-					continue;
-				}
-				ss << n;
-				if ( ss.str().empty() ) continue;
-
-
-				if ( ss.str().find_first_not_of(" \t\r\n") == string::npos) continue;
-				if ( it != begin() ) o << ", ";
-				o << teal << ss.str() << normal; 
-			}
-		}
+		if ( tokentype == ObjectOpen ) o << "[ ";
+		Node::operator<<( o );
+		if ( tokentype == ObjectClose ) o << "] ";
 		return o;
 	}
-
 	ostream& ValueText::operator<<(ostream& o) const 
 	{
 		o << mgenta << vtext() << normal << " ";
