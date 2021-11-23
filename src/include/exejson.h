@@ -676,7 +676,7 @@ namespace ExeJson
 
 	ostream& ValueText::operator<<(ostream& o) const 
 	{
-		o << magenta << vtext() << normal << " ";
+		o << mgenta << vtext() << normal << " ";
 		return o;
 	}
 
