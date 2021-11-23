@@ -37,8 +37,14 @@
 using namespace KruncherTools;
 
 
+
 namespace ExeJson
 {
+	struct JsonOut : ofstream
+	{
+		JsonOut() : ofstream( "/dev/stderr" ) {}
+	};
+
 	enum TokenType { 
 		Root=100, 
 		ObjectOpen, ObjectClose, ListOpen, ListClose,
@@ -249,8 +255,11 @@ namespace ExeJson
 		mutable JsonToken jc;
 		friend ostream& operator<<(ostream&, const NodeBase&);
 		virtual ostream& operator<<(ostream& o) const = 0;
+		friend JsonOut& operator<<(JsonOut&, const NodeBase&);
+		virtual JsonOut& operator<<(JsonOut& o) const = 0;
 	};
 	inline ostream& operator<<(ostream& o, const NodeBase& n ) { return n.operator<<(o); }
+	inline JsonOut& operator<<(JsonOut& o, const NodeBase& n ) { return n.operator<<(o); }
 
 	struct Index : map< string, NodeBase* >
 	{
@@ -279,6 +288,15 @@ namespace ExeJson
 			}
 			return o;
 		}
+		virtual JsonOut& operator<<(JsonOut& o) const
+		{
+			for ( const_iterator it=begin();it!=end();it++)
+			{
+				const NodeBase& n( **it );
+				o << n;
+			}
+			return o;
+		} 
 	};
 
 	
@@ -295,6 +313,8 @@ namespace ExeJson
 			const Object* oo( n );
 			return oo;
 		}
+		private:
+		virtual JsonOut& operator<<(JsonOut& o) const { return o; }
 	};
 
 
@@ -303,6 +323,7 @@ namespace ExeJson
 		NullObject() = delete;
 		NullObject( const string& _jtxt ) : Node( _jtxt, Nothing ) {}
 		virtual ostream& operator<<(ostream& o) const { return o; }
+		virtual JsonOut& operator<<(JsonOut& o) const { return o; }
 	};
 
 	struct Object : Node
@@ -319,6 +340,7 @@ namespace ExeJson
 		virtual const string vtext () const { return "OBJECT"; }
 		private:
 		virtual ostream& operator<<(ostream& o) const ;
+		virtual JsonOut& operator<<(JsonOut& o) const ;
 		NullObject nullobject;
 	};
 
@@ -328,16 +350,19 @@ namespace ExeJson
 		virtual const string vtext () const { return "LIST"; }
 		private:
 		virtual ostream& operator<<(ostream& o) const;
+		virtual JsonOut& operator<<(JsonOut& o) const ;
 	};
 
 	struct Comma : Node
 	{
 		Comma( const string& _jtxt, const JsonToken _jc ) : Node( _jtxt, _jc ) {}
+		virtual JsonOut& operator<<(JsonOut& o) const { return o; }
 	};
 
 	struct Colon : Node
 	{
 		Colon( const string& _jtxt, const JsonToken _jc ) : Node( _jtxt, _jc ) {}
+		virtual JsonOut& operator<<(JsonOut& o) const { return o; }
 	};
 
 	struct QuotedText : Node
@@ -369,6 +394,7 @@ namespace ExeJson
 		NameText( const string& _jtxt, const JsonToken _jc ) : QuotedText( _jtxt, _jc ) {}
 		private:
 		virtual ostream& operator<<(ostream& o) const ;
+		virtual JsonOut& operator<<(JsonOut& o) const ;
 	};
 
 	struct StringValue : QuotedText
@@ -376,11 +402,13 @@ namespace ExeJson
 		StringValue( const string& _jtxt, const JsonToken _jc ) : QuotedText( _jtxt, _jc ) {}
 		private:
 		virtual ostream& operator<<(ostream& o) const ;
+		virtual JsonOut& operator<<(JsonOut& o) const ;
 	};
 
 	struct SpecialChar : Node
 	{
 		SpecialChar( const string& _jtxt, const JsonToken _jc ) : Node( _jtxt, _jc ) {}
+		virtual JsonOut& operator<<(JsonOut& o) const { return o; }
 	};
 
 	struct RegularCharacter : Node
@@ -388,6 +416,7 @@ namespace ExeJson
 		RegularCharacter( const string& _jtxt, const JsonToken _jc ) : Node( _jtxt, _jc ) {}
 		private:
 		operator const bool () ;
+		virtual JsonOut& operator<<(JsonOut& o) const { return o; }
 	};
 
 	struct ValueText : Node
@@ -398,7 +427,7 @@ namespace ExeJson
 		const string vtext () const { return valuetext; }
 		private:
 		const string valuetext;
-
+		virtual JsonOut& operator<<(JsonOut& o) const ;
 	};
 
 	struct Excavator 
@@ -720,6 +749,71 @@ namespace ExeJson
 		const TokenType& tt( jc );
 		if ( tt == NameQuots ) o << red << s << normal << " ";
 		if ( tt == ValueQuots ) o << yellow << s << normal << " ";
+		return o;
+	}
+
+
+	JsonOut& Object::operator<<(JsonOut& o) const
+	{
+		const TokenType tokentype( jc );
+		if ( tokentype == ObjectOpen ) o << "{ ";
+		Node::operator<<( o );
+		if ( tokentype == ObjectClose ) o << "} ";
+		return o;
+	}
+
+	JsonOut& List::operator<<(JsonOut& o) const 
+	{
+		const TokenType tokentype( jc );
+		if ( tokentype == ListClose )  {o << "] "; return o;}
+		if ( tokentype == ListOpen ) 
+		{
+			o << "[ ";
+			for ( const_iterator it=begin();it!=end();it++)
+			{
+				const NodeBase& n( **it );
+				const TokenType subtokentype( n );
+				stringstream ss;
+				if ( subtokentype == ListClose )
+				{
+					o << "] ";
+					continue;
+				}
+				ss << n;
+				if ( ss.str().empty() ) continue;
+
+
+				if ( ss.str().find_first_not_of(" \t\r\n") == string::npos) continue;
+				if ( it != begin() ) o << ", ";
+				o << teal << ss.str() << normal; 
+			}
+		}
+		return o;
+	}
+
+	JsonOut& ValueText::operator<<(JsonOut& o) const 
+	{
+		o << mgenta << vtext() << normal << " ";
+		return o;
+	}
+
+	JsonOut& NameText::operator<<(JsonOut& o) const 
+	{
+		const Markers& m( jc );
+		const string& s( Slice( jtxt, m ) );
+		const TokenType& tt( jc );
+		if ( tt == NameQuots ) o << greenbk << s << normal << " ";
+		if ( tt == ValueQuots ) o << red << s << normal << " ";
+		return o;
+	}
+
+	JsonOut& StringValue::operator<<(JsonOut& o) const 
+	{
+		const Markers& m( jc );
+		const string& s( Slice( jtxt, m ) );
+		const TokenType& tt( jc );
+		if ( tt == NameQuots ) o << red << s << normal << " ";
+		if ( tt == ValueQuots ) o << yellowbk << s << normal << " ";
 		return o;
 	}
 } // ExeJson
