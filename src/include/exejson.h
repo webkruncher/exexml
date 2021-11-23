@@ -50,31 +50,35 @@ namespace ExeJson
 
 	struct JsonOut : ofstream
 	{
-		JsonOut() : ofstream( "/dev/stderr" ), level( 0 ), lastlevel( 0 ), ended( false ) {}
+		JsonOut() : ofstream( "/dev/stderr" ), level( 0 ), lastlevel( 0 ), starting( true ), ended( false ) {}
 		JsonOut& operator()( const TokenType& t ) 
 		{
 			ofstream& me( *this );
 			switch ( t )
 			{
 				case ObjectOpen: 
-					if ( ended ) me << coma << endl; ended=false;
+					if ( starting ) me << endl; starting=false;
+					if ( ended ) me << endl; ended=false;
 					me << tracetabs( level++ ); 
 				break; 
 				case ObjectClose: 
+					if ( ended ) me << endl; ended=false;
 					me << tracetabs( --level ); 
 				break; 
 				case ListOpen: 
-					if ( ended ) me << coma << endl; ended=false;
+					if ( starting ) me << endl; starting=false;
+					if ( ended ) me << endl; ended=false;
 					me << tracetabs( level++ ); 
 					break; 
 				case ListClose: 
+					if ( ended ) me << endl; ended=false;
 					me << tracetabs( --level ); 
 				break; 
 				case ValueQuots: 
 				case ValueChar: 
 				break; 
 				default: 
-					if ( ended ) me << coma << endl; ended=false;
+					if ( ended ) me << endl; ended=false;
 					me << tracetabs( level );
 				break;
 			}
@@ -99,11 +103,13 @@ namespace ExeJson
 			pf( *this );
 			return *this;
 		}
+		void starter() { starting=true; }
 		void ender() { ended=true; }
 		size_t level,lastlevel;
-		bool ended;
+		bool starting,ended;
 	};
 	inline JsonOut& jendl( JsonOut& o ) { o.ender(); return o; } 
+	inline JsonOut& jsndl( JsonOut& o ) { o.starter(); return o; } 
 
 	struct GlyphDisposition
 	{
@@ -409,7 +415,7 @@ namespace ExeJson
 	struct Comma : Node
 	{
 		Comma( const string& _jtxt, const JsonToken _jc ) : Node( _jtxt, _jc ) {}
-		virtual JsonOut& operator<<(JsonOut& o) const { return o; }
+		virtual JsonOut& operator<<(JsonOut& o) const { o<<","; return o; }
 	};
 
 	struct Colon : Node
@@ -788,7 +794,7 @@ namespace ExeJson
 	JsonOut& Object::operator<<(JsonOut& o) const
 	{
 		const TokenType tokentype( jc );
-		if ( tokentype == ObjectOpen ) o( tokentype )  << "{" << endl;
+		if ( tokentype == ObjectOpen ) o( tokentype )  << "{" << jsndl;
 		Node::operator<<( o );
 		if ( tokentype == ObjectClose ) o( tokentype ) << "}" << jendl;
 		return o;
@@ -797,7 +803,7 @@ namespace ExeJson
 	JsonOut& List::operator<<(JsonOut& o) const
 	{
 		const TokenType tokentype( jc );
-		if ( tokentype == ListOpen ) o( tokentype )  << "[" << endl;
+		if ( tokentype == ListOpen ) o( tokentype )  << "[" << jsndl;
 		Node::operator<<( o );
 		if ( tokentype == ListClose ) o( tokentype ) << "]" << jendl;
 		return o;
