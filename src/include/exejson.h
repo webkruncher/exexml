@@ -91,15 +91,13 @@ namespace ExeJson
 		}
 		JsonOut& operator<<(JsonOut& (*pf)(JsonOut&))
 		{
-			ofstream& me( *this );
-			me << red << "," << normal << endl;
 			return *this;
 		}
 		void ender() { ended=true; }
 		size_t level,lastlevel;
 		bool ended;
 	};
-	inline JsonOut& jendl( JsonOut& o ) { return o; } 
+	inline JsonOut& jendl( JsonOut& o ) { o << green << "," << normal; return o; } 
 
 	struct GlyphDisposition
 	{
