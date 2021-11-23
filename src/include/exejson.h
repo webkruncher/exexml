@@ -54,10 +54,10 @@ namespace ExeJson
 		JsonOut& operator()( const TokenType& t ) 
 		{
 			ofstream& me( *this );
+			if ( starting ) me << endl; starting=false;
 			switch ( t )
 			{
 				case ObjectOpen: 
-					if ( starting ) me << endl; starting=false;
 					if ( ended ) me << endl; ended=false;
 					me << tracetabs( level++ ); 
 				break; 
@@ -66,7 +66,6 @@ namespace ExeJson
 					me << tracetabs( --level ); 
 				break; 
 				case ListOpen: 
-					if ( starting ) me << endl; starting=false;
 					if ( ended ) me << endl; ended=false;
 					me << tracetabs( level++ ); 
 					break; 
@@ -103,7 +102,10 @@ namespace ExeJson
 			pf( *this );
 			return *this;
 		}
-		void starter() { starting=true; }
+		void starter() 
+		{ 
+			starting=true; 
+		}
 		void ender() { ended=true; }
 		size_t level,lastlevel;
 		bool starting,ended;
