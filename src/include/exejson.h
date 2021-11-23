@@ -46,8 +46,6 @@ namespace ExeJson
 		ValueChar, Nothing
 	};
 
-
-
 	struct GlyphDisposition
 	{
 		GlyphDisposition() : Enquoted( false ) {}
@@ -82,9 +80,7 @@ namespace ExeJson
 			return o;
 		}
 	}; 
-
 	inline ostream& operator<<(ostream& o,const Markers& m) { return m.operator<<(o); }
-
 
 	struct QueString;
 	struct NodeBase;
@@ -269,40 +265,7 @@ namespace ExeJson
 		Node( const string& _jtxt) : NodeBase( _jtxt) {}
 		Node( const string& _jtxt, TokenType _tokentype) : NodeBase( _jtxt, _tokentype ) {}
 		Node( const string& _jtxt, const JsonToken _jc ) : NodeBase( _jtxt, _jc ) {}
-		virtual operator const bool () 
-		{
-			string current;
-			for ( iterator it=begin();it!=end();it++)
-			{
-				NodeBase& n( **it );
-				const JsonToken& subjc( n );
-				const TokenType& subtokentype( subjc );
-				const Markers& submarkers( subjc );
-
-				if ( subtokentype == NameQuots ) 
-				{
-					if ( submarkers.second )
-					{
-						const Markers& pos( subjc );
-						const string& name( Slice( jtxt, pos ) );
-						if ( !name.empty() )
-						{
-							current=name;
-						}
-					}
-				} 
-				if ( ! current.empty() ) 
-				{
-						const string& value( n.vtext() );
-						if ( ! value.empty() )
-							index[ current ] = &n;
-				}
-
-
-				if ( ! n ) return false;
-			}
-			return true;
-		}
+		virtual operator const bool ();
 		virtual operator string () const { return ""; }
 
 		protected:
@@ -377,9 +340,9 @@ namespace ExeJson
 		Colon( const string& _jtxt, const JsonToken _jc ) : Node( _jtxt, _jc ) {}
 	};
 
-	struct QuotationMark : Node
+	struct QuotedText : Node
 	{
-		QuotationMark( const string& _jtxt, const JsonToken _jc ) : Node( _jtxt, _jc ) {}
+		QuotedText( const string& _jtxt, const JsonToken _jc ) : Node( _jtxt, _jc ) {}
 		private:
 		const string vtext () const 
 		{
@@ -399,6 +362,19 @@ namespace ExeJson
 			return ss.str();
 		}
 
+	};
+
+	struct NameText : QuotedText
+	{
+		NameText( const string& _jtxt, const JsonToken _jc ) : QuotedText( _jtxt, _jc ) {}
+		private:
+		virtual ostream& operator<<(ostream& o) const ;
+	};
+
+	struct StringValue : QuotedText
+	{
+		StringValue( const string& _jtxt, const JsonToken _jc ) : QuotedText( _jtxt, _jc ) {}
+		private:
 		virtual ostream& operator<<(ostream& o) const ;
 	};
 
@@ -532,14 +508,14 @@ namespace ExeJson
 			{
 				if (  ! qtext.enquoted() )
 				{
-					push_back( new QuotationMark( txt, jc ) );
+					push_back( new NameText( txt, jc ) );
 					NodeBase& item( *back() );
 					Excavator excavate( txt, item, qtext );
 					Markers m( excavate );
 					closure( m );
 					return true;
 				} else {
-					push_back( new QuotationMark( txt, jc ) );
+					push_back( new NameText( txt, jc ) );
 					const Markers& m( jc );
 					jc.swap();
 					closure( m );
@@ -550,14 +526,14 @@ namespace ExeJson
 			{
 				if (  ! qtext.enquoted() )
 				{
-					push_back( new QuotationMark( txt, jc ) );
+					push_back( new StringValue( txt, jc ) );
 					NodeBase& item( *back() );
 					Excavator excavate( txt, item, qtext );
 					Markers m( excavate );
 					closure( m );
 					return true;
 				} else {
-					push_back( new QuotationMark( txt, jc ) );
+					push_back( new StringValue( txt, jc ) );
 					const Markers& m( jc );
 					jc.swap();
 					closure( m );
@@ -648,6 +624,41 @@ namespace ExeJson
 		return o;
 	}
 
+	Node::operator const bool () 
+	{
+		string current;
+		for ( iterator it=begin();it!=end();it++)
+		{
+			NodeBase& n( **it );
+			const JsonToken& subjc( n );
+			const TokenType& subtokentype( subjc );
+			const Markers& submarkers( subjc );
+
+			if ( subtokentype == NameQuots ) 
+			{
+				if ( submarkers.second )
+				{
+					const Markers& pos( subjc );
+					const string& name( Slice( jtxt, pos ) );
+					if ( !name.empty() )
+					{
+						current=name;
+					}
+				}
+			} 
+			if ( ! current.empty() ) 
+			{
+					const string& value( n.vtext() );
+					if ( ! value.empty() )
+						index[ current ] = &n;
+			}
+
+
+			if ( ! n ) return false;
+		}
+		return true;
+	}
+
 	ostream& List::operator<<(ostream& o) const 
 	{
 		for ( const_iterator it=begin();it!=end();it++)
@@ -658,30 +669,36 @@ namespace ExeJson
 			if ( ss.str().empty() ) continue;
 			if ( ss.str().find_first_not_of(" \t\r\n") == string::npos) continue;
 			if ( it != begin() ) o << ", ";
-			o << ss.str(); 
+			o << teal << ss.str() << normal; 
 		}
 		return o;
 	}
 
-
 	ostream& ValueText::operator<<(ostream& o) const 
 	{
-		o << vtext() << " ";
+		o << blue << vtext() << normal << " ";
 		return o;
 	}
 
-
-	ostream& QuotationMark::operator<<(ostream& o) const 
+	ostream& NameText::operator<<(ostream& o) const 
 	{
 		const Markers& m( jc );
 		const string& s( Slice( jtxt, m ) );
 		const TokenType& tt( jc );
-		if ( tt == NameQuots ) o << s << " ";
-		if ( tt == ValueQuots ) o << s << " ";
+		if ( tt == NameQuots ) o << green << s << normal << " ";
+		if ( tt == ValueQuots ) o << red << s << normal << " ";
 		return o;
 	}
 
-
+	ostream& StringValue::operator<<(ostream& o) const 
+	{
+		const Markers& m( jc );
+		const string& s( Slice( jtxt, m ) );
+		const TokenType& tt( jc );
+		if ( tt == NameQuots ) o << red << s << normal << " ";
+		if ( tt == ValueQuots ) o << yellow << s << normal << " ";
+		return o;
+	}
 } // ExeJson
 
 #endif //BUILDER_JSON_H
