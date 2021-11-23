@@ -204,7 +204,9 @@ int main(int argc,char** argv)
 			if ( ! json ) throw string("Cannot load json");
 			const ExeJson::Object& root( json );
 			ExeJson::JsonOut jout;
-			jout << root ;
+			jout << root;
+		
+			cout << endl << root << endl;
 		}
 	}
 	catch(const exception& e) {except=e.what();}

@@ -753,9 +753,9 @@ namespace ExeJson
 	ostream& List::operator<<(ostream& o) const 
 	{
 		const TokenType tokentype( jc );
-		if ( tokentype == ObjectOpen ) o << "[ ";
+		if ( tokentype == ListOpen ) o << "[ ";
 		Node::operator<<( o );
-		if ( tokentype == ObjectClose ) o << "] ";
+		if ( tokentype == ListClose ) o << "] ";
 		return o;
 	}
 	ostream& ValueText::operator<<(ostream& o) const 
