@@ -83,8 +83,19 @@ void bugjson()
 				CBug bug;
 			
 				const ExeJson::JsonToken& jc( node );	
+				const ExeJson::TokenType& tokentype( jc );	
 				const string gt( ExeJson::GlyphType( jc ) );
 				//cout << tracetabs( node.level ) << name << "->" << gt << fence << endl;
+				if ( tokentype == ExeJson::ObjectOpen )
+				{
+					cout << "Object:" << node << endl;
+					continue;
+				}
+				if ( tokentype == ExeJson::ListOpen )
+				{
+					cout << "List:" << node << endl;
+					continue;
+				}
 				const string v( node.vtext() );
 				cout << gt << "->" << name << ":" << v << endl;
 			}

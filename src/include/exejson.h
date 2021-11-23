@@ -325,7 +325,6 @@ namespace ExeJson
 		operator const TokenType () const { return jc; }
 		virtual operator const bool () = 0;
 		virtual operator string () const = 0;
-		//virtual const NodeBase& operator[]( const size_t ndx ) const = 0;
 		virtual operator const Object* () const { return nullptr; }
 		operator JsonToken& () const { return jc; }
 		virtual const string vtext () const { return ""; }
@@ -377,51 +376,17 @@ namespace ExeJson
 						const string& name( Slice( jtxt, pos ) );
 						if ( !name.empty() )
 						{
-							//cout << tracetabs( level ) << green << "(" << index.size() << ") " << name << normal << endl;
-							//cout << tracetabs( level ) << bluebk << name << normal << endl;
-							//index[ name ] = this;
 							current=name;
 						}
 					}
 				} 
-#if 0
-				if ( ! current.empty() ) 
-				{
-					if ( 
-						(subtokentype == ValueChar ) 
-							||
-						(subtokentype == ValueQuots ) 
-//							||
-//						(subtokentype == ListOpen ) 
-//							||
-//						(subtokentype == ObjectOpen ) 
-					)
-					{
-						const string& value( n.vtext() );
-						if ( ! value.empty() )
-						{
-							//cout << tracetabs( level ) << green << n.size() << fence << GlyphType( n ) << fence << current << " = " << value << normal << endl;
-							index[ current ] = &n;
-							current.clear();
-						}
-					} else {
-						const JsonToken& subjc( n );
-						const Markers& pos( n );
-						//const char cc( subjc );
-						//cout << tracetabs( level ) << blue << n.size() << fence << current << " ? " << GlyphType( subjc ) << fence << pos << fence << n.vtext() << normal << endl;
-					}
-				}
-#else
 				if ( ! current.empty() ) 
 				{
 						const string& value( n.vtext() );
 						if ( ! value.empty() )
-						{
-							//cout << tracetabs( level ) << green << n.size() << fence << GlyphType( n ) << fence << current << " = " << value << normal << endl;
 							index[ current ] = &n;
-						}
 				}
-#endif
+
 
 				if ( ! n ) return false;
 			}
@@ -429,13 +394,6 @@ namespace ExeJson
 		}
 		virtual operator string () const { return ""; }
 
-#if 0
-		virtual const NodeBase& operator[]( const size_t ndx ) const
-		{
-			const vector< NodeBase* >& me( *this );
-			return *me[ ndx ];
-		}
-#endif
 
 		protected:
 		Index index;
@@ -477,17 +435,6 @@ namespace ExeJson
 			}
 			return o;
 		}
-#if 0
-		virtual ostream& operator<<(ostream& o) const 
-		{
-			for ( const_iterator it=begin();it!=end();it++)
-			{
-				const NodeBase& n( **it );
-				o << n;
-			}
-			return o;
-		}
-#endif
 	};
 
 
@@ -496,11 +443,8 @@ namespace ExeJson
 	{
 		Object( const string& _jtxt, const int _level, const JsonToken _jc ) : Node( _jtxt, _level, _jc ) {}
 		operator const Object* () const { return this; }
-		//const Value& GetValue( const string& name ) const;
 		const NodeBase& GetNode( const string& name ) const
 		{
-//cout << "looking for " << name << " in: " << endl;
-//cout << index << endl;
 			Index::const_iterator it( index.find( name ) );
 			if ( it == index.end() ) throw name;
 			return *it->second;
@@ -517,10 +461,11 @@ namespace ExeJson
 			}
 			return o;
 		}
-#if 1
+
 		virtual ostream& operator<<(ostream& o) const 
 		{
-			o << endl << tracetabs( level ) << jc ;
+			o << index;
+			return o;
 			for ( const_iterator it=begin();it!=end();it++)
 			{
 				const NodeBase& n( **it );
@@ -528,7 +473,7 @@ namespace ExeJson
 			}
 			return o;
 		}
-#endif
+
 	};
 
 	struct List : Node
@@ -549,7 +494,7 @@ namespace ExeJson
 
 		virtual ostream& operator<<(ostream& o) const 
 		{
-			o << endl << tracetabs( level ) << jc ;
+			//o << endl << tracetabs( level ) << jc ;
 			for ( const_iterator it=begin();it!=end();it++)
 			{
 				const NodeBase& n( **it );
@@ -570,13 +515,11 @@ namespace ExeJson
 			//o << blink << "," << normal;
 			return o;
 		}
-#if 1
+
 		virtual ostream& operator<<(ostream& o) const 
 		{
-			//o << "," ;
 			return o;
 		}
-#endif
 	};
 
 	struct Colon : Node
@@ -585,16 +528,16 @@ namespace ExeJson
 		private:
 		virtual CBug& operator<<(CBug& o) const 
 		{
-			o << rvid << ":" << normal ;
+			//o << rvid << ":" << normal ;
 			return o;
 		}
-#if 1
+
 		virtual ostream& operator<<(ostream& o) const 
 		{
 			//o << ":"; 
 			return o;
 		}
-#endif
+
 	};
 
 	struct QuotationMark : Node
@@ -605,7 +548,6 @@ namespace ExeJson
 		{
 			const Markers& m( jc );
 			const string s( Slice( jtxt, m ) );
-//cout << "QM:" << s << endl;
 			return s;
 		}
 		virtual operator string () const 
@@ -628,34 +570,28 @@ namespace ExeJson
 				const NodeBase& n( **it );
 				const JsonToken& subjc( n );
 				const char cc( subjc );
-				//o << GlyphType( subjc ) << fence << n;
 				o << fence << cc;
 			}
 			return o;
 		}
-#if 1
+
 		virtual ostream& operator<<(ostream& o) const 
 		{
 			const Markers& m( jc );
 			const string& s( Slice( jtxt, m ) );
-			//o << m << fence << s << fence ;
-			//return o;
-			//const string& s( Slice( jtxt, jc ) );
-			//o << endl << tracetabs( level ) << "Quotes:" << s  << endl;
 			for ( const_iterator it=begin();it!=end();it++)
 			{
 				const NodeBase& n( **it );
 				const JsonToken subjc( n );
 				const TokenType tt( subjc );
 				const char cc( subjc );
-//o<< GlyphType( subjc ) << fence << cc << fence;
 				if ( tt == ValueQuots )
 					o << n.vtext(); 
 				o << n;
 			}
 			return o;
 		}
-#endif
+
 	};
 
 	struct SpecialChar : Node
@@ -672,10 +608,10 @@ namespace ExeJson
 			}
 			return o;
 		}
-#if 1
+
 		virtual ostream& operator<<(ostream& o) const 
 		{
-			o << jc; 
+			//o << jc; 
 			for ( const_iterator it=begin();it!=end();it++)
 			{
 				const NodeBase& n( **it );
@@ -683,7 +619,7 @@ namespace ExeJson
 			}
 			return o;
 		}
-#endif
+
 	};
 
 	struct RegularCharacter : Node
@@ -696,13 +632,12 @@ namespace ExeJson
 			o << yellow << bold << jc << normal;
 			return o;
 		}
-#if 1
 		virtual ostream& operator<<(ostream& o) const 
 		{
-			//o << "RC:" << jc;
+			const char cc( jc );
+			o << cc;
 			return o;
 		}
-#endif
 	};
 
 	struct ValueText : Node
@@ -711,7 +646,6 @@ namespace ExeJson
 		private:
 		virtual CBug& operator<<(CBug& o) const 
 		{
-			//o << ulin << blink << bold << jc << normal;
 			for ( const_iterator it=begin();it!=end();it++)
 			{
 				const NodeBase& n( **it );
@@ -722,13 +656,7 @@ namespace ExeJson
 
 		virtual ostream& operator<<(ostream& o) const 
 		{
-			const Markers& pos( jc );
-			o << endl << tracetabs( level ) << normal << mgenta << GlyphType( ValueChar ) << fence << rvid << fence << valuetext << normal << endl;
-			for ( const_iterator it=begin();it!=end();it++)
-			{
-				const NodeBase& n( **it );
-				o << n;
-			}
+			o << vtext();
 			return o;
 		}
 		const string vtext () const { return valuetext; }
@@ -776,8 +704,6 @@ namespace ExeJson
 	inline bool NodeBase::operator()( const string& txt, QueString& qtext, const JsonToken& jc )
 	{
 		const TokenType tokentype( jc );
-		//cerr << teal << level << fence << tokentype << fence << "->" << normal;
-
 
 		switch ( tokentype )
 		{
@@ -832,12 +758,6 @@ namespace ExeJson
 					return true;
 				} else {
 					push_back( new Object( txt, level, jc ) );
-#if 0
-					NodeBase& item( *back() );
-					Excavator excavate( txt, item, qtext );
-					Markers m( excavate );
-					closure( m );
-#endif
 					return true;
 				}
 			}
@@ -846,12 +766,6 @@ namespace ExeJson
 			{
 				trace << tracetabs( level ) << "CM";
 				push_back( new Comma( txt, level, jc ) );
-#if 0
-				NodeBase& item( *back() );
-				Excavator excavate( txt, item, qtext );
-				Markers m( excavate );
-				closure( m );
-#endif
 				return true;
 			}
 			break;
@@ -970,11 +884,7 @@ namespace ExeJson
 				qtext( *it );
 			Excavator excavator( jtxt, root, qtext );
 			Markers m( excavator ); 
-			//if ( true ) { CBug cbug; cbug << root; cerr << endl << setw( 80 ) << setfill( '-' ) << "-" << endl; }
 			if ( ! root ) throw string( "Cannot index json" );
-			//CBug cbug;
-			//cbug << green << rvid << root << normal;
-			//JsonGlyphTypeLegend( cbug );
 			return true;
 		}
 
