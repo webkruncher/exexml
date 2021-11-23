@@ -46,27 +46,6 @@ CBug trace;
 
 namespace ExeJson
 {
-	struct Value
-	{
-		void operator=( const string& s )
-		{
-			if ( ! Text.empty() ) throw s;
-			Text=s;
-		}
-		void clear() { Text.clear(); }
-		const bool empty() const { return Text.empty(); }
-		private:
-		string Text;
-		friend ostream& operator<<( ostream&, const Value& );
-		ostream& operator<<( ostream& o ) const
-		{
-			if ( ! Text.empty() ) { o << Text; return o; }
-			return o;
-		}
-	};
-	inline ostream& operator<<( ostream& o, const Value& v ) { return v.operator<<(o); }
-
-
 	enum TokenType { 
 		Root=100, 
 		ObjectOpen, ObjectClose, ListOpen, ListClose,
@@ -74,21 +53,6 @@ namespace ExeJson
 		ValueChar
 	};
 
-	inline void JsonGlyphTypeLegend( ostream& o)
-	{
-		o<< "Root       :" << Root       << endl;
-		o<< "ObjectOpen :" << ObjectOpen << endl;
-		o<< "ObjectClose:" << ObjectClose<< endl;
-		o<< "ListOpen   :" << ListOpen   << endl;
-		o<< "ListClose  :" << ListClose  << endl;
-		o<< "Coma       :" << Coma       << endl;
-		o<< "Coln       :" << Coln       << endl;
-		o<< "NameQuots  :" << NameQuots  << endl;
-		o<< "ValueQuots :" << ValueQuots << endl;
-		o<< "Special    :" << Special    << endl;
-		o<< "Character  :" << Character  << endl;
-		o<< "ValueChar  :" << ValueChar  << endl;
-	}
 
 	inline string GlyphType( const TokenType& tokentype )
 	{
@@ -297,19 +261,6 @@ namespace ExeJson
 	};
 
 
-	struct Item
-	{
-		Item( const size_t _name ) : name( _name ), value( 0, 0 )  {}
-		Item( const Item& that ) : name( that.name ), value( that.value )  {}
-		size_t operator < ( const Item& that ) const { return name < that.name; }
-		void SetValueIndex( const Markers& pos ) const { value=pos; }
-		const size_t NameIndex() const { return name; }
-		const Markers& ValueIndex() const { return value; }
-		private:
-		const size_t name;
-		mutable Markers value;
-	};
-
 	struct Excavator;
 	struct Object;
 	struct NodeBase : vector< NodeBase* >
@@ -337,7 +288,7 @@ namespace ExeJson
 		const int level;
 		protected:
 		mutable JsonToken jc;
-		mutable Value value;
+		//mutable Value value;
 		friend ostream& operator<<(ostream&, const NodeBase&);
 		virtual ostream& operator<<(ostream& o) const = 0;
 		friend CBug& operator<<(CBug&, const NodeBase&);
