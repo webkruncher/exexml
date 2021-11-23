@@ -5,10 +5,14 @@
 	"real" : 99.22,
 	"subs" :
 	{
+		"abc" : "AA:BB:CC",
 		"subtxt" : "avalue",
 		"int" : 3000,
 		"real" : 999.88,
-		"sublst" : [1,2,4000.77]
+		"sublst" : [1,2,4000.77],
+		"txt" : "the sub string, with a comma",
+		"lst" : [999],
+		"subs" : "more subs"
 	},
 	"txt" : "the string, with a comma",
 	"lst" : [1,2,3, 44  , 555],

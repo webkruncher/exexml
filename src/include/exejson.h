@@ -329,7 +329,7 @@ namespace ExeJson
 		operator JsonToken& () const { return jc; }
 		virtual const string vtext () const { return ""; }
 
-		const NodeBase& GetNode( const string& name ) const { throw name; }
+		virtual const NodeBase& GetNode( const string& name ) const { throw name; }
 		protected:
 		const string& jtxt;
 
@@ -445,8 +445,9 @@ namespace ExeJson
 		operator const Object* () const { return this; }
 		const NodeBase& GetNode( const string& name ) const
 		{
+cerr << name << "??" << index << endl;
 			Index::const_iterator it( index.find( name ) );
-			if ( it == index.end() ) throw name;
+			if ( it == index.end() ) throw string("Cannot find " ) + name;
 			return *it->second;
 		}
 		virtual const string vtext () const { return "OBJECT"; }

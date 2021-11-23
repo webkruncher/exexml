@@ -73,14 +73,13 @@ void bugjson()
 		const ExeJson::Object& root( json );
 		//cout << root << endl;
 		vector<string> v
-			{ "abc", "int", "txt", "lst", "real", "subs" }; 
+			{ "abc", "int", "txt", "subs", "lst", "real" }; 
 
 		{
 			for ( vector<string>::iterator sit=v.begin();sit!=v.end();sit++)
 			{
 				const string name( *sit ); 
 				const ExeJson::NodeBase& node( root.GetNode( name ) );
-				CBug bug;
 			
 				const ExeJson::JsonToken& jc( node );	
 				const ExeJson::TokenType& tokentype( jc );	
@@ -89,6 +88,22 @@ void bugjson()
 				if ( tokentype == ExeJson::ObjectOpen )
 				{
 					cout << "Object:" << node << endl;
+					for ( vector<string>::iterator sit=v.begin();sit!=v.end();sit++)
+					{
+						const string subname( *sit ); 
+						const ExeJson::NodeBase& subnode( node.GetNode( subname ) );
+					
+						const ExeJson::JsonToken& subjc( subnode );	
+						const ExeJson::TokenType& subtokentype( subjc );	
+						const string subgt( ExeJson::GlyphType( subjc ) );
+						if ( subtokentype == ExeJson::ListOpen )
+						{
+							cout << tab << "List:" << subnode << endl;
+							continue;
+						}
+						const string subv( subnode.vtext() );
+						cout << tab << subgt << "->" << subname << ":" << subv << endl;
+					}
 					continue;
 				}
 				if ( tokentype == ExeJson::ListOpen )
