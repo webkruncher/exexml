@@ -498,7 +498,12 @@ namespace ExeJson
 			for ( const_iterator it=begin();it!=end();it++)
 			{
 				const NodeBase& n( **it );
-				o << n;
+				stringstream ss;
+				ss << n;
+				if ( ss.str().empty() ) continue;
+				if ( ss.str().find_first_not_of(" \t\r\n") == string::npos) continue;
+				if ( it != begin() ) o << ", ";
+				o << ss.str();
 			}
 			return o;
 		}
