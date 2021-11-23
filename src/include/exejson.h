@@ -50,7 +50,7 @@ namespace ExeJson
 		Root=100, 
 		ObjectOpen, ObjectClose, ListOpen, ListClose,
 		Coma, Coln, NameQuots, ValueQuots, Special, Character,
-		ValueChar
+		ValueChar, Nothing
 	};
 
 
@@ -118,6 +118,7 @@ namespace ExeJson
 	struct JsonToken
 	{
 		JsonToken( ) : pos( 0, 0 ), tokentype( Root ), c( 0 ) {}
+		JsonToken( TokenType _tokentype) : pos( 0, 0 ), tokentype( _tokentype ), c( 0 ) {}
 		JsonToken( const size_t _pos, TokenType _t, char _c ) : pos( _pos, 0 ), tokentype( _t ), c( _c ) {}
 		JsonToken( const size_t zero, const size_t _pos, TokenType _t, char _c ) : pos( zero, _pos ), tokentype( _t ), c( _c ) {}
 		JsonToken( const JsonToken& that ) : pos( that.pos ), tokentype( that.tokentype ), c( that.c ) { }
@@ -288,7 +289,6 @@ namespace ExeJson
 		const int level;
 		protected:
 		mutable JsonToken jc;
-		//mutable Value value;
 		friend ostream& operator<<(ostream&, const NodeBase&);
 		virtual ostream& operator<<(ostream& o) const = 0;
 		friend CBug& operator<<(CBug&, const NodeBase&);
@@ -308,6 +308,7 @@ namespace ExeJson
 	struct Node : NodeBase
 	{
 		Node( const string& _jtxt, const int _level ) : NodeBase( _jtxt, _level ) {}
+		Node( const string& _jtxt, TokenType _tokentype) : NodeBase( _jtxt, _tokentype ) {}
 		Node( const string& _jtxt, const int _level, const JsonToken _jc ) : NodeBase( _jtxt, _level, _jc ) {}
 		virtual operator const bool () 
 		{
@@ -389,19 +390,28 @@ namespace ExeJson
 	};
 
 
+	struct NullObject : Node
+	{
+		NullObject() = delete;
+		NullObject( const string& _jtxt ) : Node( _jtxt, Nothing ) {}
+		virtual ostream& operator<<(ostream& o) const { return o; }
+		virtual CBug& operator<<(CBug& o) const  { return o; }
+	};
 
 	struct Object : Node
 	{
-		Object( const string& _jtxt, const int _level, const JsonToken _jc ) : Node( _jtxt, _level, _jc ) {}
+		Object( const string& _jtxt, const int _level, const JsonToken _jc ) 
+			: Node( _jtxt, _level, _jc ), nullobject( _jtxt ) {}
 		operator const Object* () const { return this; }
 		const NodeBase& GetNode( const string& name ) const
 		{
 			Index::const_iterator it( index.find( name ) );
-			if ( it == index.end() ) throw string("Cannot find " ) + name;
+			if ( it == index.end() ) return nullobject;
 			return *it->second;
 		}
 		virtual const string vtext () const { return "OBJECT"; }
 		private:
+		NullObject nullobject;
 		virtual CBug& operator<<(CBug& o) const 
 		{
 			o << tracetabs( level-1 ) << blue << jc << normal;
@@ -538,8 +548,8 @@ namespace ExeJson
 			for ( const_iterator it=begin();it!=end();it++)
 			{
 				const NodeBase& n( **it );
-				const JsonToken subjc( n );
-				const TokenType tt( subjc );
+				const JsonToken& subjc( n );
+				const TokenType& tt( subjc );
 				const char cc( subjc );
 				if ( tt == ValueQuots )
 					o << n.vtext(); 

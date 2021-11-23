@@ -114,6 +114,9 @@ void bugjson()
 				const string v( node.vtext() );
 				cout << gt << "->" << name << ":" << v << endl;
 			}
+			const ExeJson::NodeBase& nulchk( root.GetNode( "notfound" ) );
+			const ExeJson::TokenType& isnul( nulchk );
+			if ( isnul == ExeJson::Nothing ) cout << "notfound=NullObject" << endl;
 		}
         }
 	catch(std::exception& e) {except=e.what();}
