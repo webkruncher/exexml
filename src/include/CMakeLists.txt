@@ -6,7 +6,7 @@ install(
     FILES
 	    ${includes}    
 		    OPTIONAL
-		    DESTINATION include/exexml
+		    DESTINATION include/infokruncher/exexml
 )
 
 add_library(

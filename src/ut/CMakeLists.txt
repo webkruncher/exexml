@@ -1,17 +1,18 @@
 
 
-set(CMAKE_CXX_FLAGS "  -pthread " )
+set(CMAKE_CXX_FLAGS " -pthread " )
 
 get_filename_component(INCLUDES_PATH ../include/ REALPATH) 
 
 set(INCLUDE_PATHS)
 IncludeProjects(
-	krunchercore/src/include
+	krunchercore
 )
 set(LIBRARY_PATHS)
 set(LIBRARIES)
 IncludeLibraryPaths(
 	krunchercore
+	krunchercore/tracer
 )
 
 add_executable(
@@ -52,6 +53,7 @@ target_link_libraries(
     exeut
 	    PUBLIC
 			${LIBRARIES}
+			krunchertrace
 )
 
 install(

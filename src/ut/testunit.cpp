@@ -18,6 +18,7 @@ typedef stringstream stringstreamtype;
 #include <exejson.h>
 #include <iomanip>
 #include <hypefactory.h>
+#include <tracer/tracer.h>
 
 
 namespace XmlPayload
@@ -124,6 +125,7 @@ void bugjson()
 bool Diagnose(false);
 int main(int argc,char** argv)
 {
+	VERBOSITY=1;
 	string mode,bigs;
         if ( argc < 2 )  { bugjson(); return 0; }
 
