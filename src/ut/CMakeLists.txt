@@ -1,19 +1,26 @@
 
 
-set(CMAKE_CXX_FLAGS " -pthread " )
+#set(CMAKE_CXX_FLAGS " -pthread " )
 
 get_filename_component(INCLUDES_PATH ../include/ REALPATH) 
 
-set(INCLUDE_PATHS)
-IncludeProjects(
+
+Headers(
 	krunchercore
 )
-set(LIBRARY_PATHS)
-set(LIBRARIES)
-IncludeLibraryPaths(
-	krunchercore
-	krunchercore/tracer
+
+
+LibraryPaths(
+	krunchercore::global/tracer/
+	krunchercore::global/
 )
+
+
+Libraries(
+	krunchertrace
+	krunchercore
+)
+
 
 add_executable(
 	textslicer
@@ -38,9 +45,9 @@ target_include_directories(
     exeut
 	    PRIVATE
 		${INCLUDE_PATHS}
-		../include/
 		$<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}>
 		$<INSTALL_INTERFACE:include>
+		../include
 )
 
 target_link_directories(
@@ -50,10 +57,9 @@ target_link_directories(
 )
 
 target_link_libraries(
-    exeut
-	    PUBLIC
+	exeut
+		PUBLIC 
 			${LIBRARIES}
-			krunchertrace
 )
 
 install(
