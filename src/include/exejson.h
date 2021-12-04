@@ -40,13 +40,35 @@ using namespace KruncherTools;
 
 namespace ExeJson
 {
-
 	enum TokenType { 
 		Root=100, 
 		ObjectOpen, ObjectClose, ListOpen, ListClose,
 		Coma, Coln, NameQuots, ValueQuots, Special, Character,
 		ValueChar, Nothing
 	};
+
+
+	inline string TypeName( const TokenType tokentype )
+	{
+		switch ( tokentype )
+		{
+			case Coma: return "Coma";
+			case Coln: return "Coln";
+			case NameQuots: return "NameQuots";
+			case ValueQuots: return "ValueQuots";
+			case ListOpen: return "ListOpen";
+			case ListClose: return "ListClose";
+			case ObjectOpen: return "ObjectOpen";
+			case ObjectClose: return "ObjectClose";
+			case Special: return "Special";
+			case Character: return "Character";
+			case Root: return "Root";
+			case ValueChar: return "ValueChar";
+			case Nothing: return "Nothing";
+			default: return "ERROR";
+		}
+		return "ERROR";
+	}
 
 	struct JsonOut : ofstream
 	{
@@ -366,7 +388,22 @@ namespace ExeJson
 		RootNode( const string& _jtxt ) : Node( _jtxt) {}
 		operator const Object* () const 
 		{
-			if ( size() != 1 ) return nullptr;
+			if ( empty() ) return nullptr;
+
+#if 0
+			if ( size() > 1 )
+			{	
+				cerr << "Warning: Many root nodes" << endl;
+				for ( const_iterator it=begin();it!=end();it++)
+				{
+					const NodeBase* np( *it );
+					if ( ! np ) throw string("No node");
+					const NodeBase& n( *np );
+					cerr << "N:" << endl << n << endl;
+				}
+			}
+#endif
+
 			const NodeBase* np( *begin() );
 			if ( ! np ) throw string("No node");
 			const NodeBase& n( *np );
@@ -705,16 +742,16 @@ namespace ExeJson
 		const string& jtxt;
 	};
 
-	RegularCharacter::operator const bool () { return true; }
+	inline RegularCharacter::operator const bool () { return true; }
 
-	ostream& Index::operator<<(ostream& o) const 
+	inline ostream& Index::operator<<(ostream& o) const 
 	{
 		for ( const_iterator it=begin();it!=end();it++)
 			o << it->first << "," << " ";
 		return o;
 	}
 
-	Node::operator const bool () 
+	inline Node::operator const bool () 
 	{
 		string current;
 		for ( iterator it=begin();it!=end();it++)
@@ -723,6 +760,7 @@ namespace ExeJson
 			const JsonToken& subjc( n );
 			const TokenType& subtokentype( subjc );
 			const Markers& submarkers( subjc );
+
 
 			if ( subtokentype == NameQuots ) 
 			{
@@ -738,9 +776,16 @@ namespace ExeJson
 			} 
 			if ( ! current.empty() ) 
 			{
+				if ( 
+					( submarkers.first && submarkers.second )
+						||
+					( subtokentype == ValueChar )
+				)
+				{
 					const string& value( n.vtext() );
 					if ( ! value.empty() )
 						index[ current ] = &n;
+				}
 			}
 
 
@@ -749,7 +794,7 @@ namespace ExeJson
 		return true;
 	}
 
-	ostream& Object::operator<<(ostream& o) const 
+	inline ostream& Object::operator<<(ostream& o) const 
 	{
 		const TokenType tokentype( jc );
 		if ( tokentype == ObjectOpen ) o << "{ ";
@@ -758,7 +803,7 @@ namespace ExeJson
 		return o;
 	}
 
-	ostream& List::operator<<(ostream& o) const 
+	inline ostream& List::operator<<(ostream& o) const 
 	{
 		const TokenType tokentype( jc );
 		if ( tokentype == ListOpen ) o << "[ ";
@@ -766,13 +811,13 @@ namespace ExeJson
 		if ( tokentype == ListClose ) o << "] ";
 		return o;
 	}
-	ostream& ValueText::operator<<(ostream& o) const 
+	inline ostream& ValueText::operator<<(ostream& o) const 
 	{
 		o << mgenta << vtext() << normal << " ";
 		return o;
 	}
 
-	ostream& NameText::operator<<(ostream& o) const 
+	inline ostream& NameText::operator<<(ostream& o) const 
 	{
 		const Markers& m( jc );
 		const string& s( Slice( jtxt, m ) );
@@ -782,7 +827,7 @@ namespace ExeJson
 		return o;
 	}
 
-	ostream& StringValue::operator<<(ostream& o) const 
+	inline ostream& StringValue::operator<<(ostream& o) const 
 	{
 		const Markers& m( jc );
 		const string& s( Slice( jtxt, m ) );
@@ -793,7 +838,7 @@ namespace ExeJson
 	}
 
 
-	JsonOut& Object::operator<<(JsonOut& o) const
+	inline JsonOut& Object::operator<<(JsonOut& o) const
 	{
 		const TokenType tokentype( jc );
 		if ( tokentype == ObjectOpen ) o( tokentype )  << "{" << jsndl;
@@ -802,7 +847,7 @@ namespace ExeJson
 		return o;
 	}
 
-	JsonOut& List::operator<<(JsonOut& o) const
+	inline JsonOut& List::operator<<(JsonOut& o) const
 	{
 		const TokenType tokentype( jc );
 		if ( tokentype == ListOpen ) o( tokentype )  << "[" << jsndl;
@@ -811,7 +856,7 @@ namespace ExeJson
 		return o;
 	}
 
-	JsonOut& ValueText::operator<<(JsonOut& o) const 
+	inline JsonOut& ValueText::operator<<(JsonOut& o) const 
 	{
 		const TokenType tokentype( jc );
 		const string& s( vtext() );
@@ -819,7 +864,7 @@ namespace ExeJson
 		return o;
 	}
 
-	JsonOut& NameText::operator<<(JsonOut& o) const 
+	inline JsonOut& NameText::operator<<(JsonOut& o) const 
 	{
 		const TokenType tokentype( jc );
 		const Markers& m( jc );
@@ -828,7 +873,7 @@ namespace ExeJson
 		return o;
 	}
 
-	JsonOut& StringValue::operator<<(JsonOut& o) const 
+	inline JsonOut& StringValue::operator<<(JsonOut& o) const 
 	{
 		const TokenType tokentype( jc );
 		const Markers& m( jc );
