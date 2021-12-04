@@ -881,6 +881,19 @@ namespace ExeJson
 		if ( tokentype == ValueQuots ) o( tokentype ) << "\"" << s.c_str() << "\"" << jendl;
 		return o;
 	}
+
+	inline string JsonString( const NodeBase& node, const string name )
+	{
+		const NodeBase& n( node.GetNode( name ) );
+		return n.vtext();
+	}
+
+	inline int JsonInt( const NodeBase& node, const string name )
+	{
+		const NodeBase& n( node.GetNode( name ) );
+		const string txt( n.vtext() );
+		return atoi( txt.c_str() );
+	}
 } // ExeJson
 
 #endif //BUILDER_JSON_H
