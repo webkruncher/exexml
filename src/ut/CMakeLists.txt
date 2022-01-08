@@ -1,4 +1,5 @@
 
+Banner()
 
 #set(CMAKE_CXX_FLAGS " -pthread " )
 
