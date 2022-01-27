@@ -1,13 +1,9 @@
-# Compiled Object files
-*.slo
-*.lo
-*.o
+src.build
+CMakeCache.txt
+CMakeFiles
+Makefiles
+Makefile
+*.cmake
 
-# Compiled Dynamic libraries
-*.so
-*.dylib
-
-# Compiled Static libraries
-*.lai
-*.la
-*.a
+journal.txt
+progress.txt
