@@ -709,8 +709,8 @@ namespace XmlFamily
                 return x;
         }
 
-#ifdef XML_BASE
-	class Xml : public XML_BASE
+#ifdef PROPERTIES_BASE
+	class Xml : public PROPERTIES_BASE
 #else
 	class Xml
 #endif
