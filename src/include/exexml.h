@@ -709,7 +709,11 @@ namespace XmlFamily
                 return x;
         }
 
-	class Xml 
+#ifdef XML_BASE
+	class Xml : public XML_BASE
+#else
+	class Xml
+#endif
 	{
 	public:
 		Xml() : Root(NULL) {}
