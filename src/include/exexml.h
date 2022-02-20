@@ -857,6 +857,20 @@ namespace XmlFamily
 		}
 	};
 
+	struct NodeIndex : map< string, XmlNodeBase* >
+	{
+		void operator()( string name, XmlNodeBase* item )
+		{
+			iterator it( find( name ) );
+			if ( it == end() ) 
+			{
+				insert( pair<string, XmlNodeBase* >( name, item ) );
+			} 
+			iterator tit( find( name ) );
+			if ( tit == end() )  throw name;
+		}
+	};
+
 
 
 
