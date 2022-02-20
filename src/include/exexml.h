@@ -1108,6 +1108,16 @@ namespace XmlFamilyUtils
 		return text.substr( sotxt, eocd-sotxt );
 	}
 
+	inline string AncestorsAttribute( const XmlFamily::XmlNodeBase* pnode, const string what )
+	{
+		if ( ! pnode ) return "";
+		const XmlFamily::XmlNode& N( static_cast< const XmlFamily::XmlNode& > ( *pnode ) );
+		const XmlFamily::XmlAttributes::const_iterator it( N.attributes.find( what ) );
+		if ( it!=N.attributes.end() ) return it->second;
+		const XmlFamily::XmlNodeBase* P( pnode->Parent() );
+		if ( ! P ) return "";
+		return AncestorsAttribute( P, what );
+	}
 
 } // XmlFamilyUtils
 
