@@ -1119,6 +1119,25 @@ namespace XmlFamilyUtils
 		return AncestorsAttribute( P, what );
 	}
 
+	inline void Depth( const XmlFamily::XmlNodeBase* pnode, int& depth )
+	{
+		if ( ! pnode ) return;
+		const XmlFamily::XmlNodeBase* P( pnode->Parent() );
+		if ( ! P ) return; 
+		depth++;
+		return Depth( P, depth );
+	}
+
+	inline XmlFamily::XmlNodeBase& Ascend( XmlFamily::XmlNodeBase* pnode, int depth )
+	{
+		depth--;
+		if ( ! depth ) return *pnode;
+		if ( ! pnode ) return *pnode;
+		XmlFamily::XmlNodeBase* P( const_cast< XmlFamily::XmlNodeBase* >( pnode->Parent() ) ) ;
+		if ( ! P ) return *pnode;
+		return Ascend( P, depth );
+	}
+
 } // XmlFamilyUtils
 
 
