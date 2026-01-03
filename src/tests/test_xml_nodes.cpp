@@ -136,8 +136,8 @@ TEST_F(XmlNodeTest, GetRootFromDeepNode) {
 
     const XmlNode* root = child.Root();
     ASSERT_NE(root, nullptr);
-    // Note: Name() is not const-correct in current API, will fix during modernization
-    EXPECT_EQ(const_cast<XmlNode*>(root)->Name(), "root");
+    // Now Name() is const-correct!
+    EXPECT_EQ(root->Name(), "root");
 }
 
 // Test node children collection

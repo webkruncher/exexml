@@ -93,9 +93,8 @@ TEST_F(XmlAttributeTest, SetAttributeValue) {
     XmlNode& element = testDoc.Root->GetNode("element");
     XmlAttributes& attrs = element.Attributes();
 
-    // Modify existing attribute - use string base class assignment
-    // Note: TextElement::operator= only accepts TextElement&, will fix during modernization
-    static_cast<std::string&>(attrs["attr1"]) = "newvalue";
+    // Modify existing attribute - now works naturally with C++20 improvements!
+    attrs["attr1"] = "newvalue";
     EXPECT_EQ(std::string(attrs["attr1"]), "newvalue");
 }
 
@@ -108,8 +107,8 @@ TEST_F(XmlAttributeTest, AddNewAttribute) {
 
     size_t originalCount = attrs.size();
 
-    // Use string base class assignment
-    static_cast<std::string&>(attrs["newattribute"]) = "newvalue";
+    // Natural assignment works with C++20 improvements!
+    attrs["newattribute"] = "newvalue";
 
     EXPECT_EQ(attrs.size(), originalCount + 1);
     EXPECT_TRUE(attrs.Exists("newattribute"));

@@ -53,13 +53,13 @@ namespace XmlFamily
 		friend void XmlError(const chartype* a);
 		friend void XmlError(const chartype* a,const chartype* b);
 		XmlException(){}
-		virtual ~XmlException() throw() {}
+		virtual ~XmlException() noexcept {}
 		XmlException(chartype* a,chartype* b)  { stringstreamtype ss;ss<<a<<" "<<b; msg=ss.str();}
-		public: virtual const chartype* what() const throw() {return msg.c_str();}
+		public: virtual const chartype* what() const noexcept {return msg.c_str();}
 		private: string msg;
 	};
 
-	inline void XmlError(const chartype* a){throw XmlException(const_cast<chartype*>(a),NULL);}
+	inline void XmlError(const chartype* a){throw XmlException(const_cast<chartype*>(a),nullptr);}
 	inline void XmlError(const chartype* a,const chartype* b) {throw XmlException(const_cast<chartype*>(a),const_cast<chartype*>(b));}
 	#define whitespaces ((chartype*)" \f\v\r\n\t")
 
@@ -83,7 +83,7 @@ namespace XmlFamily
 		const XmlNodeBase* parent;
 	public:
 		Xml& GetDoc(){return Document;}
-		const XmlNodeBase* Parent() const {return (XmlNodeBase*) parent;}
+		const XmlNodeBase* Parent() const {return const_cast<XmlNodeBase*>(parent);}
 		virtual ostream& operator<<(ostream& o) const = 0;
 		virtual void operator()(istream& i,ostream& o) {}
 	protected:
@@ -100,10 +100,13 @@ namespace XmlFamily
 		friend class TextSegments;
 	public:
  		TextElement(Xml& _doc,const XmlNodeBase* _parent) : ElementBase(_doc,_parent)  {}
-		TextElement(Xml& _doc,const XmlNodeBase* _parent,stringtype s) : 
+		TextElement(Xml& _doc,const XmlNodeBase* _parent,stringtype s) :
 			ElementBase(_doc,_parent),stringtype(s)  {}
-		TextElement& operator=(const TextElement& a)	
+		TextElement& operator=(const TextElement& a)
 			{ if (&a!=this) {parent=a.parent;stringtype::operator=(a.c_str());}return *this; }
+		// C++20: Add string assignment operators for convenience
+		TextElement& operator=(const stringtype& s) { stringtype::operator=(s); return *this; }
+		TextElement& operator=(const chartype* s) { stringtype::operator=(s); return *this; }
 		virtual ~TextElement(){clear();}
 	protected:
 		virtual ostream& operator<<(ostream& o) const
@@ -182,13 +185,15 @@ namespace XmlFamily
 		friend class XmlFamilyUtils::XmlNodeGuts;
 		friend class Xml;
 		XmlNodeBase(Xml& _doc,const XmlNodeBase* _p) : ElementBase(_doc,_p) {}
-		XmlNodeBase(Xml& _doc) : ElementBase(_doc,NULL) {}
+		XmlNodeBase(Xml& _doc) : ElementBase(_doc,nullptr) {}
 		virtual ~XmlNodeBase(){}
 		virtual XmlNodeBase& Copy(const XmlNodeBase& _a) = 0;
 	public:
 		virtual XmlNodeBase& operator=(const XmlNodeBase& a) {if (&a==this) return *this; clear(); return Copy(a);}
 		virtual stringtype& Name() = 0;
+		virtual const stringtype& Name() const = 0;
 		virtual XmlAttributes& Attributes() = 0;
+		virtual const XmlAttributes& Attributes() const = 0;
 		virtual void clear() = 0;
 		virtual int TabLevel() const = 0;
 		virtual int SetTabLevel(int) const = 0;
@@ -207,9 +212,9 @@ namespace XmlFamily
 	public:
 		XmlNodeSet(bool _bRef = true) : bReference(_bRef) {}
 		virtual ~XmlNodeSet() 
-			{if (!bReference)  for (iterator it=begin();it!=end();it++)  if (*it) { delete (*it); *it=NULL; } }
+			{if (!bReference)  for (iterator it=begin();it!=end();it++)  if (*it) { delete (*it); *it=nullptr; } }
 		void clear() 
-			{if (!bReference)  for (iterator it=begin();it!=end();it++)  if (*it) {delete (*it);  *it=NULL; } vector<ElementBase*>::clear();}
+			{if (!bReference)  for (iterator it=begin();it!=end();it++)  if (*it) {delete (*it);  *it=nullptr; } vector<ElementBase*>::clear();}
 	private:
 		bool bReference;// set (default) if referencing nodes, not controlling lifetime
 	} ;
@@ -226,7 +231,7 @@ namespace XmlFamilyUtils
 	inline void XmlError(const string _a)
 	{
 		const char* a=const_cast<chartype*>(_a.c_str()); 
-		const char* b=NULL;
+		const char* b=nullptr;
 		XmlFamily::XmlError(a,b);
 	}
 
@@ -257,12 +262,12 @@ namespace XmlFamilyUtils
 
 		XmlMapNode(size_t p) : 
 			type(unknownTagSymbol), 
-			Mark1(NULL),		// Must always be lessThanSymbol
-			Mark2(NULL),		// May be greaterThanSymbol or endingGreaterThanSymbol
-			Mark3(NULL),		// May be NULL or endingLessThanSymbol
-			Mark4(NULL),		// May be NULL or greaterThanSymbol
+			Mark1(nullptr),		// Must always be lessThanSymbol
+			Mark2(nullptr),		// May be greaterThanSymbol or endingGreaterThanSymbol
+			Mark3(nullptr),		// May be nullptr or endingLessThanSymbol
+			Mark4(nullptr),		// May be nullptr or greaterThanSymbol
 			bDone(false),
-			pos(p),prev(NULL),next(NULL),name("") {}
+			pos(p),prev(nullptr),next(nullptr),name("") {}
 		virtual ~XmlMapNode(){}
 		TagType type;
 		// these pointers are not to be deleted by this class - their lifetimes are managed elsewhere
@@ -343,7 +348,9 @@ namespace XmlFamilyUtils
 		XmlFamily::XmlNodeSet children;
 		XmlFamily::XmlAttributes attributes;
 		virtual stringtype& Name(){return name;}
+		virtual const stringtype& Name() const {return name;}
 		virtual XmlFamily::XmlAttributes& Attributes(){return attributes;}
+		virtual const XmlFamily::XmlAttributes& Attributes() const {return attributes;}
 		virtual void Load(stringtype& text)
 		{
 			if (!text.size()) XmlError("malformed xml - no text");
@@ -532,8 +539,7 @@ namespace XmlFamilyUtils
 						{
 							if (nn&&nn->prev) textmarkers.add
 								(children.size(),*nn->prev,*nn);
-							XmlNodeBase* nnode = (XmlNodeBase*)
-								NewNode(Document,this,wn.name);
+							XmlNodeBase* nnode = NewNode(Document,this,wn.name);
 							if (!nnode) XmlError("Out of memory");
 							appendChild(nnode);
 							nnode->Load(intext,wn);
@@ -567,12 +573,12 @@ namespace XmlFamily
 
 		friend ostream& operator<<(ostream& o,const XmlNode& xmlnode);
 	public:
-		virtual operator Xml* () { return NULL;}
-		virtual XmlNodeBase* Generate(XmlNodeBase* parent,string _name) 
-		{ 
-			if (!parent) XmlError((char*)"Cannot produce a node with no parent");
-			XmlNodeBase* nn=NewNode(Document,this,_name); 
-			if (!nn) XmlError((char*)"Cannot produce a ",_name.c_str());
+		virtual operator Xml* () { return nullptr;}
+		virtual XmlNodeBase* Generate(XmlNodeBase* parent,string _name)
+		{
+			if (!parent) XmlError(const_cast<char*>("Cannot produce a node with no parent"));
+			XmlNodeBase* nn=NewNode(Document,this,_name);
+			if (!nn) XmlError(const_cast<char*>("Cannot produce a "),_name.c_str());
 			appendChild(nn);
 			return nn;
 		}
@@ -647,7 +653,7 @@ namespace XmlFamily
 				if (n.name==_name) return n;
 			}
 			stringstreamtype ss; ss<<"Cannot find "<<_name<<" in "<<name<<endl;
-			XmlError((char*)ss.str().c_str());
+			XmlError(const_cast<char*>(ss.str().c_str()));
 			return DeadRoot();
 		}
 		
@@ -658,7 +664,7 @@ namespace XmlFamily
 				XmlNode& n=static_cast<XmlNode&>(*(*it));
 				if (n.name==_name) return static_cast<XmlNode*>(*it);
 			}
-			return NULL;
+			return nullptr;
 		}
 
 		virtual bool Exists(string _name)
@@ -716,23 +722,23 @@ namespace XmlFamily
 #endif
 	{
 	public:
-		Xml() : Root(NULL) {}
-		Xml(istream& in) : Root(NULL) {Load(in);}
-		Xml(const XmlFamily::Xml& a) : Root(NULL) {Copy(a);}
+		Xml() : Root(nullptr) {}
+		Xml(istream& in) : Root(nullptr) {Load(in);}
+		Xml(const XmlFamily::Xml& a) : Root(nullptr) {Copy(a);}
 		operator XmlNode& () { if (!Root) XmlError("No root node"); return *Root; }
 		//void TabLevel(int tl) const { if (!Root) XmlError("No root node"); Root->SetTabLevel(tl);}
 		const Xml& operator=(const Xml& a)
 		{
 			if (&a==this) return *this; 
 			if (Root) delete Root; 
-			Root=NULL;
+			Root=nullptr;
 			const Xml& ret=Copy(a);
 			return ret;
 		}
 
-		virtual ~Xml(){if (Root) delete Root; Root=NULL;Headers.clear();Comments.clear();}
+		virtual ~Xml(){if (Root) delete Root; Root=nullptr;Headers.clear();Comments.clear();}
 		virtual bool operator()() {if (Root) return (*Root)(); return false;}
-		virtual void Load(istream& in,XmlFamily::XmlNode* _root=NULL)
+		virtual void Load(istream& in,XmlFamily::XmlNode* _root=nullptr)
 		{
 			if (_root) Root=_root;
 			else 
@@ -763,7 +769,7 @@ namespace XmlFamily
 			Root->Load(text);
 		}
 
-		virtual void Load(stringtype& text,XmlFamily::XmlNode* _root=NULL)
+		virtual void Load(stringtype& text,XmlFamily::XmlNode* _root=nullptr)
 		{
 			if (_root) Root=_root;
 			else Root = NewNode(*this,"root");
@@ -776,7 +782,7 @@ namespace XmlFamily
         	std::list<stringtype> Headers,Comments;
 		virtual XmlNode* NewNode(Xml& _doc,stringtype name) const
 		{
-			XmlNode* n = new XmlNode(_doc,NULL,name); 
+			XmlNode* n = new XmlNode(_doc,nullptr,name); 
 			if (!n) XmlError("Can't create node"); 
 			return n;
 		}

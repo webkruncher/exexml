@@ -1,6 +1,11 @@
 # GoogleTest configuration for exexml
 cmake_minimum_required(VERSION 3.14)
 
+# Ensure C++20 is used (should inherit from parent, but make it explicit)
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
 # Fetch GoogleTest from GitHub
 include(FetchContent)
 FetchContent_Declare(
