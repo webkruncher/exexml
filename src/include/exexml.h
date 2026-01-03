@@ -477,6 +477,8 @@ namespace XmlFamilyUtils
 
 		virtual void ParseAttrs(stringtype& txt)
 		{
+			// C++20: Early return for empty or whitespace-only attribute strings
+			if (txt.empty()) return;
 			size_t m=0;
 			while(1)
 			{
@@ -495,13 +497,16 @@ namespace XmlFamilyUtils
 					attributes[a]=XmlFamily::TextElement(Document,this,b);
 					m=e+1;
 				} else {
-					size_t e=txt.find_first_of(whitespace_or_end_tag,m);
+					// C++20: Support self-closing tags by checking for '/' or '>'
+					size_t e=txt.find_first_of(whitespace_or_end_tag_or_slash,m);
 					if (e==stringtype::npos) e=txt.size();
 					if (e<=m) XmlError("Invalid xml - can't parse attributes");
+					// If we hit '/' or '>', we're done parsing attributes
+					if (e<txt.size() && (txt[e]=='/' || txt[e]=='>')) return;
 					stringtype a;
 					a.assign(txt,m,e-m);
 					attributes[a]=XmlFamily::TextElement(Document,this);
-					m=e+2;
+					m=e+1;
 				}
 			}
 		}
@@ -513,9 +518,10 @@ namespace XmlFamilyUtils
 			size_t a=mn.pos+mn.name.size()+1;
 			if (mn.type==XmlFamilyUtils::XmlMapNode::endingLessThanSymbol) a++;
 			size_t b=mn.Mark2->pos;
-			if (mn.Mark2->type==XmlFamilyUtils::XmlMapNode::endingGreaterThanSymbol) 
-				while(intext[b]!='/') 
-			b--;
+			// C++20: Fix critical indentation bug - b-- must be inside while loop
+			if (mn.Mark2->type==XmlFamilyUtils::XmlMapNode::endingGreaterThanSymbol) {
+				while(intext[b]!='/') b--;
+			}
 			txt.assign(intext,a,(b-a));
 			ParseAttrs(txt);
 		}
@@ -1057,7 +1063,8 @@ namespace XmlFamilyUtils
 		size_t soname(text.find_first_not_of(whitespace,node.pos+1));
 		if (soname==stringtype::npos) XmlError("Cannot deduce name for a node ",&text[node.pos]);
 		if (!isalnum(text[soname])) XmlError("Cannot deduce name for a node ",&text[node.pos]);
-		size_t eoname(text.find_first_of(whitespace_or_end_tag,soname+1));
+		// C++20: Support self-closing tags by including '/' as end-of-name marker
+		size_t eoname(text.find_first_of(whitespace_or_end_tag_or_slash,soname+1));
 		node.name.assign(text,soname,eoname-soname);
 		node.Mark1=&node;
 	}
