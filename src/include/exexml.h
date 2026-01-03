@@ -38,16 +38,35 @@
 
 #ifndef __EXECUTABLE_XML__
 #define __EXECUTABLE_XML__
-#include <list>
-#include <string.h>
+#include <string>      // for std::string
+#include <iostream>    // for std::ostream, std::istream
+#include <sstream>     // for std::stringstream
+#include <map>         // for std::map
+#include <vector>      // for std::vector
+#include <deque>       // for std::deque
+#include <list>        // for std::list
+#include <exception>   // for std::exception
+#include <string.h>    // for strlen() - C-style string functions
 
 namespace XmlFamilyUtils {class XmlMapNode; class XmlNodeGuts;}
+
+// Bring STL types into scope
+using std::string;
+using std::ostream;
+using std::istream;
+using std::stringstream;
+using std::map;
+using std::vector;
+using std::list;
+using std::deque;
+using std::pair;
+using std::endl;
 
 namespace XmlFamily
 {
 	#define chartype char
-	#define stringtype string
-	#define stringstreamtype stringstream
+	#define stringtype std::string
+	#define stringstreamtype std::stringstream
 	class XmlException : public std::exception
 	{
 		friend void XmlError(const chartype* a);
@@ -85,7 +104,7 @@ namespace XmlFamily
 		Xml& GetDoc(){return Document;}
 		const XmlNodeBase* Parent() const {return const_cast<XmlNodeBase*>(parent);}
 		virtual ostream& operator<<(ostream& o) const = 0;
-		virtual void operator()(istream& i,ostream& o) {}
+		virtual void operator()(istream& /*i*/,ostream& /*o*/) {}
 	protected:
 		Xml& Document;
 	};
@@ -332,10 +351,11 @@ namespace XmlFamilyUtils
 			attributes(_doc,_parent)
 		{ } 
 		virtual ~XmlNodeGuts() {clear();name.clear();textmarkers.clear();}
-		XmlNodeGuts& operator=(const XmlNodeGuts& a) 
+		using XmlNodeBase::operator=;  // Bring base class operator= into scope
+		XmlNodeGuts& operator=(const XmlNodeGuts& a)
 		{
-			if (&a==this) return *this; 
-			clear();  
+			if (&a==this) return *this;
+			clear();
 			return (XmlNodeGuts&)Copy((const XmlNodeBase&)a);
 		}
 		mutable int __tablevel;
@@ -452,7 +472,7 @@ namespace XmlFamilyUtils
 				if (find(childndx)!=end())  XmlError("textmarker error");
 				(*this)[childndx]=pair<XmlMapNode*,XmlMapNode*>(&tm,&mn);
 			}
-			void generate(const XmlNodeGuts* _parent,stringtype& intext,
+			void generate(const XmlNodeGuts* /*_parent*/,stringtype& intext,
 				XmlFamily::TextSegments& ts)
 			{
 				for(iterator it=begin();it!=end();it++)
@@ -579,6 +599,7 @@ namespace XmlFamily
 
 		friend ostream& operator<<(ostream& o,const XmlNode& xmlnode);
 	public:
+		using XmlNodeBase::operator=;  // Bring base class operator= into scope
 		virtual operator Xml* () { return nullptr;}
 		virtual XmlNodeBase* Generate(XmlNodeBase* parent,string _name)
 		{
@@ -979,7 +1000,7 @@ namespace XmlFamilyUtils
 		}
 	}
 
-	inline bool NodeMapper::Eat(XmlMapNode& node,stringtype& text,NodeMapBase& xmap,XmlMapNode& mn)
+	inline bool NodeMapper::Eat(XmlMapNode& node,stringtype& /*text*/,NodeMapBase& /*xmap*/,XmlMapNode& mn)
 	{
 		if (mn.bDone) return true;
 		if (mn.type!=XmlMapNode::lessThanSymbol) XmlError("Did not get a < in  matching tag"); 
@@ -1027,7 +1048,7 @@ namespace XmlFamilyUtils
 	}
 
 
-	inline void NodeMapper::Relate(XmlMapNode& node,stringtype& text,NodeMapBase& xmap)
+	inline void NodeMapper::Relate(XmlMapNode& node,stringtype& /*text*/,NodeMapBase& xmap)
 	{
 		NodeMapBase::reverse_iterator relatives=xmap.rbegin();
 		if (&*relatives!=&node) XmlError("invalid call to Excavate(...)");
@@ -1040,7 +1061,7 @@ namespace XmlFamilyUtils
 		}
 	}
 
-	inline void NodeMapper::ResolveType(XmlMapNode& node,stringtype& text,NodeMapBase& xmap)
+	inline void NodeMapper::ResolveType(XmlMapNode& node,stringtype& text,NodeMapBase& /*xmap*/)
 	{
 		chartype& chr(text[node.pos]);
 		if (chr=='<') 
@@ -1057,7 +1078,7 @@ namespace XmlFamilyUtils
 		}
 	}
 
-	inline void NodeMapper::LessThan(XmlMapNode& node,stringtype& text,NodeMapBase& xmap)
+	inline void NodeMapper::LessThan(XmlMapNode& node,stringtype& text,NodeMapBase& /*xmap*/)
 	{
 		if ((node.pos+1)>text.size()) XmlError("Invalid xml - node pos > text size on lessThanSymbol");
 		size_t soname(text.find_first_not_of(whitespace,node.pos+1));
@@ -1069,7 +1090,7 @@ namespace XmlFamilyUtils
 		node.Mark1=&node;
 	}
 
-	inline void NodeMapper::EndingLessThan(XmlMapNode& node,stringtype& text,NodeMapBase& xmap)
+	inline void NodeMapper::EndingLessThan(XmlMapNode& node,stringtype& text,NodeMapBase& /*xmap*/)
 	{
 		if ((node.pos+1)>text.size()) XmlError("Invalid xml - node pos > text size on endingLessThanSymbol");
 		size_t soname(text.find_first_not_of(whitespace_or_slash,node.pos+1));
