@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root attribute1="value1" attribute2="value2">
+    <level1 id="1">
+        <level2 id="2">
+            <level3 id="3">Deep nested content</level3>
+        </level2>
+        <sibling>Sibling content</sibling>
+    </level1>
+    <another id="test">
+        <item>Item 1</item>
+        <item>Item 2</item>
+        <item>Item 3</item>
+    </another>
+    <!-- This is a comment -->
+    <mixed>
+        Text before
+        <inner>Inner text</inner>
+        Text after
+    </mixed>
+</root>

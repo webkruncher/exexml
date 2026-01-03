@@ -9,3 +9,4 @@ journal.txt
 progress.txt
 *.*.swp
 *.core
+src/build
