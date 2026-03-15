@@ -1,12 +1,30 @@
+# Build artifacts
 src.build
+build
+_deps
 CMakeCache.txt
 CMakeFiles
 Makefiles
 Makefile
 *.cmake
+*.o
+*.a
+*.so
 
+# Editor / IDE
+*.swp
+*.swo
+*.swn
+*.backup_*
+*.bak
+*.orig
+tags
+
+# Core dumps
+*.core
+
+# Workflow
+.gitcommit
 journal.txt
 progress.txt
-*.*.swp
-*.core
 src/build
